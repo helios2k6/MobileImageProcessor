@@ -28,26 +28,60 @@ namespace Slice
     public sealed class SliceSize : IEquatable<SliceSize>
     {
         /// <summary>
+        /// The SliceSize for a snapshot from an iPad
+        /// </summary>
+        public static readonly SliceSize IPadSliceSize = SliceSize.Create(274, 65, 0, 40);
+
+        /// <summary>
+        /// The SliceSize for a snapshot from an iPhone
+        /// </summary>
+        public static readonly SliceSize IPhoneSliceSize = SliceSize.Create(240, 62, 0, 40);
+
+        /// <summary>
         /// Represents the width of the slice
         /// </summary>
-        public int Width { get; set; }
+        public int Width { get; private set; }
 
         /// <summary>
         /// Represents the Height of the slice
         /// </summary>
-        public int Height { get; set; }
+        public int Height { get; private set; }
 
         /// <summary>
         /// Represents the offset from the top of the 
         /// image at which the slice begins
         /// </summary>
-        public int YOffset { get; set; }
+        public int YOffset { get; private set; }
 
         /// <summary>
         /// Represents the offset from the left of the
         /// image at which the slice begins
         /// </summary>
-        public int XOffset { get; set; }
+        public int XOffset { get; private set; }
+
+        /// <summary>
+        /// Factory method for creating a SliceSize
+        /// </summary>
+        /// <param name="width">The width of the slice</param>
+        /// <param name="height">The height of the slice</param>
+        /// <param name="xOffset">the x offset</param>
+        /// <param name="yOffset">The y offset</param>
+        /// <returns>A new SliceSize</returns>
+        public static SliceSize Create(
+            int width,
+            int height,
+            int xOffset,
+            int yOffset
+        )
+        {
+            return new SliceSize
+            {
+                Width = width,
+                Height = height,
+                YOffset = yOffset,
+                XOffset = xOffset,
+            };
+        }
 
         public bool Equals(SliceSize other)
         {

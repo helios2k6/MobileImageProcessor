@@ -42,24 +42,12 @@ namespace Slice
         {
             if (IsiPadSize(image))
             {
-                return new SliceSize
-                {
-                    Height = 48,
-                    Width = 124,
-                    YOffset = 45,
-                    XOffset = 112,
-                }.ToMaybe();
+                return SliceSize.IPadSliceSize.ToMaybe();
             }
 
             if (IsiPhoneSize(image))
             {
-                return new SliceSize
-                {
-                    Height = 34,
-                    Width = 112,
-                    YOffset = 50,
-                    XOffset = 98,
-                }.ToMaybe();
+                return SliceSize.IPhoneSliceSize.ToMaybe();
             }
 
             return Maybe<SliceSize>.Nothing;

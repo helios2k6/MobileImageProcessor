@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <StartArguments>"\\Mac\Home\Documents\Programming Projects\C-Sharp\Slice\Test Images\image_b.png" "\\Mac\Home\Documents\Programming Projects\C-Sharp\Slice\Test Images\image_a.png"</StartArguments>
+    <StartArguments>ipad_a.png ipad_b.png ipad_c.png ipad_d.png iphone_a.png iphone_b.png iphone_c.png iphone_d.png</StartArguments>
+    <StartWorkingDirectory>\\Mac\Home\Documents\Programming Projects\C-Sharp\Slice\Test Images\</StartWorkingDirectory>
   </PropertyGroup>
 </Project>

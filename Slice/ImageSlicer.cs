@@ -50,7 +50,8 @@ namespace Slice
 
             try
             {
-                return bitmap.Clone(cropArea, bitmap.PixelFormat).ToMaybe<Image>();
+                return from tintedImage in TryInvertColors(bitmap.Clone(cropArea, bitmap.PixelFormat))
+                       select tintedImage as Image;
             }
             catch (OutOfMemoryException e)
             {
@@ -62,6 +63,20 @@ namespace Slice
             }
 
             return Maybe<Image>.Nothing;
+        }
+
+        private static Maybe<Bitmap> TryInvertColors(Bitmap sliceImage)
+        {
+            try
+            {
+                return sliceImage.FilterIPadSnapshot().ToMaybe();
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Could not add color tint to image. {0}", e.Message);
+            }
+
+            return Maybe<Bitmap>.Nothing;
         }
     }
 }

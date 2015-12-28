@@ -18,40 +18,76 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
- 
- using Functional.Maybe;
- 
- /// <summary>
- /// Processes the output file of tesseract
- /// </summary>
- internal static class OutputFileProcessor
- {
-     /// <summary>
-     /// Tries to get the timestamp from the contents of the output file
-     /// from tesseract
-     /// </summary>
-     public static Maybe<string> TryGetTime(string[] outputFileContents)
-     {
-         return Maybe<string>.Nothing;
-     }
-     
-     private static Maybe<string> TryGetPrimaryLine(string[] outputFileContents)
-     {
-         return Maybe<string>.Nothing;
-     }
 
-     private static Maybe<string> TryGetPrimarySubstring(string primaryLine)
-     {
-         return Maybe<string>.Nothing;
-     }
+using Functional.Maybe;
+using System;
+using System.Linq;
 
-     private static Maybe<string> TryDeduceTimeCodeFromStandardFormat(string primarySubstring)
-     {
-         return Maybe<string>.Nothing;
-     }
-     
-     private static Maybe<string> TryDeduceTimeCodeFromKnownDigitIssue(string primarySubstring)
-     {
-         return Maybe<string>.Nothing;
-     }
- }
+/// <summary>
+/// Processes the output file of tesseract
+/// </summary>
+internal static class OutputFileProcessor
+{
+    /// <summary>
+    /// Tries to get the timestamp from the contents of the output file
+    /// from tesseract
+    /// </summary>
+    public static Maybe<TimeSpan> TryGetTime(string[] outputFileContents)
+    {
+        return TryGetPrimaryLine(outputFileContents)
+           .Select(
+               line => TryDeduceTimeCodeFromStandardFormat(line)
+                           .Or(TryDeduceTimeCodeFromKnownDigitIssue(line))
+           );
+    }
+
+    private static Maybe<string> TryGetPrimaryLine(string[] outputFileContents)
+    {
+        foreach (var line in outputFileContents)
+        {
+            var indexOfDone = line.IndexOf("DONE", StringComparison.OrdinalIgnoreCase);
+            if (indexOfDone != -1)
+            {
+                return line.Substring(indexOfDone + 4).Trim().ToMaybe();
+            }
+        }
+        return Maybe<string>.Nothing;
+    }
+
+    private static Maybe<TimeSpan> TryDeduceTimeCodeFromStandardFormat(string primarySubstring)
+    {
+        var explodedStrings = primarySubstring.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries).Reverse().ToList();
+        if (explodedStrings.Count < 2)
+        {
+            return Maybe<TimeSpan>.Nothing;
+        }
+
+        var secondsString = explodedStrings[0];
+        var minutesString = explodedStrings[1];
+
+        int seconds, minutes, hours;
+        seconds = minutes = hours = 0;
+
+        if (int.TryParse(secondsString, out seconds) && int.TryParse(minutesString, out minutes))
+        {
+            if (explodedStrings.Count > 2)
+            {
+                var hoursString = explodedStrings[2];
+                if (int.TryParse(hoursString, out hours) == false)
+                {
+                    // Ensure proper assignment
+                    hours = 0;
+                }
+            }
+
+            return new TimeSpan(hours, minutes, seconds).ToMaybe();
+        }
+
+        return Maybe<TimeSpan>.Nothing;
+    }
+
+    private static Maybe<TimeSpan> TryDeduceTimeCodeFromKnownDigitIssue(string primarySubstring)
+    {
+        return Maybe<TimeSpan>.Nothing;
+    }
+}

@@ -29,6 +29,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="CommandLine">
+      <HintPath>..\packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
+    </Reference>
+    <Reference Include="Functional.Maybe">
+      <HintPath>..\packages\Functional.Maybe.1.0.7\lib\portable-net40+win+MonoAndroid10+xamarinios10+MonoTouch10\Functional.Maybe.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -36,4 +45,13 @@
     <Compile Include="TesseractProcess.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="..\Common Image Model\Common Image Model.csproj">
+      <Project>{94502024-13C6-4495-AEC8-4F67FAE29396}</Project>
+      <Name>Common Image Model</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
 </Project>

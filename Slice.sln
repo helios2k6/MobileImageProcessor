@@ -7,12 +7,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Slice", "Slice\Slice.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common Image Model", "Common Image Model\Common Image Model.csproj", "{94502024-13C6-4495-AEC8-4F67FAE29396}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scrape", "Scrape\Scrape.csproj", "{596FF35E-21EB-4600-A89C-CB129BCC3B75}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{596FF35E-21EB-4600-A89C-CB129BCC3B75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{596FF35E-21EB-4600-A89C-CB129BCC3B75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{596FF35E-21EB-4600-A89C-CB129BCC3B75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{596FF35E-21EB-4600-A89C-CB129BCC3B75}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7B674F26-2F2E-4AC9-B933-C4D67C7C1C30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7B674F26-2F2E-4AC9-B933-C4D67C7C1C30}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B674F26-2F2E-4AC9-B933-C4D67C7C1C30}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -19,15 +19,58 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommonImageModel;
+using Functional.Maybe;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
 namespace Scrape
 {
     public static class Driver
     {
         public static void Main(string[] args)
         {
-            var process = new TesseractProcess("/Users/abjohnson/ipad_d_slice_0.png");
-            var output = process.Execute();
-            System.Console.WriteLine(output);
+            if (args.Length != 1)
+            {
+                PrintHelp();
+                return;
+            }
+
+            var imageJobs = JsonConvert.DeserializeObject<ImageJobs>(args[0]);
+            foreach (var imageJob in imageJobs.Images)
+            {
+                
+            }
+        }
+        
+        private static IEnumerable<ImageJob> ProcessImageJob(ImageJobs imageJobs)
+        {
+            return imageJobs.Images
+                .Select(TryGetTimeSpan)
+                .SelectWhereValueExist(
+                    timeSpan => new ImageJob
+                    {
+
+                    }
+                );
+        }
+        
+        private static Maybe<TimeSpan> TryGetTimeSpan(ImageJob imageJob)
+        {
+            var tesseractProcess = new TesseractProcess(imageJob.SliceImagePath);
+            var tesseractOutput = tesseractProcess.Execute();
+            return OutputFileProcessor.TryGetTime(tesseractOutput);
+        }
+        
+        private static void PrintHelp()
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine("Scrape 1.0")
+                .AppendLine("Usage: <this program> <JSON Input>");
+            Console.Error.WriteLine(builder.ToString());
         }
     }
 }

@@ -23,7 +23,7 @@ using CommonImageModel;
 using Functional.Maybe;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -33,36 +33,36 @@ namespace Scrape
     {
         public static void Main(string[] args)
         {
-            if (args.Length != 1)
+            var imageJobs = TryReadStandardIn();
+            if (imageJobs.IsNothing())
             {
                 PrintHelp();
                 return;
             }
-
-            var imageJobs = JsonConvert.DeserializeObject<ImageJobs>(args[0]);
-            foreach (var imageJob in imageJobs.Images)
+            var processedImageJobs = ScrapeJobProcessor.ProcessImageJobs(imageJobs.Value);
+            var newImageModel = new ImageJobs
             {
+                Images = processedImageJobs.ToArray(),
+            };
 
+            Console.WriteLine(JsonConvert.SerializeObject(newImageModel));
+        }
+
+
+        private static Maybe<ImageJobs> TryReadStandardIn()
+        {
+            var stdin = new StreamReader(Console.OpenStandardInput());
+            var input = stdin.ReadToEnd();
+            try
+            {
+                return JsonConvert.DeserializeObject<ImageJobs>(input).ToMaybe();
             }
-        }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Could not deserialize input. {0}", e.Message);
+            }
 
-        private static IEnumerable<ImageJob> ProcessImageJob(ImageJobs imageJobs)
-        {
-            return imageJobs.Images
-                .Select(TryGetTimeSpan)
-                .SelectWhereValueExist(
-                    timeSpan => new ImageJob
-                    {
-
-                    }
-                );
-        }
-
-        private static Maybe<TimeSpan> TryGetTimeSpan(ImageJob imageJob)
-        {
-            var tesseractProcess = new TesseractProcess(imageJob.SliceImagePath);
-            var tesseractOutput = tesseractProcess.Execute();
-            return OutputFileProcessor.TryGetTime(tesseractOutput);
+            return Maybe<ImageJobs>.Nothing;
         }
 
         private static void PrintHelp()

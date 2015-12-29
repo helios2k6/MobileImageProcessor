@@ -59,8 +59,14 @@ namespace Slice
     {
         public static void Main(string[] args)
         {
-            var parser = new Parser();
             var options = new CommandLineOptions();
+            if (args.Length < 1)
+            {
+                Console.Error.Write(options.GetUsage());
+                return;
+            }
+            
+            var parser = new Parser();
             var parseSuccess = parser.ParseArguments(args, options);
             if (parseSuccess)
             {
@@ -71,11 +77,11 @@ namespace Slice
                     Images = imageJobsMaybe.SelectWhereValueExist(t => t).ToArray(),
                 };
                 string serializedString = JsonConvert.SerializeObject(imageJobs, Formatting.None);
-                Console.Write(serializedString);
+                Console.WriteLine(serializedString);
             }
             else
             {
-                Console.Error.WriteLine(options.GetUsage());
+                Console.Error.Write(options.GetUsage());
             }
         }
 

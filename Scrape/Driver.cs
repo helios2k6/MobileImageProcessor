@@ -42,10 +42,10 @@ namespace Scrape
             var imageJobs = JsonConvert.DeserializeObject<ImageJobs>(args[0]);
             foreach (var imageJob in imageJobs.Images)
             {
-                
+
             }
         }
-        
+
         private static IEnumerable<ImageJob> ProcessImageJob(ImageJobs imageJobs)
         {
             return imageJobs.Images
@@ -57,14 +57,14 @@ namespace Scrape
                     }
                 );
         }
-        
+
         private static Maybe<TimeSpan> TryGetTimeSpan(ImageJob imageJob)
         {
             var tesseractProcess = new TesseractProcess(imageJob.SliceImagePath);
             var tesseractOutput = tesseractProcess.Execute();
             return OutputFileProcessor.TryGetTime(tesseractOutput);
         }
-        
+
         private static void PrintHelp()
         {
             var builder = new StringBuilder();

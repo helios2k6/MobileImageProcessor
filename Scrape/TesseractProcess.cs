@@ -88,7 +88,7 @@ namespace Scrape
             }
             _hasExecuted = true;
             _process.StartInfo.UseShellExecute = true;
-            _process.StartInfo.FileName = TESSERACT_PROC_NAME;
+            _process.StartInfo.FileName = CalculateProcessName();
             _process.StartInfo.CreateNoWindow = true;
             _process.StartInfo.Arguments = string.Format("\"{0}\" {1}", _imagePath, _outputArgument);
 
@@ -114,6 +114,26 @@ namespace Scrape
             var outputFileContents = File.ReadAllLines(outputFilePathWithExtension);
             File.Delete(outputFilePathWithExtension);
             return outputFileContents;
+        }
+        
+        private static string CalculateProcessName()
+        {
+            var operationSystem = Environment.OSVersion;
+            switch (operationSystem.Platform)
+            {
+                case PlatformID.Win32NT:
+                case PlatformID.Win32S:
+                case PlatformID.Win32Windows:
+                case PlatformID.WinCE:
+                    return TESSERACT_PROC_NAME + ".exe";
+                case PlatformID.MacOSX:
+                case PlatformID.Unix:
+                    return TESSERACT_PROC_NAME;
+                case PlatformID.Xbox:
+                    throw new InvalidOperationException("Xbox OS not supported");
+                default:
+                    throw new InvalidOperationException("Unknown OS detected");
+            }
         }
     }
 }

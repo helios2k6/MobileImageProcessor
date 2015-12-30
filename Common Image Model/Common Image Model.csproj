@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="ImageJob.cs" />
     <Compile Include="ImageJobs.cs" />
+    <Compile Include="ProcessNameDeducer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

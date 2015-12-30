@@ -19,7 +19,9 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
  
+using CommonImageModel;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
@@ -34,7 +36,7 @@ namespace Scrape
     /// Calling the "Execute()" method on this class will block the current thread
     /// until the child process is finished. 
     /// </remarks>
-    public sealed class TesseractProcess : IDisposable
+    internal sealed class TesseractProcess : IDisposable
     {
         private static readonly string TESSERACT_PROC_NAME = "tesseract";
 
@@ -80,7 +82,7 @@ namespace Scrape
         /// This is a blocking function and will block the thread it is executed on
         /// until the underlying tesseract executable is finished.
         /// </remarks>
-        public string[] Execute()
+        public IList<string> Execute()
         {
             if (_hasExecuted) 
             {
@@ -88,7 +90,7 @@ namespace Scrape
             }
             _hasExecuted = true;
             _process.StartInfo.UseShellExecute = true;
-            _process.StartInfo.FileName = CalculateProcessName();
+            _process.StartInfo.FileName = ProcessNameDeducer.CalculateProcessName(TESSERACT_PROC_NAME);
             _process.StartInfo.CreateNoWindow = true;
             _process.StartInfo.Arguments = string.Format("\"{0}\" {1}", _imagePath, _outputArgument);
 
@@ -114,26 +116,6 @@ namespace Scrape
             var outputFileContents = File.ReadAllLines(outputFilePathWithExtension);
             File.Delete(outputFilePathWithExtension);
             return outputFileContents;
-        }
-        
-        private static string CalculateProcessName()
-        {
-            var operationSystem = Environment.OSVersion;
-            switch (operationSystem.Platform)
-            {
-                case PlatformID.Win32NT:
-                case PlatformID.Win32S:
-                case PlatformID.Win32Windows:
-                case PlatformID.WinCE:
-                    return TESSERACT_PROC_NAME + ".exe";
-                case PlatformID.MacOSX:
-                case PlatformID.Unix:
-                    return TESSERACT_PROC_NAME;
-                case PlatformID.Xbox:
-                    throw new InvalidOperationException("Xbox OS not supported");
-                default:
-                    throw new InvalidOperationException("Unknown OS detected");
-            }
         }
     }
 }

@@ -50,6 +50,12 @@ namespace CommonImageModel
         /// </summary>
         [JsonProperty(PropertyName = "FrameNumber", Required = Required.AllowNull)]
         public int? FrameNumber { get; set; }
+        
+        /// <summary>
+        /// The images that were taken from the original media file
+        /// </summary>
+        [JsonProperty(PropertyName = "ImageSnapshots", Required = Required.AllowNull)]
+        public string[] ImageSnapshots { get; set; }
 
         public bool Equals(ImageJob other)
         {

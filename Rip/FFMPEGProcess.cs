@@ -19,6 +19,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
  
+using CommonImageModel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -57,7 +58,7 @@ namespace Rip
             _process.Dispose();
         }
         
-        public IList<string> Execute()
+        public IEnumerable<string> Execute()
         {
             if (_hasExecuted)
             {
@@ -65,8 +66,29 @@ namespace Rip
             }
             _hasExecuted = true;
             _process.StartInfo.UseShellExecute = true;
-            _process.StartInfo.FileName = 
+            _process.StartInfo.FileName = ProcessNameDeducer.CalculateProcessName(FFMPEG_PROC_NAME);
+            _process.StartInfo.CreateNoWindow = true;
+            _process.StartInfo.Arguments = GetArguments();
+            
+            var processStarted = _process.Start();
+            if (processStarted == false)
+            {
+                throw new Exception("Unable to start the FFMPEG process");
+            }
+            
+            _process.WaitForExit();
+            
+            if(_process.ExitCode != 0)
+            {
+                throw new Exception("FFMPEG did not execute properly");
+            }
+            
             return new List<string>();
+        }
+        
+        private string GetArguments()
+        {
+            return string.Empty;
         }
     }
 }

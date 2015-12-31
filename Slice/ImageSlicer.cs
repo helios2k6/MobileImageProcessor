@@ -29,7 +29,7 @@ namespace Slice
     /// <summary>
     /// Factory method for slicing images
     /// </summary>
-    public static class ImageSlicer
+    internal static class ImageSlicer
     {
         /// <summary>
         /// Attempts to slice the image

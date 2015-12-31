@@ -27,7 +27,7 @@ namespace Slice
     /// <summary>
     /// Represents the state of slicing an image
     /// </summary>
-    public sealed class ImageSliceContext
+    internal sealed class ImageSliceContext
     {
         /// <summary>
         /// The path to the original file

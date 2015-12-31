@@ -29,7 +29,7 @@ using System.Text;
 
 namespace Scrape
 {
-    public static class Driver
+    internal static class Driver
     {
         public static void Main(string[] args)
         {

@@ -35,7 +35,7 @@ namespace Scrape
         /// Tries to get the timestamp from the contents of the output file
         /// from tesseract
         /// </summary>
-        public static Maybe<TimeSpan> TryGetTime(IList<string> outputFileContents)
+        public static Maybe<TimeSpan> TryGetTime(IEnumerable<string> outputFileContents)
         {
             return TryGetPrimaryLine(outputFileContents)
                .Select(
@@ -44,7 +44,7 @@ namespace Scrape
                );
         }
 
-        private static Maybe<string> TryGetPrimaryLine(IList<string> outputFileContents)
+        private static Maybe<string> TryGetPrimaryLine(IEnumerable<string> outputFileContents)
         {
             foreach (var line in outputFileContents)
             {

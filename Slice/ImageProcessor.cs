@@ -32,7 +32,7 @@ namespace Slice
     /// <summary>
     /// Processes each image file by detecting the slice size and creating a 
     /// </summary>
-    public static class ImageProcessor
+    internal static class ImageProcessor
     {
         /// <summary>
         /// Process all images files

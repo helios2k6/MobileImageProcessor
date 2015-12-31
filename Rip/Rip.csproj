@@ -39,7 +39,14 @@
   <ItemGroup>
     <Compile Include="Driver.cs" />
     <Compile Include="FFMPEGProcess.cs" />
+    <Compile Include="SnapshotHarvester.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common Image Model\Common Image Model.csproj">
+      <Project>{94502024-13C6-4495-AEC8-4F67FAE29396}</Project>
+      <Name>Common Image Model</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

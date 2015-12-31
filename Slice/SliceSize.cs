@@ -25,7 +25,7 @@ namespace Slice
     /// <summary>
     /// Represents the size of a slice
     /// </summary>
-    public sealed class SliceSize : IEquatable<SliceSize>
+    internal sealed class SliceSize : IEquatable<SliceSize>
     {
         /// <summary>
         /// The SliceSize for a snapshot from an iPad

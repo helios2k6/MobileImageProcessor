@@ -28,7 +28,7 @@ namespace Slice
     /// <summary>
     /// Calculates the size of the slice that is required for this particular Image
     /// </summary>
-    public static class SliceCalculator
+    internal static class SliceCalculator
     {
         /// <summary>
         /// Calculate the size of the slice that is required 

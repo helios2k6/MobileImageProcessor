@@ -82,7 +82,7 @@ namespace Scrape
         /// This is a blocking function and will block the thread it is executed on
         /// until the underlying tesseract executable is finished.
         /// </remarks>
-        public IList<string> Execute()
+        public IEnumerable<string> Execute()
         {
             if (_hasExecuted) 
             {
@@ -97,14 +97,14 @@ namespace Scrape
             var processStarted = _process.Start();
             if (processStarted == false)
             {
-                throw new Exception("Unable to start the tesseract executable");
+                throw new Exception("Unable to start the tesseract process");
             }
 
             _process.WaitForExit();
             
             if (_process.ExitCode != 0)
             {
-                throw new Exception("Tesseract did not execute properly.");
+                throw new Exception("Tesseract did not execute properly");
             }
             
             var outputFilePathWithExtension = string.Format("{0}.txt", _outputArgument);

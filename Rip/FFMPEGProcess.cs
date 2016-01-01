@@ -18,77 +18,92 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
- 
+
 using CommonImageModel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Text;
 
 namespace Rip
 {
+    /// <summary>
+    /// Represents the FFMPEG Process
+    /// </summary>
     internal sealed class FFMPEGProcess : IDisposable
     {
         private static readonly string FFMPEG_PROC_NAME = "ffmpeg";
-        private static readonly int FRAME_WINDOW_OFFSET = 5;
+        private static readonly TimeSpan BUFFER_TIME = new TimeSpan(0, 0, 1);
 
         private readonly Process _process;
-        private readonly int _targetFrameNumber;
+        private readonly TimeSpan _snapshotTimestamp;
         private readonly string _targetMediaFile;
-        
+
         private bool _isDisposed;
         private bool _hasExecuted;
-        
-        public FFMPEGProcess(int targetFrameNumber, string targetMediaFile)
+
+        public FFMPEGProcess(TimeSpan snapshotTimestamp, string targetMediaFile)
         {
             _process = new Process();
-            _targetFrameNumber = targetFrameNumber;
+            _snapshotTimestamp = snapshotTimestamp;
             _targetMediaFile = targetMediaFile;
             _isDisposed = false;
             _hasExecuted = false;
         }
-        
+
         public void Dispose()
         {
             if (_isDisposed)
             {
                 return;
             }
-            
+
             _isDisposed = true;
             _process.Dispose();
         }
-        
-        public IEnumerable<string> Execute()
+
+        public void Execute()
         {
             if (_hasExecuted)
             {
                 throw new InvalidOperationException("This process has already executed");
             }
+
             _hasExecuted = true;
             _process.StartInfo.UseShellExecute = true;
             _process.StartInfo.FileName = ProcessNameDeducer.CalculateProcessName(FFMPEG_PROC_NAME);
             _process.StartInfo.CreateNoWindow = true;
             _process.StartInfo.Arguments = GetArguments();
-            
+
             var processStarted = _process.Start();
             if (processStarted == false)
             {
                 throw new Exception("Unable to start the FFMPEG process");
             }
-            
+
             _process.WaitForExit();
-            
-            if(_process.ExitCode != 0)
+
+            if (_process.ExitCode != 0)
             {
                 throw new Exception("FFMPEG did not execute properly");
             }
-            
-            return new List<string>();
         }
-        
+
         private string GetArguments()
         {
-            return string.Empty;
+            var rootFileName = Path.GetFileNameWithoutExtension(_targetMediaFile);
+            var outputPath = string.Format(
+                "AUTOGEN_{0}_TIME_({1})_SNAPSHOT_(%02d).png",
+                rootFileName,
+                _snapshotTimestamp
+            );
+            return string.Format(
+                "-i {0} -ss {1} -vframes 48 {2}",
+                _targetMediaFile,
+                _snapshotTimestamp - BUFFER_TIME,
+                outputPath
+            );
         }
     }
 }

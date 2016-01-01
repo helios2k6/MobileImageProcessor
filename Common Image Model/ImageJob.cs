@@ -21,6 +21,7 @@
 
 using Newtonsoft.Json;
 using System;
+using System.Linq;
 
 namespace CommonImageModel
 {
@@ -46,11 +47,11 @@ namespace CommonImageModel
         public string SliceImagePath { get; set; }
 
         /// <summary>
-        /// The frame at which to take a snapshot
+        /// The timestamp at which the screenshot was taken
         /// </summary>
-        [JsonProperty(PropertyName = "FrameNumber", Required = Required.AllowNull)]
-        public int? FrameNumber { get; set; }
-        
+        [JsonProperty(PropertyName = "SnapshotTimeStamp", Required = Required.AllowNull)]
+        public TimeSpan SnapshotTimestamp { get; set; }
+
         /// <summary>
         /// The images that were taken from the original media file
         /// </summary>
@@ -70,7 +71,9 @@ namespace CommonImageModel
             }
 
             return string.Equals(OriginalFilePath, other.OriginalFilePath, StringComparison.Ordinal) &&
-                string.Equals(SliceImagePath, other.SliceImagePath, StringComparison.Ordinal);
+                string.Equals(SliceImagePath, other.SliceImagePath, StringComparison.Ordinal) &&
+                Equals(SnapshotTimestamp, other.SnapshotTimestamp) &&
+                Enumerable.SequenceEqual(ImageSnapshots, other.ImageSnapshots);
         }
 
         // override object.Equals
@@ -87,7 +90,19 @@ namespace CommonImageModel
         public override int GetHashCode()
         {
             return OriginalFilePath.GetHashCode() ^
-                SliceImagePath.GetHashCode();
+                GetHashCodeOrZero(SliceImagePath) ^
+                SnapshotTimestamp.GetHashCode() ^
+                GetHashCodeOrZero(ImageSnapshots);
+        }
+
+        private static int GetHashCodeOrZero(object obj)
+        {
+            if (obj == null)
+            {
+                return 0;
+            }
+
+            return obj.GetHashCode();
         }
     }
 }

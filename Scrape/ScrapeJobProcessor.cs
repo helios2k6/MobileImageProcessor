@@ -32,9 +32,6 @@ namespace Scrape
     /// </summary>
     internal static class ScrapeJobProcessor
     {
-        private const int STANDARD_FPS_NUMERATOR = 24000;
-        private const int STANDARD_FPS_DENOMINATOR = 1001;
-        
         public static IEnumerable<ImageJob> ProcessImageJobs(ImageJobs imageJobs)
         {
             return imageJobs
@@ -50,27 +47,17 @@ namespace Scrape
                    {
                        OriginalFilePath = oldImageJob.OriginalFilePath,
                        SliceImagePath = oldImageJob.SliceImagePath,
-                       FrameNumber = CalculateFrameNumber(timeSpan),
+                       SnapshotTimestamp = timeSpan,
                    };
-        }
-
-        private static int CalculateFrameNumber(TimeSpan timeSpan)
-        {
-            var numberOfSeconds = (timeSpan.Hours * 60 * 60) + 
-                (timeSpan.Minutes * 60) +
-                timeSpan.Seconds;
-            
-            return (int)Math.Floor(
-                ((double)(numberOfSeconds * STANDARD_FPS_NUMERATOR)) / 
-                STANDARD_FPS_DENOMINATOR
-            );
         }
 
         private static Maybe<TimeSpan> TryGetTimeSpan(ImageJob imageJob)
         {
-            var tesseractProcess = new TesseractProcess(imageJob.SliceImagePath);
-            var tesseractOutput = tesseractProcess.Execute();
-            return OutputFileProcessor.TryGetTime(tesseractOutput);
+            using (var tesseractProcess = new TesseractProcess(imageJob.SliceImagePath))
+            {
+                var tesseractOutput = tesseractProcess.Execute();
+                return OutputFileProcessor.TryGetTime(tesseractOutput);
+            }
         }
     }
 }

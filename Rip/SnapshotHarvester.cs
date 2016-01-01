@@ -20,6 +20,7 @@
  */
 
 using CommonImageModel;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,31 +35,78 @@ namespace Rip
         /// <summary>
         /// Harvest all of the possible images for a given ImageJob
         /// </summary>
-        public static IEnumerable<string> HarvestCandidateImages(ImageJob imageJob, IEnumerable<string> folderPaths)
+        /// <param name="imageJobs">The old ImageJobs object</param>
+        /// <param name="mediaFilePaths">The path to every single media file</param>
+        /// <returns>An new ImageJobs object with paths to the snapshots for every ImageJob</returns>
+        public static ImageJobs HarvestCandidateImages(
+            ImageJobs imageJobs,
+            IEnumerable<string> mediaFilePaths
+        )
         {
-            return Enumerable.Empty<string>();
-        }
-        
-        private static IEnumerable<string> GetAllMediaFiles(IEnumerable<string> folderPaths)
-        {
-            return folderPaths.SelectMany(GetAllMediaFiles);
-        }
-        
-        private static IEnumerable<string> GetAllMediaFiles(string folderPath)
-        {
-            var listOfFileLists = new[] 
+            IDictionary<TimeSpan, ImageJobGroup> imageGroups = ImageJobGrouper.GroupImageJobs(imageJobs);
+            var mapFromGroupsToSnapshots = new Dictionary<ImageJobGroup, IEnumerable<string>>();
+            foreach (var group in imageGroups.Values)
             {
-                Directory.EnumerateFiles(folderPath, "*.mkv", SearchOption.AllDirectories),
-                Directory.EnumerateFiles(folderPath, "*.mp4", SearchOption.AllDirectories),
-                Directory.EnumerateFiles(folderPath, "*.wmv", SearchOption.AllDirectories),
+                var snapshots = TakeSnapshots(group, mediaFilePaths);
+                mapFromGroupsToSnapshots.Add(group, snapshots);
+            }
+
+            return new ImageJobs
+            {
+                Images = UpdateImageJobs(mapFromGroupsToSnapshots).ToArray(),
             };
-            return listOfFileLists.SelectMany(x => x);
         }
-        
-        private static IEnumerable<string> GetImages(ImageJob imageJob, IEnumerable<string> mediaFiles)
+
+        private static IEnumerable<ImageJob> UpdateImageJobs(
+            IDictionary<ImageJobGroup, IEnumerable<string>> mapFromGroupsToSnapshots
+        )
         {
-            
-            return Enumerable.Empty<string>();
+            foreach (var groupToSnapshots in mapFromGroupsToSnapshots)
+            {
+                string[] snapshots = groupToSnapshots.Value.ToArray();
+                ImageJobGroup group = groupToSnapshots.Key;
+                foreach (var imageJob in group.Jobs)
+                {
+                    var newImageJob = new ImageJob
+                    {
+                        OriginalFilePath = imageJob.OriginalFilePath,
+                        SliceImagePath = imageJob.SliceImagePath,
+                        SnapshotTimestamp = imageJob.SnapshotTimestamp,
+                        ImageSnapshots = snapshots,
+                    };
+
+                    yield return newImageJob;
+                }
+            }
+        }
+
+        private static IEnumerable<string> TakeSnapshots(ImageJobGroup group, IEnumerable<string> mediaFilePaths)
+        {
+            var listOfFilePathLists = new List<IEnumerable<string>>();
+            foreach (var mediaFilePath in mediaFilePaths)
+            {
+                using (var ffmpeg = new FFMPEGProcess(group.Timestamp, mediaFilePath))
+                {
+                    ffmpeg.Execute();
+                }
+
+                listOfFilePathLists.Add(GetImageFilePaths(group, mediaFilePath));
+            }
+
+            return listOfFilePathLists.SelectMany(s => s);
+        }
+
+        private static IEnumerable<string> GetImageFilePaths(ImageJobGroup group, string mediaFilePath)
+        {
+            var rootMediaFileName = Path.GetFileNameWithoutExtension(mediaFilePath);
+            return Directory.EnumerateFiles(
+                Directory.GetCurrentDirectory(),
+                string.Format(
+                    "AUTOGEN_({0})_TIME_({1})_SNAPSHOT*.png",
+                    rootMediaFileName,
+                    group.Timestamp
+                )
+            );
         }
     }
 }

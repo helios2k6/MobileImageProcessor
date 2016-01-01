@@ -94,16 +94,26 @@ namespace Rip
         {
             var rootFileName = Path.GetFileNameWithoutExtension(_targetMediaFile);
             var outputPath = string.Format(
-                "AUTOGEN_{0}_TIME_({1})_SNAPSHOT_(%02d).png",
+                "AUTOGEN_({0})_TIME_({1})_SNAPSHOT_(%02d).png",
                 rootFileName,
-                _snapshotTimestamp
+                FormatTimeSpanFileName(_snapshotTimestamp)
             );
             return string.Format(
-                "-i {0} -ss {1} -vframes 48 {2}",
+                "-i \"{0}\" -ss {1} -vframes 48 \"{2}\"",
                 _targetMediaFile,
                 _snapshotTimestamp - BUFFER_TIME,
                 outputPath
             );
+        }
+
+        /// <summary>
+        /// Calculate what the timespan string should be when it is embedded in a file name
+        /// </summary>
+        /// <param name="timespan">The timespan</param>
+        /// <returns>A string with the timespan formatted for a file name</returns>
+        public static string FormatTimeSpanFileName(TimeSpan timespan)
+        {
+            return string.Format("{0}_{1}_{2}", timespan.Hours, timespan.Minutes, timespan.Seconds);
         }
     }
 }

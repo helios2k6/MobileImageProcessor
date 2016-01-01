@@ -104,7 +104,7 @@ namespace Rip
                 string.Format(
                     "AUTOGEN_({0})_TIME_({1})_SNAPSHOT*.png",
                     rootMediaFileName,
-                    group.Timestamp
+                    FFMPEGProcess.FormatTimeSpanFileName(group.Timestamp)
                 )
             );
         }

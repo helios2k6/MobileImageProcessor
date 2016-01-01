@@ -49,6 +49,8 @@ namespace Rip
                         Jobs = new HashSet<ImageJob>(),
                         Timestamp = focusTimeSpan,
                     };
+
+                    groups.Add(focusTimeSpan, group);
                 }
 
                 group.Jobs.Add(imageJob);

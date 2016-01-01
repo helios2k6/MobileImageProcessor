@@ -19,51 +19,31 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 using Functional.Maybe;
 using System;
-using System.Drawing;
 
-namespace Slice
+namespace CommonImageModel
 {
     /// <summary>
-    /// Factory method for slicing images
+    /// Common Maybe extensions
     /// </summary>
-    internal static class ImageSlicer
+    public static class CommonMaybeExtensions
     {
         /// <summary>
-        /// Attempts to slice the image
+        /// Invokes an action on the wrapped reference, if it exists, and returns the same reference
+        /// to the Maybe{T}
         /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        public static Maybe<Image> TrySliceImage(
-            string imagePath,
-            Image image,
-            SliceSize sliceSize
-        )
+        /// <typeparam name="T">The type wrapped by this Maybe</typeparam>
+        /// <param name="this">The Maybe{T}</param>
+        /// <param name="action">The action to invoke on the underlying object</param>
+        /// <returns>A reference to the same Maybe{T} that this references</returns>
+        public static Maybe<T> Apply<T>(this Maybe<T> @this, Action<T> action)
         {
-            using (var bitmap = new Bitmap(image))
+            return @this.Select(t =>
             {
-                var cropArea = new Rectangle(
-                    new Point(sliceSize.XOffset, sliceSize.YOffset),
-                    new Size(sliceSize.Width, sliceSize.Height)
-                );
-
-                try
-                {
-                    return (bitmap.Clone(cropArea, bitmap.PixelFormat) as Image).ToMaybe();
-                }
-                catch (OutOfMemoryException e)
-                {
-                    Console.Error.WriteLine("Could not slice image. Crop area is outside of the image bounds. {0}", e.Message);
-                }
-                catch (ArgumentException e)
-                {
-                    Console.Error.WriteLine("Could not slice image. Invalid arguments. {0}", e.Message);
-                }
-
-                return Maybe<Image>.Nothing;
-            }
+                action.Invoke(t);
+                return t;
+            });
         }
     }
 }

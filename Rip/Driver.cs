@@ -71,7 +71,7 @@ namespace Rip
             var parseSuccess = parser.ParseArguments(args, options);
             if (parseSuccess)
             {
-                var imageJobs = TryReadStandardIn();
+                var imageJobs = CommonFunctions.TryReadStandardIn();
                 if (imageJobs.IsNothing())
                 {
                     Console.Error.WriteLine(options.GetUsage());
@@ -89,22 +89,6 @@ namespace Rip
             {
                 Console.Error.WriteLine(options.GetUsage());
             }
-        }
-
-        private static Maybe<ImageJobs> TryReadStandardIn()
-        {
-            var stdin = new StreamReader(Console.OpenStandardInput());
-            var input = stdin.ReadToEnd();
-            try
-            {
-                return JsonConvert.DeserializeObject<ImageJobs>(input).ToMaybe();
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine("Could not deserialize input. {0}", e.Message);
-            }
-
-            return Maybe<ImageJobs>.Nothing;
         }
 
         private static IEnumerable<string> GetAllMediaFiles(IEnumerable<string> folderPaths)

@@ -19,6 +19,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommonImageModel;
 using Functional.Maybe;
 using System;
 using System.Collections.Generic;
@@ -46,7 +47,8 @@ namespace Slice
                 .Select(TryLoadImage)
                 .Select(TryCalculateSliceSize)
                 .Select(TrySliceImage)
-                .Select(TryWriteSliceImage);
+                .Select(TryWriteSliceImage)
+                .Select(DisposeOfImageResources);
         }
 
         private static ImageSliceContext TryWriteSliceImage(ImageSliceContext context)
@@ -131,30 +133,22 @@ namespace Slice
         {
             return ImageSliceContext.Create(
                 context.OriginalFile,
-                context.OriginalFile.Select(TryLoadImage)
+                context.OriginalFile.Select(CommonFunctions.TryLoadImage)
             );
         }
 
-        private static Maybe<Image> TryLoadImage(string path)
+        private static ImageSliceContext DisposeOfImageResources(ImageSliceContext context)
         {
-            try
+            using (context)
             {
-                return Image.FromFile(path).ToMaybe();
+                return ImageSliceContext.Create(
+                    context.OriginalFile,
+                    Maybe<Image>.Nothing,
+                    context.SliceSize,
+                    Maybe<Image>.Nothing,
+                    context.SlicedImageFile
+                );
             }
-            catch (OutOfMemoryException e)
-            {
-                Console.Error.WriteLine("Could not read image {0}. Reason: {1}", path, e.Message);
-            }
-            catch (FileNotFoundException e)
-            {
-                Console.Error.WriteLine("Could not find file {0}. {1}", path, e.Message);
-            }
-            catch (ArgumentException)
-            {
-                Console.Error.WriteLine("URIs are not supported. {0}", path);
-            }
-
-            return Maybe<Image>.Nothing;
         }
     }
 }

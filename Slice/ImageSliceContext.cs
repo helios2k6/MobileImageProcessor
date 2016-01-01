@@ -19,7 +19,9 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommonImageModel;
 using Functional.Maybe;
+using System;
 using System.Drawing;
 
 namespace Slice
@@ -27,7 +29,7 @@ namespace Slice
     /// <summary>
     /// Represents the state of slicing an image
     /// </summary>
-    internal sealed class ImageSliceContext
+    internal sealed class ImageSliceContext : IDisposable
     {
         /// <summary>
         /// The path to the original file
@@ -53,6 +55,15 @@ namespace Slice
         /// The path to the sliced image file
         /// </summary>
         public Maybe<string> SlicedImageFile { get; private set; }
+
+        /// <summary>
+        /// Dispose of this context's images
+        /// </summary>
+        public void Dispose()
+        {
+            Image.Apply(i => i.Dispose());
+            SlicedImage.Apply(i => i.Dispose());
+        }
 
         /// <summary>
         /// Factory method for creating ImageSliceContextes

@@ -19,48 +19,15 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using CommonImageModel;
-using Functional.Maybe;
-using Newtonsoft.Json;
-using System;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-namespace Scrape
+namespace Dedup
 {
     /// <summary>
-    /// Entry point for the Scrape process
+    /// The main entry point for the Dedup process
     /// </summary>
     internal static class Driver
     {
-        /// <summary>
-        /// Main method that executes on startup 
-        /// </summary>
-        /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            var imageJobs = CommonFunctions.TryReadStandardIn();
-            if (imageJobs.IsNothing())
-            {
-                PrintHelp();
-                return;
-            }
-            var processedImageJobs = ScrapeJobProcessor.ProcessImageJobs(imageJobs.Value);
-            var newImageModel = new ImageJobs
-            {
-                Images = processedImageJobs.ToArray(),
-            };
-
-            Console.WriteLine(JsonConvert.SerializeObject(newImageModel));
-        }
-
-        private static void PrintHelp()
-        {
-            var builder = new StringBuilder();
-            builder.AppendLine("Scrape 1.0")
-                .AppendLine("Usage: <this program> <JSON Input>");
-            Console.Error.WriteLine(builder.ToString());
         }
     }
 }

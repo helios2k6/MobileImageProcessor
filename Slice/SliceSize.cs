@@ -20,6 +20,7 @@
  */
 
 using System;
+
 namespace Slice
 {
     /// <summary>

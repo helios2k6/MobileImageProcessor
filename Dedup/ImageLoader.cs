@@ -19,51 +19,42 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
+using CommonImageModel;
 using Functional.Maybe;
-using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 
-namespace Slice
+namespace Dedup
 {
     /// <summary>
-    /// Factory method for slicing images
+    /// Loads all of the images from the ImageJobs and resizes the images so that they'll fit in memory
     /// </summary>
-    internal static class ImageSlicer
+    internal static class ImageLoader
     {
         /// <summary>
-        /// Attempts to slice the image
+        /// Load all of the images from disk and resize them
         /// </summary>
-        /// <param name="image"></param>
+        /// <param name="imageJobs"></param>
         /// <returns></returns>
-        public static Maybe<Image> TrySliceImage(
-            string imagePath,
-            Image image,
-            SliceSize sliceSize
-        )
+        public static IEnumerable<Image> LoadImages(ImageJobs imageJobs)
         {
-            using (var bitmap = new Bitmap(image))
+            return GetAllImagePaths(imageJobs)
+                    .Select(CommonFunctions.TryLoadImage)
+                    .SelectWhereValueExist(ResizeImageAndDisposeOfOriginal);
+        }
+
+        private static Image ResizeImageAndDisposeOfOriginal(Image original)
+        {
+            using (original)
             {
-                var cropArea = new Rectangle(
-                    new Point(sliceSize.XOffset, sliceSize.YOffset),
-                    new Size(sliceSize.Width, sliceSize.Height)
-                );
-
-                try
-                {
-                    return (bitmap.Clone(cropArea, bitmap.PixelFormat) as Image).ToMaybe();
-                }
-                catch (OutOfMemoryException e)
-                {
-                    Console.Error.WriteLine("Could not slice image. Crop area is outside of the image bounds. {0}", e.Message);
-                }
-                catch (ArgumentException e)
-                {
-                    Console.Error.WriteLine("Could not slice image. Invalid arguments. {0}", e.Message);
-                }
-
-                return Maybe<Image>.Nothing;
+                return ImageResizer.ResizeImageDown(original);
             }
+        }
+
+        private static IEnumerable<string> GetAllImagePaths(ImageJobs imageJobs)
+        {
+            return new HashSet<string>(imageJobs.Images.SelectMany(s => s.ImageSnapshots));
         }
     }
 }

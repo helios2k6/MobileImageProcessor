@@ -19,51 +19,34 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
+using CommonImageModel;
 using Functional.Maybe;
 using System;
 using System.Drawing;
 
-namespace Slice
+namespace Dedup
 {
     /// <summary>
-    /// Factory method for slicing images
+    /// Represents the context around a Snapshot
     /// </summary>
-    internal static class ImageSlicer
+    internal sealed class SnapshotContext : IDisposable
     {
         /// <summary>
-        /// Attempts to slice the image
+        /// The path to the snapshot file
         /// </summary>
-        /// <param name="image"></param>
-        /// <returns></returns>
-        public static Maybe<Image> TrySliceImage(
-            string imagePath,
-            Image image,
-            SliceSize sliceSize
-        )
+        public string SnapshotPath { get; private set; }
+
+        /// <summary>
+        /// The scaled down snapshot
+        /// </summary>
+        public Maybe<Image> ScaledDownSnapshot { get; private set; }
+
+        /// <summary>
+        /// Dispose of this object
+        /// </summary>
+        public void Dispose()
         {
-            using (var bitmap = new Bitmap(image))
-            {
-                var cropArea = new Rectangle(
-                    new Point(sliceSize.XOffset, sliceSize.YOffset),
-                    new Size(sliceSize.Width, sliceSize.Height)
-                );
-
-                try
-                {
-                    return (bitmap.Clone(cropArea, bitmap.PixelFormat) as Image).ToMaybe();
-                }
-                catch (OutOfMemoryException e)
-                {
-                    Console.Error.WriteLine("Could not slice image. Crop area is outside of the image bounds. {0}", e.Message);
-                }
-                catch (ArgumentException e)
-                {
-                    Console.Error.WriteLine("Could not slice image. Invalid arguments. {0}", e.Message);
-                }
-
-                return Maybe<Image>.Nothing;
-            }
+            ScaledDownSnapshot.Apply(i => i.Dispose());
         }
     }
 }

@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rip", "Rip\Rip.csproj", "{5
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dedup", "Dedup\Dedup.csproj", "{97752EEC-FF04-482F-9457-71E69665B6BF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Match", "Match\Match.csproj", "{F6F66183-BB0D-4A1E-848D-7F8AB59CF77C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{97752EEC-FF04-482F-9457-71E69665B6BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97752EEC-FF04-482F-9457-71E69665B6BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97752EEC-FF04-482F-9457-71E69665B6BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6F66183-BB0D-4A1E-848D-7F8AB59CF77C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6F66183-BB0D-4A1E-848D-7F8AB59CF77C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6F66183-BB0D-4A1E-848D-7F8AB59CF77C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6F66183-BB0D-4A1E-848D-7F8AB59CF77C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

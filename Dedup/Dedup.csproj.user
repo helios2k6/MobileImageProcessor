@@ -2,9 +2,7 @@
 <Project ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <RemoteDebugEnabled>false</RemoteDebugEnabled>
-    <StartWorkingDirectory>
-    </StartWorkingDirectory>
-    <StartArguments>
-    </StartArguments>
+    <StartWorkingDirectory>W:\</StartWorkingDirectory>
+    <StartArguments>&lt; rip.txt</StartArguments>
   </PropertyGroup>
 </Project>

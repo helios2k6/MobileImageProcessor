@@ -99,7 +99,7 @@ namespace Rip
                 FormatTimeSpanFileName(_snapshotTimestamp)
             );
             return string.Format(
-                "-i \"{0}\" -ss {1} -vframes 48 \"{2}\"",
+                "-i \"{0}\" -ss {1} -vframes 8 -vf fps=4 \"{2}\"",
                 _targetMediaFile,
                 _snapshotTimestamp - BUFFER_TIME,
                 outputPath

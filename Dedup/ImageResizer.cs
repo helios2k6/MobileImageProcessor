@@ -76,7 +76,7 @@ namespace Dedup
                 return image.Clone() as Image;
             }
 
-            return ResizeImage(image, 1280, 720);
+            return ResizeImage(image, 640, 360);
         }
     }
 }

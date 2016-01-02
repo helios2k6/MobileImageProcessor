@@ -65,19 +65,18 @@ namespace Slice
                 Console.Error.Write(options.GetUsage());
                 return;
             }
-            
+
             var parser = new Parser();
             var parseSuccess = parser.ParseArguments(args, options);
             if (parseSuccess)
             {
-                IEnumerable<ImageSliceContext> results = ImageProcessor.ProcessFiles(options.InputFiles);
-                IEnumerable<Maybe<ImageJob>> imageJobsMaybe = results.Select(Convert);
+                IEnumerable<ImageSliceContext> processedSlices = ImageProcessor.ProcessFiles(options.InputFiles);
+                IEnumerable<Maybe<ImageJob>> imageJobsMaybe = processedSlices.Select(Convert);
                 var imageJobs = new ImageJobs
                 {
                     Images = imageJobsMaybe.SelectWhereValueExist(t => t).ToArray(),
                 };
-                string serializedString = JsonConvert.SerializeObject(imageJobs, Formatting.None);
-                Console.WriteLine(serializedString);
+                Console.WriteLine(JsonConvert.SerializeObject(imageJobs, Formatting.None));
             }
             else
             {

@@ -21,6 +21,7 @@
 
 using CommonImageModel;
 using Functional.Maybe;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,6 +62,7 @@ namespace Dedup
                 pathToRemainingSnapshots
             );
 
+            Console.WriteLine(JsonConvert.SerializeObject(newImageJobs));
         }
 
         private static void DisposeOfOldSnapshots(IEnumerable<SnapshotContext> snapshots)
@@ -73,7 +75,7 @@ namespace Dedup
 
         private static void PrintHelp()
         {
-            Console.Error.WriteLine("Scrape 1.0");
+            Console.Error.WriteLine("Dedup 1.0 - Removes all duplicate anime snapshots");
             Console.Error.WriteLine("Usage: This program does not take any args and requires all input be from stdin");
         }
     }

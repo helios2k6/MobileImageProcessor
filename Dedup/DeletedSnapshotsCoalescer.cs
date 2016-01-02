@@ -20,6 +20,7 @@
  */
 using CommonImageModel;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Dedup
 {
@@ -40,7 +41,35 @@ namespace Dedup
             IEnumerable<string> remainingSnapshots
         )
         {
-            return null;
+            var setOfRemainingSnapshots = new HashSet<string>(remainingSnapshots);
+            var newImageJobs = oldImageJobs.Images.Select(s => ProcessImageJob(s, setOfRemainingSnapshots));
+            return new ImageJobs
+            {
+                Images = newImageJobs.ToArray(),
+            };
+        }
+
+        private static ImageJob ProcessImageJob(
+            ImageJob oldImageJob,
+            ICollection<string> remainingSnapshotPaths
+        )
+        {
+            var newSnapshotPaths = new List<string>();
+            foreach (var oldSnapshotPath in oldImageJob.ImageSnapshots)
+            {
+                if (remainingSnapshotPaths.Contains(oldSnapshotPath))
+                {
+                    newSnapshotPaths.Add(oldSnapshotPath);
+                }
+            }
+
+            return new ImageJob
+            {
+                OriginalFilePath = oldImageJob.OriginalFilePath,
+                SliceImagePath = oldImageJob.SliceImagePath,
+                SnapshotTimestamp = oldImageJob.SnapshotTimestamp,
+                ImageSnapshots = newSnapshotPaths.ToArray(),
+            };
         }
     }
 }

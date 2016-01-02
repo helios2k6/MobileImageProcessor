@@ -43,7 +43,8 @@ namespace Slice
         public static IEnumerable<ImageSliceContext> ProcessFiles(IEnumerable<string> files)
         {
             return files
-                .Select(t => ImageSliceContext.Create(t.ToMaybe()))
+                .Select(TryConvertRelativePathToAbsolutePath)
+                .SelectWhereValueExist(t => ImageSliceContext.Create(t.ToMaybe()))
                 .Select(TryLoadImage)
                 .Select(TryCalculateSliceSize)
                 .Select(TrySliceImage)
@@ -51,11 +52,16 @@ namespace Slice
                 .Select(DisposeOfImageResources);
         }
 
+        private static Maybe<string> TryConvertRelativePathToAbsolutePath(string file)
+        {
+            return Path.GetFullPath(file).ToMaybe();
+        }
+
         private static ImageSliceContext TryWriteSliceImage(ImageSliceContext context)
         {
             var finalSliceImagePath = from sliceImage in context.SlicedImage
                                       from originalImagePath in context.OriginalFile
-                                      from sliceImagePath in TryGetSlicedImageName(originalImagePath)
+                                      from sliceImagePath in TryGetSlicedImagePath(originalImagePath)
                                       select TryWriteSliceImage(sliceImage, sliceImagePath);
 
             return ImageSliceContext.Create(
@@ -86,7 +92,7 @@ namespace Slice
             return Maybe<string>.Nothing;
         }
 
-        private static Maybe<string> TryGetSlicedImageName(string originalFile)
+        private static Maybe<string> TryGetSlicedImagePath(string originalFile)
         {
             var extension = Path.GetExtension(originalFile);
             var directoryPath = Path.GetDirectoryName(originalFile);

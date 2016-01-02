@@ -33,6 +33,9 @@ namespace Dedup
     /// </summary>
     internal static class SnapshotLoader
     {
+        private const int TARGET_WIDTH = 640;
+        private const int TARGET_HEIGHT = 360;
+
         /// <summary>
         /// Load all of the images from disk and resize them
         /// </summary>
@@ -52,7 +55,7 @@ namespace Dedup
             {
                 return new SnapshotContext(
                     snapshotPathAndImage.Item1,
-                    ImageResizer.ResizeImageDown(originalSnapshot).ToMaybe()
+                    ImageTransformations.ResizeImage(originalSnapshot, TARGET_WIDTH, TARGET_HEIGHT).ToMaybe()
                 );
             }
         }

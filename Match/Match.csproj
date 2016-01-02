@@ -46,6 +46,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Driver.cs" />
+    <Compile Include="ImageLoaderAndCropper.cs" />
+    <Compile Include="ImageMatch.cs" />
+    <Compile Include="ImageMatcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

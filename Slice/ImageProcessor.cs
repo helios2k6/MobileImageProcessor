@@ -116,7 +116,7 @@ namespace Slice
             var slicedImage = from originalFile in context.OriginalFile
                               from image in context.Image
                               from sliceSize in context.SliceSize
-                              select ImageSlicer.TrySliceImage(originalFile, image, sliceSize);
+                              select ImageTransformations.CropImage(image, sliceSize.Point, sliceSize.Size);
 
             return ImageSliceContext.Create(
                 context.OriginalFile,

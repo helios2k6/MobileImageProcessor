@@ -51,7 +51,6 @@
     <Compile Include="DuplicateSnapshotProcessor.cs" />
     <Compile Include="SnapshotContext.cs" />
     <Compile Include="SnapshotLoader.cs" />
-    <Compile Include="ImageResizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

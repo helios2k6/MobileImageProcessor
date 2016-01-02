@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.8.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="Functional.Maybe, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Functional.Maybe.1.0.7\lib\portable-net40+win+MonoAndroid10+xamarinios10+MonoTouch10\Functional.Maybe.dll</HintPath>
       <Private>True</Private>
@@ -42,8 +45,12 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DeletedSnapshotsCoalescer.cs" />
     <Compile Include="Driver.cs" />
-    <Compile Include="ImageLoader.cs" />
+    <Compile Include="DuplicateSnapshotDetector.cs" />
+    <Compile Include="DuplicateSnapshotProcessor.cs" />
+    <Compile Include="SnapshotContext.cs" />
+    <Compile Include="SnapshotLoader.cs" />
     <Compile Include="ImageResizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

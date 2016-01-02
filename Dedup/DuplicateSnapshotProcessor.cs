@@ -19,54 +19,38 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using CommonImageModel;
-using Functional.Maybe;
-using System;
-using System.Drawing;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
 
 namespace Dedup
 {
     /// <summary>
-    /// Represents the context around a Snapshot
+    /// Processes and deletes duplicate images
     /// </summary>
-    internal sealed class SnapshotContext : IDisposable
+    internal static class DuplicateSnapshotProcessor
     {
         /// <summary>
-        /// Construct a new Snapshot Context
+        /// Deletes duplicate snapshots and returns a list of snapshot contexts that were not deleted
         /// </summary>
-        /// <param name="snapshotPath"></param>
-        /// <param name="scaledDownSnapshot"></param>
-        public SnapshotContext(string snapshotPath, Maybe<Image> scaledDownSnapshot)
+        /// <param name="duplicateGroups">The groups of duplicate images</param>
+        /// <returns>An IEnumerable of snapshots that were not deleted</returns>
+        public static IEnumerable<SnapshotContext> DeleteDuplicateImages(
+            IEnumerable<IEnumerable<SnapshotContext>> duplicateGroups
+        )
         {
-            SnapshotPath = snapshotPath;
-            ScaledDownSnapshot = scaledDownSnapshot;
+            return duplicateGroups.Select(DeleteDuplicates);
         }
 
-        /// <summary>
-        /// Construct a new Snapshot Context with no Snapshot image
-        /// </summary>
-        /// <param name="snapshotPath"></param>
-        public SnapshotContext(string snapshotPath)
-            : this(snapshotPath, Maybe<Image>.Nothing)
+        private static SnapshotContext DeleteDuplicates(IEnumerable<SnapshotContext> group)
         {
-        }
-
-        /// <summary>
-        /// The path to the snapshot file
-        /// </summary>
-        public string SnapshotPath { get; private set; }
-
-        /// <summary>
-        /// The scaled down snapshot
-        /// </summary>
-        public Maybe<Image> ScaledDownSnapshot { get; private set; }
-
-        /// <summary>
-        /// Dispose of this object
-        /// </summary>
-        public void Dispose()
-        {
-            ScaledDownSnapshot.Apply(i => i.Dispose());
+            var firstSnapshot = group.First();
+            foreach (var snapshot in group.Where(s => ReferenceEquals(firstSnapshot, s) == false))
+            {
+                File.Delete(snapshot.SnapshotPath);
+            }
+            return firstSnapshot;
         }
     }
 }

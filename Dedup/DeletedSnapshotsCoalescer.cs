@@ -18,43 +18,29 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 using CommonImageModel;
-using Functional.Maybe;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 
 namespace Dedup
 {
     /// <summary>
-    /// Loads all of the images from the ImageJobs and resizes the images so that they'll fit in memory
+    /// Coalsces deleted snapshot paths from the old ImageJobs object
     /// </summary>
-    internal static class ImageLoader
+    internal static class DeletedSnapshotsCoalescer
     {
         /// <summary>
-        /// Load all of the images from disk and resize them
+        /// Culls the deleted snapshots from ImageJobs and produces a new ImageJobs object
+        /// with the remaining snapshots
         /// </summary>
-        /// <param name="imageJobs"></param>
-        /// <returns></returns>
-        public static IEnumerable<Image> LoadImages(ImageJobs imageJobs)
+        /// <param name="oldImageJobs">The old ImageJobs object</param>
+        /// <param name="remainingSnapshots">The path to all of the remaining snapshots</param>
+        /// <returns>A new ImageJobs object</returns>
+        public static ImageJobs CoalesceDeletedSnapshots(
+            ImageJobs oldImageJobs,
+            IEnumerable<string> remainingSnapshots
+        )
         {
-            return GetAllImagePaths(imageJobs)
-                    .Select(CommonFunctions.TryLoadImage)
-                    .SelectWhereValueExist(ResizeImageAndDisposeOfOriginal);
-        }
-
-        private static Image ResizeImageAndDisposeOfOriginal(Image original)
-        {
-            using (original)
-            {
-                return ImageResizer.ResizeImageDown(original);
-            }
-        }
-
-        private static IEnumerable<string> GetAllImagePaths(ImageJobs imageJobs)
-        {
-            return new HashSet<string>(imageJobs.Images.SelectMany(s => s.ImageSnapshots));
+            return null;
         }
     }
 }

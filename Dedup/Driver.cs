@@ -19,6 +19,13 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommonImageModel;
+using Functional.Maybe;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
 namespace Dedup
 {
     /// <summary>
@@ -26,8 +33,48 @@ namespace Dedup
     /// </summary>
     internal static class Driver
     {
+        /// <summary>
+        /// Main method that serves as the entry point for the Dedup process
+        /// </summary>
+        /// <param name="args"></param>
         public static void Main(string[] args)
         {
+            var imageJobsMaybe = CommonFunctions.TryReadStandardIn();
+            if (imageJobsMaybe.IsNothing())
+            {
+                PrintHelp();
+                return;
+            }
+
+            var loadedSnapshots = SnapshotLoader.LoadSnapshots(imageJobsMaybe.Value);
+            var duplicateSnapshots = DuplicateSnapshotDetector.DetectDuplicates(loadedSnapshots);
+            var remainingSnapshots = DuplicateSnapshotProcessor.DeleteDuplicateImages(duplicateSnapshots);
+            var pathToRemainingSnapshots = remainingSnapshots.Select(s => s.SnapshotPath);
+
+            DisposeOfOldSnapshots(loadedSnapshots);
+            loadedSnapshots = null;
+            duplicateSnapshots = null;
+            remainingSnapshots = null;
+
+            var newImageJobs = DeletedSnapshotsCoalescer.CoalesceDeletedSnapshots(
+                imageJobsMaybe.Value,
+                pathToRemainingSnapshots
+            );
+
+        }
+
+        private static void DisposeOfOldSnapshots(IEnumerable<SnapshotContext> snapshots)
+        {
+            foreach (var s in snapshots)
+            {
+                s.Dispose();
+            }
+        }
+
+        private static void PrintHelp()
+        {
+            Console.Error.WriteLine("Scrape 1.0");
+            Console.Error.WriteLine("Usage: This program does not take any args and requires all input be from stdin");
         }
     }
 }

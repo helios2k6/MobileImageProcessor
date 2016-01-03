@@ -19,21 +19,40 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
+using System.Drawing;
+
 namespace Match
 {
     /// <summary>
-    /// The context for image matching
+    /// Wraps an Image object and pairs its file path along with it
     /// </summary>
-    internal sealed class ImageMatch
+    internal sealed class ImageWrapper : IDisposable
     {
         /// <summary>
-        /// Path to the original image
+        /// The loaded Image or Nothing
         /// </summary>
-        public string OriginalImage { get; set; }
+        public Image Image { get; private set; }
 
         /// <summary>
-        /// Path to the matched snapshot
+        /// The path to the image file
         /// </summary>
-        public string MatchedSnapshot { get; set; }
+        public string ImagePath { get; set; }
+
+        /// <summary>
+        /// Construct a new ImageWrapper
+        /// </summary>
+        /// <param name="image">The image</param>
+        /// <param name="imagePath">The path on disk to the image</param>
+        public ImageWrapper(Image image, string imagePath)
+        {
+            Image = image;
+            ImagePath = imagePath;
+        }
+
+        public void Dispose()
+        {
+            Image.Dispose();
+        }
     }
 }

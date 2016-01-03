@@ -19,12 +19,33 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace Match
+using System.Drawing;
+
+namespace CommonImageModel
 {
     /// <summary>
-    /// Loads and crops images depending on 
+    /// Contains common predicates for determining what device the snapshot was taken with
     /// </summary>
-    internal static class ImageLoaderAndCropper
+    public static class Predicates
     {
+        /// <summary>
+        /// Determines if the image was taken with an iPad based on the image's dimensions
+        /// </summary>
+        /// <param name="image">The image</param>
+        /// <returns>True if the image was taken from an iPad</returns>
+        public static bool IsiPadSize(Image image)
+        {
+            return image.Height == 1536 && image.Width == 2048;
+        }
+
+        /// <summary>
+        /// Determines if the image was taken with an iPhone 6 based on the image's dimensions
+        /// </summary>
+        /// <param name="image">The image</param>
+        /// <returns>True if the image was taken from an iPhone 6</returns>
+        public static bool IsiPhoneSixSize(Image image)
+        {
+            return image.Height == 750 && image.Width == 1334;
+        }
     }
 }

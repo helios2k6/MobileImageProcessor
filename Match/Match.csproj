@@ -46,10 +46,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Driver.cs" />
-    <Compile Include="ImageLoaderAndCropper.cs" />
-    <Compile Include="ImageMatch.cs" />
+    <Compile Include="ImageCropper.cs" />
+    <Compile Include="ImageWrapper.cs" />
     <Compile Include="ImageMatcher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimilarityCalculator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

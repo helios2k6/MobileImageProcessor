@@ -18,39 +18,34 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
 using CommonImageModel;
-using Functional.Maybe;
-using System.Drawing;
 
-namespace Slice
+namespace Match
 {
     /// <summary>
-    /// Calculates the size of the slice that is required for this particular Image
+    /// Calculates the similarity between two images
     /// </summary>
-    internal static class SliceCalculator
+    internal static class SimilarityCalculator
     {
         /// <summary>
-        /// Calculate the size of the slice that is required 
+        /// Calculate the similarity between two images
         /// </summary>
-        /// <param name="image">The original image</param>
-        /// <returns>
-        /// A new <see cref="SliceSize"/> that describes how to slice
-        /// the photo
-        /// </returns>
-        public static Maybe<SliceSize> TryCalculateSliceDimensions(Image image)
+        /// <remarks>
+        /// Images that are not the same size will always return a result of 0, as they cannot 
+        /// be the same.
+        /// </remarks>
+        /// <param name="original">The original image to compare against</param>
+        /// <param name="candidate">The candidate image to compare with the original</param>
+        /// <returns>An integer, from 0-100 indicating how similar the two images are</returns>
+        public static int CalculateSimilarityIndex(ImageWrapper original, ImageWrapper candidate)
         {
-            if (Predicates.IsiPadSize(image))
+            // Images that are not the same size are immediately discounted
+            if (original.Image.Width != candidate.Image.Width || original.Image.Height != candidate.Image.Height)
             {
-                return SliceSize.IPadSliceSize.ToMaybe();
+                return 0;
             }
 
-            if (Predicates.IsiPhoneSixSize(image))
-            {
-                return SliceSize.IPhoneSliceSize.ToMaybe();
-            }
-
-            return Maybe<SliceSize>.Nothing;
+            return (int)(SSIMCalculator.Compute(original.Image, candidate.Image) * 100);
         }
     }
 }

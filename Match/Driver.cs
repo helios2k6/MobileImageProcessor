@@ -19,6 +19,14 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommonImageModel;
+using Functional.Maybe;
+using Newtonsoft.Json;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace Match
 {
     /// <summary>
@@ -32,6 +40,43 @@ namespace Match
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
+            Maybe<ImageJobs> imageJobsMaybe = CommonFunctions.TryReadStandardIn();
+            if (imageJobsMaybe.IsNothing())
+            {
+                PrintHelp();
+                return;
+            }
+
+            IDictionary<ImageJob, string> jobToSnapshotMap = ImageMatcher.GetMatches(imageJobsMaybe.Value);
+            ImageJob[] processedJobs = UpdateSnapshotResults(jobToSnapshotMap).ToArray();
+            var processedImageJobs = new ImageJobs
+            {
+                Images = processedJobs,
+            };
+
+            Console.WriteLine(JsonConvert.SerializeObject(processedImageJobs));
+        }
+
+        private static IEnumerable<ImageJob> UpdateSnapshotResults(IDictionary<ImageJob, string> jobToSnapshotMap)
+        {
+            foreach (var jobToSnapshot in jobToSnapshotMap)
+            {
+                ImageJob previousImageJob = jobToSnapshot.Key;
+                string snapshot = jobToSnapshot.Value;
+                yield return new ImageJob
+                {
+                    OriginalFilePath = previousImageJob.OriginalFilePath,
+                    SliceImagePath = previousImageJob.SliceImagePath,
+                    SnapshotTimestamp = previousImageJob.SnapshotTimestamp,
+                    ImageSnapshots = new[] { snapshot },
+                };
+            }
+        }
+
+        private static void PrintHelp()
+        {
+            Console.Error.WriteLine("Match 1.0 - Detects the most likely snapshot match");
+            Console.Error.WriteLine("Usage: This program does not take any args and requires all input be from stdin");
         }
     }
 }

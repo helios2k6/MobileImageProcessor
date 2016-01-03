@@ -168,7 +168,7 @@ namespace CommonImageModel
         {
             try
             {
-                func.Invoke().ToMaybe<T>();
+                return func.Invoke().ToMaybe<T>();
             }
             catch (Exception e)
             {

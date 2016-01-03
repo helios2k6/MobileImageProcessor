@@ -55,6 +55,8 @@ namespace Match
             };
 
             Console.WriteLine(JsonConvert.SerializeObject(processedImageJobs));
+
+            SnapshotDeleter.DeleteUnusedSnapshots(imageJobsMaybe.Value, processedImageJobs);
         }
 
         private static IEnumerable<ImageJob> UpdateSnapshotResults(IDictionary<ImageJob, string> jobToSnapshotMap)

@@ -89,6 +89,8 @@ namespace Rip
             {
                 Console.Error.WriteLine(options.GetUsage());
             }
+
+            CommonFunctions.CloseAllStandardFileHandles();
         }
 
         private static IEnumerable<string> GetAllMediaFiles(IEnumerable<string> folderPaths)

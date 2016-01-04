@@ -22,9 +22,10 @@
 using CommonImageModel;
 using Functional.Maybe;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Match
 {
@@ -38,67 +39,67 @@ namespace Match
         /// </summary>
         /// <param name="imageJobs">The ImageJobs to match</param>
         /// <returns>A dictionary between an ImageJob its matching snapshot</returns>
-        public static IDictionary<ImageJob, string> GetMatches(ImageJobs imageJobs)
+        public static IDictionary<ImageJob, IEnumerable<string>> GetMatches(ImageJobs imageJobs)
         {
-            var resultMap = new Dictionary<ImageJob, string>();
-            foreach (var imageJob in imageJobs.Images)
-            {
-                TryFindMatchingSnapshot(imageJob).Apply(candidateSnapshot => resultMap.Add(imageJob, candidateSnapshot));
-            }
-
-            return resultMap;
+            return imageJobs.Images.ToDictionary(i => i, TryFindMatchingSnapshots);
         }
 
-        private static Maybe<string> TryFindMatchingSnapshot(ImageJob imageJob)
+        private static IEnumerable<string> TryFindMatchingSnapshots(ImageJob imageJob)
         {
             var candidateSnapshots = imageJob.ImageSnapshots;
-            return from originalImage in TryLoadImage(imageJob.OriginalFilePath)
-                   select ExecThenDispose(
-                    () => TryProcessSnapshotFromiPad(originalImage, candidateSnapshots)
-                            .Or(TryProcessSnapshotFromiPhoneSix(originalImage, candidateSnapshots)),
-                    originalImage
-                   );
+            var deducedImages = from originalImage in TryLoadImage(imageJob.OriginalFilePath)
+                                select ExecThenDispose(
+                                 () => TryProcessSnapshotFromiPad(originalImage, candidateSnapshots)
+                                         .Or(TryProcessSnapshotFromiPhoneSix(originalImage, candidateSnapshots)),
+                                 originalImage
+                                );
+
+            return deducedImages.OrElse(Enumerable.Empty<string>());
         }
 
-        private static Maybe<string> TryProcessSnapshotFromiPad(
+        private static IEnumerable<string> TryProcessSnapshotFromiPad(
             ImageWrapper originalSnapshot,
             IEnumerable<string> candidateSnapshots
         )
         {
             if (Predicates.IsiPadSize(originalSnapshot.Image) == false)
             {
-                return Maybe<string>.Nothing;
+                return Enumerable.Empty<string>();
             }
 
-            return from croppedImage in ImageCropper.TryCropiPadImage(originalSnapshot)
-                   from resizedImage in ImageTransformations.TryResizeImage(croppedImage.Image, 1280, 720)
-                   let transformedOriginalSnapshot = new ImageWrapper(resizedImage, originalSnapshot.ImagePath)
-                   select ExecThenDispose(
-                        () => TryDeduceMatchingCandidateSnapshot(transformedOriginalSnapshot, candidateSnapshots, i => i.ToMaybe()),
-                        croppedImage,
-                        resizedImage
-                   );
+            var deducedSnapshots = from croppedImage in ImageCropper.TryCropiPadImage(originalSnapshot)
+                                   from resizedImage in ImageTransformations.TryResizeImage(croppedImage.Image, 1280, 720)
+                                   let transformedOriginalSnapshot = new ImageWrapper(resizedImage, originalSnapshot.ImagePath)
+                                   select ExecThenDispose(
+                                        () => TryDeduceMatchingCandidateSnapshot(transformedOriginalSnapshot, candidateSnapshots, i => i.ToMaybe()),
+                                        croppedImage,
+                                        resizedImage
+                                   );
+
+            return deducedSnapshots.OrElse(Enumerable.Empty<string>());
         }
 
-        private static Maybe<string> TryProcessSnapshotFromiPhoneSix(
+        private static IEnumerable<string> TryProcessSnapshotFromiPhoneSix(
             ImageWrapper originalSnapshot,
             IEnumerable<string> candidateSnapshots
         )
         {
             if (Predicates.IsiPhoneSixSize(originalSnapshot.Image) == false)
             {
-                return Maybe<string>.Nothing;
+                return Enumerable.Empty<string>();
             }
 
-            return from croppedOriginalSnapshot in ImageCropper.TryCropiPhoneSixImage(originalSnapshot)
-                   select ExecThenDispose(
-                            () => TryDeduceMatchingCandidateSnapshot(
-                                croppedOriginalSnapshot,
-                                candidateSnapshots,
-                                TransformCandidateSnapshotForiPhoneSix
-                            ),
-                            croppedOriginalSnapshot
-                   );
+            Maybe<IEnumerable<string>> deducedSnapshots = from croppedOriginalSnapshot in ImageCropper.TryCropiPhoneSixImage(originalSnapshot)
+                                                          select ExecThenDispose(
+                                                                   () => TryDeduceMatchingCandidateSnapshot(
+                                                                       croppedOriginalSnapshot,
+                                                                       candidateSnapshots,
+                                                                       TransformCandidateSnapshotForiPhoneSix
+                                                                   ),
+                                                                   croppedOriginalSnapshot
+                                                          );
+
+            return deducedSnapshots.OrElse(Enumerable.Empty<string>());
         }
 
         private static Maybe<ImageWrapper> TransformCandidateSnapshotForiPhoneSix(ImageWrapper candidateSnapshot)
@@ -109,13 +110,13 @@ namespace Match
                    );
         }
 
-        private static Maybe<string> TryDeduceMatchingCandidateSnapshot(
+        private static IEnumerable<string> TryDeduceMatchingCandidateSnapshot(
             ImageWrapper transformedOriginalSnapshot,
             IEnumerable<string> candidateSnapshots,
             Func<ImageWrapper, Maybe<ImageWrapper>> candidateTranform
         )
         {
-            var candidateResultList = new List<Tuple<string, int>>();
+            var candidateResultList = new ConcurrentBag<Tuple<string, int>>();
             foreach (var candidateSnapshot in candidateSnapshots)
             {
                 var candidateComparisonResult = from loadedCandidateSnapshot in TryLoadImage(candidateSnapshot)
@@ -129,12 +130,12 @@ namespace Match
                                                     loadedCandidateSnapshot,
                                                     transformedCandidate
                                                 );
-
-                candidateComparisonResult.Apply(t => candidateResultList.Add(t));
+                candidateComparisonResult.Apply(i => candidateResultList.Add(i));
             }
 
-            candidateResultList.Sort((a, b) => b.Item2 - a.Item2);
-            return candidateResultList.FirstMaybe().Select(t => t.Item1);
+            return from candidateTuple in candidateResultList
+                   where candidateTuple.Item2 >= 69
+                   select candidateTuple.Item1;
         }
 
         private static Maybe<ImageWrapper> TryLoadImage(string path)

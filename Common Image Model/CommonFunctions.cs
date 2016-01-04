@@ -53,6 +53,17 @@ namespace CommonImageModel
         }
 
         /// <summary>
+        /// Closes all standard file handles to signal the EOF to downstream processes
+        /// </summary>
+        public static void CloseAllStandardFileHandles()
+        {
+            // Close everything afterwards
+            Console.In.Close();
+            Console.Out.Close();
+            Console.Error.Close();
+        }
+
+        /// <summary>
         /// Attempt to load an Image from the provided image path
         /// </summary>
         /// <param name="imagePath"></param>

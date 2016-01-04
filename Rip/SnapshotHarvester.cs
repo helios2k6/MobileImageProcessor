@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rip
 {
@@ -44,12 +45,8 @@ namespace Rip
         )
         {
             IDictionary<TimeSpan, ImageJobGroup> imageGroups = ImageJobGrouper.GroupImageJobs(imageJobs);
-            var mapFromGroupsToSnapshots = new Dictionary<ImageJobGroup, IEnumerable<string>>();
-            foreach (var group in imageGroups.Values)
-            {
-                var snapshots = TakeSnapshots(group, mediaFilePaths);
-                mapFromGroupsToSnapshots.Add(group, snapshots);
-            }
+            IDictionary<ImageJobGroup, IEnumerable<string>> mapFromGroupsToSnapshots =
+                imageGroups.AsParallel().ToDictionary(kvp => kvp.Value, kvp => TakeSnapshots(kvp.Value, mediaFilePaths));
 
             return new ImageJobs
             {
@@ -80,20 +77,21 @@ namespace Rip
             }
         }
 
-        private static IEnumerable<string> TakeSnapshots(ImageJobGroup group, IEnumerable<string> mediaFilePaths)
+        private static IEnumerable<string> TakeSnapshots(ImageJobGroup imageJobGroup, IEnumerable<string> mediaFilePaths)
         {
-            var listOfFilePathLists = new List<IEnumerable<string>>();
-            foreach (var mediaFilePath in mediaFilePaths)
-            {
-                using (var ffmpeg = new FFMPEGProcess(group.Timestamp, mediaFilePath))
-                {
-                    ffmpeg.Execute();
-                }
+            return from mediaFilePath in mediaFilePaths.AsParallel()
+                   from snapshotPath in ExecuteFFMPEGAndGetImageFiles(imageJobGroup, mediaFilePath)
+                   select snapshotPath;
+        }
 
-                listOfFilePathLists.Add(GetImageFilePaths(group, mediaFilePath));
+        private static IEnumerable<string> ExecuteFFMPEGAndGetImageFiles(ImageJobGroup imageJobGroup, string mediaFilePath)
+        {
+            using (var ffmpeg = new FFMPEGProcess(imageJobGroup.Timestamp, mediaFilePath))
+            {
+                ffmpeg.Execute();
             }
 
-            return listOfFilePathLists.SelectMany(s => s);
+            return GetImageFilePaths(imageJobGroup, mediaFilePath);
         }
 
         private static IEnumerable<string> GetImageFilePaths(ImageJobGroup group, string mediaFilePath)

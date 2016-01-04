@@ -47,30 +47,29 @@ namespace Match
                 return;
             }
 
-            IDictionary<ImageJob, string> jobToSnapshotMap = ImageMatcher.GetMatches(imageJobsMaybe.Value);
+            IDictionary<ImageJob, IEnumerable<string>> jobToSnapshotMap = ImageMatcher.GetMatches(imageJobsMaybe.Value);
             ImageJob[] processedJobs = UpdateSnapshotResults(jobToSnapshotMap).ToArray();
             var processedImageJobs = new ImageJobs
             {
                 Images = processedJobs,
             };
 
-            Console.WriteLine(JsonConvert.SerializeObject(processedImageJobs));
-
             SnapshotDeleter.DeleteUnusedSnapshots(imageJobsMaybe.Value, processedImageJobs);
+            Console.WriteLine(JsonConvert.SerializeObject(processedImageJobs));
+            CommonFunctions.CloseAllStandardFileHandles();
         }
 
-        private static IEnumerable<ImageJob> UpdateSnapshotResults(IDictionary<ImageJob, string> jobToSnapshotMap)
+        private static IEnumerable<ImageJob> UpdateSnapshotResults(IDictionary<ImageJob, IEnumerable<string>> jobToSnapshotsMap)
         {
-            foreach (var jobToSnapshot in jobToSnapshotMap)
+            foreach (var jobToSnapshots in jobToSnapshotsMap)
             {
-                ImageJob previousImageJob = jobToSnapshot.Key;
-                string snapshot = jobToSnapshot.Value;
+                ImageJob previousImageJob = jobToSnapshots.Key;
                 yield return new ImageJob
                 {
                     OriginalFilePath = previousImageJob.OriginalFilePath,
                     SliceImagePath = previousImageJob.SliceImagePath,
                     SnapshotTimestamp = previousImageJob.SnapshotTimestamp,
-                    ImageSnapshots = new[] { snapshot },
+                    ImageSnapshots = jobToSnapshots.Value.ToArray(),
                 };
             }
         }

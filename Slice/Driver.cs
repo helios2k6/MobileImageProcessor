@@ -82,6 +82,8 @@ namespace Slice
             {
                 Console.Error.Write(options.GetUsage());
             }
+
+            CommonFunctions.CloseAllStandardFileHandles();
         }
 
         private static Maybe<ImageJob> Convert(ImageSliceContext context)

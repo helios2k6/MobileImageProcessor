@@ -19,49 +19,29 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using CommonImageModel;
-using Functional.Maybe;
-using Newtonsoft.Json;
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-namespace Scrape
+namespace CommonImageModel
 {
-    /// <summary>
-    /// Entry point for the Scrape process
-    /// </summary>
-    internal static class Driver
+    public static class CommonLinqExtensions
     {
         /// <summary>
-        /// Main method that executes on startup 
+        /// Select the first IEnumerable{T} if it has elements, else select the second
         /// </summary>
-        /// <param name="args"></param>
-        public static void Main(string[] args)
+        /// <typeparam name="T">The type inside the IEnumerable</typeparam>
+        /// <param name="first">The first IEnumerable to check</param>
+        /// <param name="fallback">The fallback to execute if there are no elements in the first</param>
+        /// <returns>The first IEnumerable if it has elements, else the second</returns>
+        public static IEnumerable<T> Or<T>(this IEnumerable<T> first, IEnumerable<T> fallback)
         {
-            var imageJobs = CommonFunctions.TryReadStandardIn();
-            if (imageJobs.IsNothing())
+            if (first.Any())
             {
-                PrintHelp();
-                return;
+                return first;
             }
-            var processedImageJobs = ScrapeJobProcessor.ProcessImageJobs(imageJobs.Value);
-            var newImageModel = new ImageJobs
-            {
-                Images = processedImageJobs.ToArray(),
-            };
 
-            Console.WriteLine(JsonConvert.SerializeObject(newImageModel));
-            CommonFunctions.CloseAllStandardFileHandles();
-        }
-
-        private static void PrintHelp()
-        {
-            var builder = new StringBuilder();
-            builder.AppendLine("Scrape 1.0")
-                .AppendLine("Usage: <this program> <JSON Input>");
-            Console.Error.WriteLine(builder.ToString());
+            return fallback;
         }
     }
 }

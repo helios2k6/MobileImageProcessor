@@ -63,6 +63,7 @@ namespace Dedup
             );
 
             Console.WriteLine(JsonConvert.SerializeObject(newImageJobs));
+            CommonFunctions.CloseAllStandardFileHandles();
         }
 
         private static void DisposeOfOldSnapshots(IEnumerable<SnapshotContext> snapshots)

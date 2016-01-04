@@ -53,6 +53,7 @@
     <Compile Include="ProcessNameDeducer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SSIMCalculator.cs" />
+    <Compile Include="TimingToken.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

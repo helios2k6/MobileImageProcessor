@@ -77,13 +77,15 @@ namespace Rip
                     Console.Error.WriteLine(options.GetUsage());
                     return;
                 }
+                using (new TimingToken("Rip", true))
+                {
+                    var newImageJobs = SnapshotHarvester.HarvestCandidateImages(
+                        imageJobs.Value,
+                        GetAllMediaFiles(options.InputFolders)
+                    );
 
-                var newImageJobs = SnapshotHarvester.HarvestCandidateImages(
-                    imageJobs.Value,
-                    GetAllMediaFiles(options.InputFolders)
-                );
-
-                Console.WriteLine(JsonConvert.SerializeObject(newImageJobs));
+                    Console.WriteLine(JsonConvert.SerializeObject(newImageJobs));
+                }
             }
             else
             {
@@ -100,7 +102,7 @@ namespace Rip
 
         private static IEnumerable<string> GetAllMediaFiles(string folderPath)
         {
-            var listOfFileLists = new[] 
+            var listOfFileLists = new[]
             {
                 Directory.EnumerateFiles(folderPath, "*.mkv", SearchOption.AllDirectories),
                 Directory.EnumerateFiles(folderPath, "*.mp4", SearchOption.AllDirectories),

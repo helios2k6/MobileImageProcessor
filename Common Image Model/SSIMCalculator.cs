@@ -215,6 +215,33 @@ namespace CommonImageModel
             }
         }
 
+        /// <summary>
+        /// Calculate the SSIM between two LockBitImages
+        /// </summary>
+        /// <param name="first">The first image</param>
+        /// <param name="second">The second image</param>
+        /// <returns>The SSIM of two LockBitImages</returns>
+        public static double Compute(LockBitImage first, LockBitImage second)
+        {
+            if (first == null || second == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            return ComputeSSIM(
+                ConvertToGrayscale(first),
+                ConvertToGrayscale(second)
+            );
+        }
+
+        private static Grid ConvertToGrayscale(LockBitImage bitmap)
+        {
+            return Grid.Op(
+                (i, j) => ConvertColorToGrayscaleDouble(bitmap.GetPixel(i, j)),
+                new Grid(bitmap.Width, bitmap.Height)
+            );
+        }
+
         private static Grid ConvertToGrayscale(Bitmap bitmap)
         {
             return Grid.Op(

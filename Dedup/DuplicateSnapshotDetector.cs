@@ -19,11 +19,14 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommonImageModel;
 using Functional.Maybe;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Dedup
 {
@@ -92,32 +95,20 @@ namespace Dedup
                 return false;
             }
 
-            using (var aSnapshotBitmap = new Bitmap(a))
+            using (var aSnapshotBitmap = new LockBitImage(a))
             {
-                using (var bSnapshotBitmap = new Bitmap(b))
+                using (var bSnapshotBitmap = new LockBitImage(b))
                 {
-                    var nonSimilarPixels = 0;
-                    var maxNonSimilarPixels = (a.Height * a.Width) / 10; // 10% pixel non-similarity tolerance
-                    foreach (var coordinate in GetPixelCoordinates(a.Width, a.Height))
-                    {
-                        var x = coordinate.Item1;
-                        var y = coordinate.Item2;
+                    var similarPixels = from coordinate in GetPixelCoordinates(a.Width, a.Height).AsParallel()
+                                        let x = coordinate.Item1
+                                        let y = coordinate.Item2
+                                        let aPixel = aSnapshotBitmap.GetPixel(x, y)
+                                        let bPixel = bSnapshotBitmap.GetPixel(x, y)
+                                        select ArePixelsCloseEnough(aPixel, bPixel);
 
-                        var aPixel = aSnapshotBitmap.GetPixel(x, y);
-                        var bPixel = bSnapshotBitmap.GetPixel(x, y);
-
-                        if (ArePixelsCloseEnough(aPixel, bPixel) == false)
-                        {
-                            nonSimilarPixels++;
-                            if (nonSimilarPixels >= maxNonSimilarPixels)
-                            {
-                                return false;
-                            }
-                        }
-                    }
+                    return similarPixels.Count(pixelIsSimilar => pixelIsSimilar == false) < (a.Height * a.Width) / 10; // 10% pixel non-similarity tolerance
                 }
             }
-            return true;
         }
 
         private static IEnumerable<Tuple<int, int>> GetPixelCoordinates(int width, int height)

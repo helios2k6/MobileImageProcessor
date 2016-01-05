@@ -49,6 +49,7 @@
     <Compile Include="ImageJob.cs" />
     <Compile Include="ImageJobs.cs" />
     <Compile Include="ImageTransformations.cs" />
+    <Compile Include="LockBitImage.cs" />
     <Compile Include="Predicates.cs" />
     <Compile Include="ProcessNameDeducer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

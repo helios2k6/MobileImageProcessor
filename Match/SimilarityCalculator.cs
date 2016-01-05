@@ -37,15 +37,15 @@ namespace Match
         /// <param name="original">The original image to compare against</param>
         /// <param name="candidate">The candidate image to compare with the original</param>
         /// <returns>An integer, from 0-100 indicating how similar the two images are</returns>
-        public static int CalculateSimilarityIndex(ImageWrapper original, ImageWrapper candidate)
+        public static int CalculateSimilarityIndex(LockBitImage original, LockBitImage candidate)
         {
             // Images that are not the same size are immediately discounted
-            if (original.Image.Width != candidate.Image.Width || original.Image.Height != candidate.Image.Height)
+            if (original.Width != candidate.Width || original.Height != candidate.Height)
             {
                 return 0;
             }
 
-            return (int)(SSIMCalculator.Compute(original.Image, candidate.Image) * 100);
+            return (int)(SSIMCalculator.Compute(original, candidate) * 100);
         }
     }
 }

@@ -117,20 +117,25 @@ namespace Match
         )
         {
             var candidateResultList = new ConcurrentBag<Tuple<string, int>>();
-            foreach (var candidateSnapshot in candidateSnapshots)
+            using (var originaImageAsLockbit = new LockBitImage(transformedOriginalSnapshot.Image))
             {
-                var candidateComparisonResult = from loadedCandidateSnapshot in TryLoadImage(candidateSnapshot)
-                                                from transformedCandidate in candidateTranform.Invoke(loadedCandidateSnapshot)
-                                                let similarityIndex = SimilarityCalculator.CalculateSimilarityIndex(
-                                                    transformedOriginalSnapshot,
-                                                    transformedCandidate
-                                                )
-                                                select ExecThenDispose(
-                                                    () => Tuple.Create<string, int>(candidateSnapshot, similarityIndex),
-                                                    loadedCandidateSnapshot,
-                                                    transformedCandidate
-                                                );
-                candidateComparisonResult.Apply(i => candidateResultList.Add(i));
+                Parallel.ForEach(candidateSnapshots, candidateSnapshot =>
+                {
+                    var candidateComparisonResult = from loadedCandidateSnapshot in TryLoadImage(candidateSnapshot)
+                                                    from transformedCandidate in candidateTranform.Invoke(loadedCandidateSnapshot)
+                                                    let candidateLockbitImage = new LockBitImage(transformedCandidate.Image)
+                                                    let similarityIndex = SimilarityCalculator.CalculateSimilarityIndex(
+                                                        originaImageAsLockbit,
+                                                        candidateLockbitImage
+                                                    )
+                                                    select ExecThenDispose(
+                                                        () => Tuple.Create<string, int>(candidateSnapshot, similarityIndex),
+                                                        loadedCandidateSnapshot,
+                                                        transformedCandidate,
+                                                        candidateLockbitImage
+                                                    );
+                    candidateComparisonResult.Apply(i => candidateResultList.Add(i));
+                });
             }
 
             return from candidateTuple in candidateResultList

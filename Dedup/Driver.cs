@@ -25,7 +25,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Dedup
 {
@@ -47,22 +46,24 @@ namespace Dedup
                 return;
             }
 
-            var loadedSnapshots = SnapshotLoader.LoadSnapshots(imageJobsMaybe.Value);
-            var duplicateSnapshots = DuplicateSnapshotDetector.DetectDuplicates(loadedSnapshots);
-            var remainingSnapshots = DuplicateSnapshotProcessor.DeleteDuplicateImages(duplicateSnapshots);
-            var pathToRemainingSnapshots = remainingSnapshots.Select(s => s.SnapshotPath);
+            using (new TimingToken("Dedup", true))
+            {
+                var loadedSnapshots = SnapshotLoader.LoadSnapshots(imageJobsMaybe.Value);
+                var duplicateSnapshots = DuplicateSnapshotDetector.DetectDuplicates(loadedSnapshots);
+                var remainingSnapshots = DuplicateSnapshotProcessor.DeleteDuplicateImages(duplicateSnapshots);
+                var pathToRemainingSnapshots = remainingSnapshots.Select(s => s.SnapshotPath);
 
-            DisposeOfOldSnapshots(loadedSnapshots);
-            loadedSnapshots = null;
-            duplicateSnapshots = null;
-            remainingSnapshots = null;
+                DisposeOfOldSnapshots(loadedSnapshots);
+                loadedSnapshots = null;
+                duplicateSnapshots = null;
+                remainingSnapshots = null;
 
-            var newImageJobs = DeletedSnapshotsCoalescer.CoalesceDeletedSnapshots(
-                imageJobsMaybe.Value,
-                pathToRemainingSnapshots
-            );
-
-            Console.WriteLine(JsonConvert.SerializeObject(newImageJobs));
+                var newImageJobs = DeletedSnapshotsCoalescer.CoalesceDeletedSnapshots(
+                    imageJobsMaybe.Value,
+                    pathToRemainingSnapshots
+                );
+                Console.WriteLine(JsonConvert.SerializeObject(newImageJobs));
+            }
             CommonFunctions.CloseAllStandardFileHandles();
         }
 

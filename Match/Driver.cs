@@ -23,7 +23,6 @@ using CommonImageModel;
 using Functional.Maybe;
 using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -47,15 +46,18 @@ namespace Match
                 return;
             }
 
-            IDictionary<ImageJob, IEnumerable<string>> jobToSnapshotMap = ImageMatcher.GetMatches(imageJobsMaybe.Value);
-            ImageJob[] processedJobs = UpdateSnapshotResults(jobToSnapshotMap).ToArray();
-            var processedImageJobs = new ImageJobs
+            using (new TimingToken("Match", true))
             {
-                Images = processedJobs,
-            };
+                IDictionary<ImageJob, IEnumerable<string>> jobToSnapshotMap = ImageMatcher.GetMatches(imageJobsMaybe.Value);
+                ImageJob[] processedJobs = UpdateSnapshotResults(jobToSnapshotMap).ToArray();
+                var processedImageJobs = new ImageJobs
+                {
+                    Images = processedJobs,
+                };
 
-            SnapshotDeleter.DeleteUnusedSnapshots(imageJobsMaybe.Value, processedImageJobs);
-            Console.WriteLine(JsonConvert.SerializeObject(processedImageJobs));
+                SnapshotDeleter.DeleteUnusedSnapshots(imageJobsMaybe.Value, processedImageJobs);
+                Console.WriteLine(JsonConvert.SerializeObject(processedImageJobs));
+            }
             CommonFunctions.CloseAllStandardFileHandles();
         }
 

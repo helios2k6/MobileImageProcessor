@@ -32,17 +32,32 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Functional.Maybe, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Functional.Maybe.1.0.7\lib\portable-net40+win+MonoAndroid10+xamarinios10+MonoTouch10\Functional.Maybe.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AutoPipingProcess.cs" />
+    <Compile Include="Dispatcher.cs" />
     <Compile Include="Driver.cs" />
-    <Compile Include="Pipe.cs" />
+    <Compile Include="GeneralProcess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RipProcess.cs" />
+    <Compile Include="SliceProcess.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common Image Model\Common Image Model.csproj">
+      <Project>{94502024-13c6-4495-aec8-4f67fae29396}</Project>
+      <Name>Common Image Model</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

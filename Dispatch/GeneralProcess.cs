@@ -19,12 +19,30 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System.Collections.Generic;
+using System.Diagnostics;
+
 namespace Dispatch
 {
     /// <summary>
-    /// Represents a connection between two processes
+    /// Represents a generic process that doesn't have any arguments
     /// </summary>
-    internal sealed class Pipe
+    internal sealed class GeneralProcess : AutoPipingProcess
     {
+        public GeneralProcess(ICollection<string> processNames)
+            : base(CreateProcess(processNames))
+        {
+        }
+
+        private static Process CreateProcess(ICollection<string> processNames)
+        {
+            var process = new Process();
+            process.StartInfo.CreateNoWindow = true;
+            process.StartInfo.FileName = GetProcessName(processNames);
+            process.StartInfo.RedirectStandardInput = true;
+            process.StartInfo.RedirectStandardOutput = true;
+
+            return process;
+        }
     }
 }

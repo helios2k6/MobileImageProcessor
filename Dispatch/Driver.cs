@@ -49,7 +49,7 @@ namespace Dispatch
                 return;
             }
 
-
+            Dispatcher.DispatchAllProcessesAsync(folderOfPictures, folderOfVideos).Wait();
         }
 
         private static bool ValidateFolder(string folder)

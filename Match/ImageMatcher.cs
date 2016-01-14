@@ -48,7 +48,7 @@ namespace Match
         {
             var candidateSnapshots = imageJob.ImageSnapshots;
             var deducedImages = from originalImage in TryLoadImage(imageJob.OriginalFilePath)
-                                select ExecThenDispose(
+                                select CommonFunctions.ExecThenDispose(
                                  () => TryProcessSnapshotFromiPad(originalImage, candidateSnapshots)
                                          .Or(TryProcessSnapshotFromiPhoneSix(originalImage, candidateSnapshots)),
                                  originalImage
@@ -70,7 +70,7 @@ namespace Match
             var deducedSnapshots = from croppedImage in ImageCropper.TryCropiPadImage(originalSnapshot)
                                    from resizedImage in ImageTransformations.TryResizeImage(croppedImage.Image, 1280, 720)
                                    let transformedOriginalSnapshot = new ImageWrapper(resizedImage, originalSnapshot.ImagePath)
-                                   select ExecThenDispose(
+                                   select CommonFunctions.ExecThenDispose(
                                         () => TryDeduceMatchingCandidateSnapshot(transformedOriginalSnapshot, candidateSnapshots, i => i.ToMaybe()),
                                         croppedImage,
                                         resizedImage
@@ -90,7 +90,7 @@ namespace Match
             }
 
             Maybe<IEnumerable<string>> deducedSnapshots = from croppedOriginalSnapshot in ImageCropper.TryCropiPhoneSixImage(originalSnapshot)
-                                                          select ExecThenDispose(
+                                                          select CommonFunctions.ExecThenDispose(
                                                                    () => TryDeduceMatchingCandidateSnapshot(
                                                                        croppedOriginalSnapshot,
                                                                        candidateSnapshots,
@@ -128,7 +128,7 @@ namespace Match
                                                         originaImageAsLockbit,
                                                         candidateLockbitImage
                                                     )
-                                                    select ExecThenDispose(
+                                                    select CommonFunctions.ExecThenDispose(
                                                         () => Tuple.Create<string, int>(candidateSnapshot, similarityIndex),
                                                         loadedCandidateSnapshot,
                                                         transformedCandidate,
@@ -147,20 +147,6 @@ namespace Match
         {
             return from image in CommonFunctions.TryLoadImage(path)
                    select new ImageWrapper(image, path);
-        }
-
-        private static T ExecThenDispose<T>(
-            Func<T> func,
-            params IDisposable[] disposables
-        )
-        {
-            T result = func.Invoke();
-            foreach (var disposable in disposables)
-            {
-                disposable.Dispose();
-            }
-
-            return result;
         }
     }
 }

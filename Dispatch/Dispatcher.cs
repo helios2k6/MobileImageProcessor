@@ -21,8 +21,10 @@
 
 using CommonImageModel;
 using Functional.Maybe;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Dispatch
@@ -32,6 +34,22 @@ namespace Dispatch
     /// </summary>
     internal static class Dispatcher
     {
+        private static ICollection<string> SLICE = new HashSet<string>
+        {
+            "Slice",
+            "Slice.exe",
+            "slice",
+            "slice.exe",
+        };
+
+        private static ICollection<string> RIP = new HashSet<string>
+        {
+            "Rip",
+            "Rip.exe",
+            "rip",
+            "rip.exe",
+        };
+
         private static ICollection<string> SCRAPE = new HashSet<string>
         {
             "Scrape",
@@ -74,34 +92,76 @@ namespace Dispatch
             string folderOfMediaFiles
         )
         {
-            foreach (var snapshot in GetSnapshots(folderOfSnapshots))
+            using (var slice = new GeneralProcess(SLICE, GetSnapshots(folderOfSnapshots)))
             {
-                await CyclePipeLineAsync(snapshot, folderOfSnapshots);
+                using (var scrape = new GeneralProcess(SCRAPE))
+                {
+                    var sliceOutput = await slice.ExecuteAsync(Maybe<string>.Nothing);
+                    var scrapeOutput = await scrape.ExecuteAsync(sliceOutput.ToMaybe());
+                    await ProcessRipDedupAndMatchAsync(scrapeOutput, folderOfMediaFiles);
+                }
             }
         }
 
-        private static IEnumerable<string> GetSnapshots(string pathToFolder)
+        private async static Task ProcessRipDedupAndMatchAsync(string scrapeOutput, string folderOfMediaFiles)
         {
-            return Directory.EnumerateFiles(
-                pathToFolder,
-                "*.png",
-                SearchOption.AllDirectories
-            );
+            ImageJobs deserializedModel = JsonConvert.DeserializeObject<ImageJobs>(scrapeOutput);
+            foreach (ImageJob imageJob in deserializedModel.Images)
+            {
+                await ProcessImageJobAsync(imageJob, folderOfMediaFiles);
+            }
         }
 
-        private async static Task CyclePipeLineAsync(string snapshot, string folderOfMediaFiles)
+        private async static Task ProcessImageJobAsync(ImageJob imageJob, string folderOfMediaFiles)
         {
-            var slice = new SliceProcess(snapshot);
-            var scrape = new GeneralProcess(SCRAPE);
-            var rip = new RipProcess(folderOfMediaFiles);
-            var dedup = new GeneralProcess(DEDUP);
-            var match = new GeneralProcess(MATCH);
+            var newImageJobs = new ImageJobs
+            {
+                Images = new[] { imageJob },
+            };
 
-            var sliceOutput = await slice.ExecuteAsync(Maybe<string>.Nothing);
-            var scrapeOutput = await scrape.ExecuteAsync(sliceOutput.ToMaybe());
-            var ripOutput = await rip.ExecuteAsync(scrapeOutput.ToMaybe());
-            var dedupOutput = await dedup.ExecuteAsync(ripOutput.ToMaybe());
-            await match.ExecuteAsync(dedupOutput.ToMaybe());
+            var serializedNewImageJobs = JsonConvert.SerializeObject(newImageJobs);
+
+            using (var rip = new GeneralProcess(RIP, string.Format("\"{0}\"", folderOfMediaFiles)))
+            {
+                using (var dedup = new GeneralProcess(DEDUP))
+                {
+                    using (var match = new GeneralProcess(MATCH))
+                    {
+                        var ripOutput = await rip.ExecuteAsync(serializedNewImageJobs.ToMaybe());
+                        var dedupOutput = await dedup.ExecuteAsync(ripOutput.ToMaybe());
+                        var matchOutput = await match.ExecuteAsync(dedupOutput.ToMaybe());
+                        MoveCompletedPhotos(matchOutput);
+                    }
+                }
+            }
+        }
+
+        private static void MoveCompletedPhotos(string matchOutput)
+        {
+            if (Directory.Exists("Finished") == false)
+            {
+                Directory.CreateDirectory("Finished");
+            }
+
+            var finalImageModel = JsonConvert.DeserializeObject<ImageJobs>(matchOutput);
+            foreach (var imageJob in finalImageModel.Images)
+            {
+                foreach (var snapshot in imageJob.ImageSnapshots)
+                {
+                    var fileName = Path.GetFileName(snapshot);
+                    var destPath = Path.Combine("Finished", fileName);
+                    File.Move(snapshot, destPath);
+                }
+            }
+        }
+
+        private static string GetSnapshots(string pathToFolder)
+        {
+            return Directory.EnumerateFiles(pathToFolder, "*.png", SearchOption.AllDirectories)
+                .Select(Path.GetFullPath)
+                .Select(s => string.Format("\"{0}\"", s)) // Quote the paths
+                .Aggregate<string>((a, b) => string.Format("{0} {1}", a, b))
+                .Trim();
         }
     }
 }

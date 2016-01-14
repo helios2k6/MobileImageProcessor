@@ -20,7 +20,6 @@
  */
 
 using CommonImageModel;
-using Functional.Maybe;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -80,12 +79,10 @@ namespace Dedup
 
         private static bool AreSnapshotsSimilarEnough(SnapshotContext a, SnapshotContext b)
         {
-            return (from aSnapshot in a.ScaledDownSnapshot
-                    from bSnapshot in b.ScaledDownSnapshot
-                    select AreImagesSimilarEnough(aSnapshot, bSnapshot)).OrElse(false);
+            return AreImagesSimilarEnough(a.ScaledDownSnapshot, b.ScaledDownSnapshot);
         }
 
-        private static bool AreImagesSimilarEnough(Image a, Image b)
+        private static bool AreImagesSimilarEnough(LockBitImage a, LockBitImage b)
         {
             // Easy checks to prevent expensive cycling
             if (a.Height != b.Height || a.Width != b.Width)
@@ -93,20 +90,35 @@ namespace Dedup
                 return false;
             }
 
-            using (var aSnapshotBitmap = new LockBitImage(a))
+            int maxPixelDifference = (a.Height * a.Width) / 10;
+            int pixelsThatMatch = 0;
+            foreach (var coordinate in GetPixelCoordinates(a.Width, a.Height))
             {
-                using (var bSnapshotBitmap = new LockBitImage(b))
-                {
-                    var similarPixels = from coordinate in GetPixelCoordinates(a.Width, a.Height).AsParallel()
-                                        let x = coordinate.Item1
-                                        let y = coordinate.Item2
-                                        let aPixel = aSnapshotBitmap.GetPixel(x, y)
-                                        let bPixel = bSnapshotBitmap.GetPixel(x, y)
-                                        select ArePixelsCloseEnough(aPixel, bPixel);
+                var x = coordinate.Item1;
+                var y = coordinate.Item2;
 
-                    return similarPixels.Count(pixelIsSimilar => pixelIsSimilar == false) < (a.Height * a.Width) / 10; // 10% pixel non-similarity tolerance
+                if (ArePixelsCloseEnough(a.GetPixel(x, y), b.GetPixel(x, y)))
+                {
+                    pixelsThatMatch++;
+                    if (pixelsThatMatch >= maxPixelDifference)
+                    {
+                        return false;
+                    }
                 }
             }
+
+            return true;
+
+#if false
+            var similarPixels = from coordinate in GetPixelCoordinates(a.Width, a.Height).AsParallel()
+                                let x = coordinate.Item1
+                                let y = coordinate.Item2
+                                let aPixel = a.GetPixel(x, y)
+                                let bPixel = b.GetPixel(x, y)
+                                select ArePixelsCloseEnough(aPixel, bPixel);
+
+            return similarPixels.Count(pixelIsSimilar => pixelIsSimilar == false) < (a.Height * a.Width) / 10; // 10% pixel non-similarity tolerance
+#endif
         }
 
         private static IEnumerable<Tuple<int, int>> GetPixelCoordinates(int width, int height)

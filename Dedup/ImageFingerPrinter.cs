@@ -21,57 +21,43 @@
 
 using CommonImageModel;
 using System;
-using System.IO;
+using System.Drawing;
+using System.Linq;
 
 namespace Dedup
 {
     /// <summary>
-    /// Represents the context around a Snapshot
+    /// Class that fingerprints an image
     /// </summary>
-    internal sealed class SnapshotContext : IDisposable
+    internal static class ImageFingerPrinter
     {
         /// <summary>
-        /// Construct a new Snapshot Context
+        /// Calculate the fingerprint of an image
         /// </summary>
-        /// <param name="snapshotPath"></param>
-        /// <param name="scaledDownSnapshot"></param>
-        public SnapshotContext(
-            string snapshotPath,
-            LockBitImage scaledDownSnapshot,
-            int fingerPrint
-        )
+        /// <param name="image">The image to fingerprint</param>
+        /// <returns>An int representing this image's fingerprint</returns>
+        public static int CalculateFingerPrint(LockBitImage image)
         {
-            SnapshotPath = snapshotPath;
-            ScaledDownSnapshot = scaledDownSnapshot;
-            FingerPrint = fingerPrint;
+            return -1;
         }
 
         /// <summary>
-        /// The path to the snapshot file
+        /// Gets the fingerprint of a square of pixels 
         /// </summary>
-        public string SnapshotPath { get; private set; }
-
-        /// <summary>
-        /// The scaled down snapshot
-        /// </summary>
-        public LockBitImage ScaledDownSnapshot { get; private set; }
-
-        /// <summary>
-        /// The snapshot fingerprint 
-        /// </summary>
-        public int FingerPrint { get; private set; }
-
-        /// <summary>
-        /// Dispose of this object
-        /// </summary>
-        public void Dispose()
+        /// <param name="image">The image</param>
+        /// <param name="x">The x coordinate of the top left corner of the square</param>
+        /// <param name="y">The y coordinate of the top left corner of the square</param>
+        /// <returns>The fingerprint of this specific square</returns>
+        private static int GetSquareFingerPrint(LockBitImage image, int x, int y, int length)
         {
-            ScaledDownSnapshot.Dispose();
+            return (int)Math.Floor((from xCoord in Enumerable.Range(x, length)
+                                    from yCoord in Enumerable.Range(y, length)
+                                    select image.GetPixel(xCoord, yCoord)).Average<Color>(c => CalculateColorHash(c)));
         }
 
-        public override string ToString()
+        private static int CalculateColorHash(Color color)
         {
-            return Path.GetFileName(SnapshotPath);
+            return color.R + color.G + color.B;
         }
     }
 }

@@ -29,18 +29,34 @@ namespace Dispatch
     /// </summary>
     internal sealed class GeneralProcess : AutoPipingProcess
     {
-        public GeneralProcess(ICollection<string> processNames)
-            : base(CreateProcess(processNames))
+        /// <summary>
+        /// Creates a General Process with the specified process names and arguments
+        /// </summary>
+        /// <param name="processNames"></param>
+        /// <param name="arguments"></param>
+        public GeneralProcess(ICollection<string> processNames, string arguments)
+            : base(CreateProcess(processNames, arguments))
         {
         }
 
-        private static Process CreateProcess(ICollection<string> processNames)
+        /// <summary>
+        /// Creates a General Process with the specified process names and no program arguments
+        /// </summary>
+        /// <param name="processNames"></param>
+        public GeneralProcess(ICollection<string> processNames)
+            : this(processNames, null)
+        {
+        }
+
+        private static Process CreateProcess(ICollection<string> processNames, string arguments)
         {
             var process = new Process();
+            process.StartInfo.Arguments = arguments;
             process.StartInfo.CreateNoWindow = true;
             process.StartInfo.FileName = GetProcessName(processNames);
             process.StartInfo.RedirectStandardInput = true;
             process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.UseShellExecute = false;
 
             return process;
         }

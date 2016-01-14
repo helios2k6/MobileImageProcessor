@@ -24,6 +24,7 @@ using Functional.Maybe;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 
 namespace Dedup
@@ -48,17 +49,20 @@ namespace Dedup
 
             using (new TimingToken("Dedup", true))
             {
-                var loadedSnapshots = SnapshotLoader.LoadSnapshots(imageJobsMaybe.Value);
-                var duplicateSnapshots = DuplicateSnapshotDetector.DetectDuplicates(loadedSnapshots);
-                var remainingSnapshots = DuplicateSnapshotProcessor.DeleteDuplicateImages(duplicateSnapshots);
-                var pathToRemainingSnapshots = remainingSnapshots.Select(s => s.SnapshotPath);
+                IEnumerable<SnapshotContext> loadedSnapshots = SnapshotLoader.LoadSnapshots(imageJobsMaybe.Value);
+                IEnumerable<IEnumerable<SnapshotContext>> fingerprintGroup = DuplicateSnapshotGrouper.GroupPotientialDuplicates(loadedSnapshots);
+                IEnumerable<IEnumerable<SnapshotContext>> duplicateSnapshotGroups = from fingerPrintGroup in fingerprintGroup
+                                                                                    from detectedDuplicate in DuplicateSnapshotDetector.DetectDuplicates(fingerPrintGroup)
+                                                                                    select detectedDuplicate;
+                IEnumerable<SnapshotContext> remainingSnapshots = DuplicateSnapshotProcessor.DeleteDuplicateImages(duplicateSnapshotGroups);
+                IEnumerable<string> pathToRemainingSnapshots = remainingSnapshots.Select(s => s.SnapshotPath);
 
                 DisposeOfOldSnapshots(loadedSnapshots);
                 loadedSnapshots = null;
-                duplicateSnapshots = null;
                 remainingSnapshots = null;
+                duplicateSnapshotGroups = null;
 
-                var newImageJobs = DeletedSnapshotsCoalescer.CoalesceDeletedSnapshots(
+                ImageJobs newImageJobs = DeletedSnapshotsCoalescer.CoalesceDeletedSnapshots(
                     imageJobsMaybe.Value,
                     pathToRemainingSnapshots
                 );

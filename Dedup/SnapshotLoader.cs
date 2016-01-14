@@ -44,26 +44,39 @@ namespace Dedup
         public static IEnumerable<SnapshotContext> LoadSnapshots(ImageJobs imageJobs)
         {
             return GetAllImagePaths(imageJobs)
-                    .Select(LoadFullSizedSnapshots)
-                    .SelectWhereValueExist(ResizeImageAndDisposeOfOriginal);
+                .Select(TryLoadSnapshot)
+                .SelectWhereValueExist(i => i);
         }
 
-        private static SnapshotContext ResizeImageAndDisposeOfOriginal(Tuple<string, Image> snapshotPathAndImage)
-        {
-            Image originalSnapshot = snapshotPathAndImage.Item2;
-            using (originalSnapshot)
-            {
-                return new SnapshotContext(
-                    snapshotPathAndImage.Item1,
-                    ImageTransformations.ResizeImage(originalSnapshot, TARGET_WIDTH, TARGET_HEIGHT).ToMaybe()
-                );
-            }
-        }
-
-        private static Maybe<Tuple<string, Image>> LoadFullSizedSnapshots(string snapshotPath)
+        private static Maybe<SnapshotContext> TryLoadSnapshot(string snapshotPath)
         {
             return from image in CommonFunctions.TryLoadImage(snapshotPath)
-                   select Tuple.Create(snapshotPath, image);
+                   from transformedImage in ImageTransformations.TryResizeImage(image, TARGET_WIDTH, TARGET_WIDTH)
+                   let lockbitImage = new LockBitImage(transformedImage)
+                   select CommonFunctions.ExecThenDispose(
+                        () => new SnapshotContext(snapshotPath, lockbitImage, GetFingerPrint(lockbitImage)),
+                        image,
+                        transformedImage
+                   );
+        }
+
+        private static int GetFingerPrint(LockBitImage image)
+        {
+            // Remember: x,y is in the top left corner
+            Color topLeft = image.GetPixel(0, 0);
+            Color topRight = image.GetPixel(TARGET_WIDTH - 1, 0);
+            Color bottomLeft = image.GetPixel(0, TARGET_HEIGHT - 1);
+            Color bottomRight = image.GetPixel(TARGET_WIDTH - 1, TARGET_HEIGHT - 1);
+
+            return GetColorHashOut(topLeft) +
+                GetColorHashOut(topRight) +
+                GetColorHashOut(bottomLeft) +
+                GetColorHashOut(bottomRight);
+        }
+
+        private static int GetColorHashOut(Color color)
+        {
+            return color.R + color.G + color.B;
         }
 
         private static IEnumerable<string> GetAllImagePaths(ImageJobs imageJobs)

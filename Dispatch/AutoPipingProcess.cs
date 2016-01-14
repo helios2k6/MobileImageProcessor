@@ -101,6 +101,8 @@ namespace Dispatch
         private void WriteToStandardIn(string input)
         {
             _process.StandardInput.Write(input);
+            _process.StandardInput.Flush();
+            _process.StandardInput.Close();
         }
 
         private void StartProcess()

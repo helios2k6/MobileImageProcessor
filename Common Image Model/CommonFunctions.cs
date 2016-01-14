@@ -89,5 +89,40 @@ namespace CommonImageModel
 
             return Maybe<Image>.Nothing;
         }
+
+        /// <summary>
+        /// Load the Image as a LockBitImage instead of as a regular image
+        /// </summary>
+        /// <param name="imagePath"></param>
+        /// <returns></returns>
+        public static Maybe<LockBitImage> TryLoadImageAsLockBit(string imagePath)
+        {
+            return from image in TryLoadImage(imagePath)
+                   select ExecThenDispose<LockBitImage>(
+                        () => new LockBitImage(image),
+                        image
+                   );
+        }
+
+        /// <summary>
+        /// Execute some function that returns a T and then dispose of any resources
+        /// </summary>
+        /// <typeparam name="T">The type T</typeparam>
+        /// <param name="func">The function to execute</param>
+        /// <param name="disposables">The array of disposables</param>
+        /// <returns>Whatever Func was supposed to return</returns>
+        public static T ExecThenDispose<T>(
+            Func<T> func,
+            params IDisposable[] disposables
+        )
+        {
+            T result = func.Invoke();
+            foreach (var disposable in disposables)
+            {
+                disposable.Dispose();
+            }
+
+            return result;
+        }
     }
 }

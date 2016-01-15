@@ -28,8 +28,6 @@ namespace Dedup
     /// </summary>
     internal sealed class FingerPrint : IEquatable<FingerPrint>
     {
-        public int Upper
-
         public bool Equals(FingerPrint fingerPrint)
         {
             if (fingerPrint == null)

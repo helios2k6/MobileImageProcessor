@@ -97,6 +97,15 @@ namespace CommonImageModel
             get { return _height; }
         }
 
+        /// <summary>
+        /// Clones the backing image and returns it
+        /// </summary>
+        /// <returns>A clone of the backing Image</returns>
+        public Image GetImageClone()
+        {
+            return _image.Clone() as Image;
+        }
+
         public void Dispose()
         {
             _bitmap.UnlockBits(_bitmapData);

@@ -20,7 +20,6 @@
  */
 
 using CommonImageModel;
-using System;
 using System.Drawing;
 using System.Linq;
 
@@ -31,33 +30,58 @@ namespace Dedup
     /// </summary>
     internal static class ImageFingerPrinter
     {
-        /// <summary>
-        /// Calculate the fingerprint of an image
-        /// </summary>
-        /// <param name="image">The image to fingerprint</param>
-        /// <returns>An int representing this image's fingerprint</returns>
-        public static int CalculateFingerPrint(LockBitImage image)
-        {
-            return -1;
-        }
+        private const int MACROBLOCK_LENGTH = 4;
 
         /// <summary>
-        /// Gets the fingerprint of a square of pixels 
+        /// Calculates the FingerPrint of the LockBitImage
         /// </summary>
-        /// <param name="image">The image</param>
-        /// <param name="x">The x coordinate of the top left corner of the square</param>
-        /// <param name="y">The y coordinate of the top left corner of the square</param>
-        /// <returns>The fingerprint of this specific square</returns>
-        private static int GetSquareFingerPrint(LockBitImage image, int x, int y, int length)
+        /// <param name="image">The LockBitImage</param>
+        /// <returns>A FingerPrint representing this LockBitImage</returns>
+        public static FingerPrint CalculateFingerPrint(LockBitImage image)
         {
-            return (int)Math.Floor((from xCoord in Enumerable.Range(x, length)
-                                    from yCoord in Enumerable.Range(y, length)
-                                    select image.GetPixel(xCoord, yCoord)).Average<Color>(c => CalculateColorHash(c)));
+            var cropWindow = new Size(MACROBLOCK_LENGTH, MACROBLOCK_LENGTH);
+
+            var topLeftPoint = new Point(0, 0);
+            var topRightPoint = new Point(image.Width - MACROBLOCK_LENGTH, 0);
+            var centerPoint = new Point((image.Width / 2) - (MACROBLOCK_LENGTH / 2), (image.Height / 2) - (MACROBLOCK_LENGTH / 2));
+            var bottomLeftPoint = new Point(0, image.Height - MACROBLOCK_LENGTH);
+            var bottomRightPoint = new Point(image.Width - MACROBLOCK_LENGTH, image.Height - MACROBLOCK_LENGTH);
+
+            var focusTopLeftPoint = new Point((image.Width / 3) - (MACROBLOCK_LENGTH / 2), (image.Height / 3) - (MACROBLOCK_LENGTH / 2));
+            var focusTopRightPoint = new Point((image.Width * 2 / 3) - (MACROBLOCK_LENGTH / 2), (image.Height / 3) - (MACROBLOCK_LENGTH / 2));
+            var focusBottomLeftPoint = new Point((image.Width / 3) - (MACROBLOCK_LENGTH / 2), (image.Height * 2 / 3) - (MACROBLOCK_LENGTH / 2));
+            var focusBottomRightPoint = new Point((image.Width * 2 / 3) - (MACROBLOCK_LENGTH / 2), (image.Height * 2 / 3) - (MACROBLOCK_LENGTH / 2));
+
+            return new FingerPrint(
+                GetMacroblock(image, new Rectangle(topLeftPoint, cropWindow)),
+                GetMacroblock(image, new Rectangle(topRightPoint, cropWindow)),
+                GetMacroblock(image, new Rectangle(centerPoint, cropWindow)),
+                GetMacroblock(image, new Rectangle(bottomLeftPoint, cropWindow)),
+                GetMacroblock(image, new Rectangle(bottomRightPoint, cropWindow)),
+                GetMacroblock(image, new Rectangle(focusTopLeftPoint, cropWindow)),
+                GetMacroblock(image, new Rectangle(focusTopRightPoint, cropWindow)),
+                GetMacroblock(image, new Rectangle(focusBottomLeftPoint, cropWindow)),
+                GetMacroblock(image, new Rectangle(focusBottomRightPoint, cropWindow))
+            );
         }
 
-        private static int CalculateColorHash(Color color)
+        private static Macroblock GetMacroblock(LockBitImage image, Rectangle cropArea)
         {
-            return color.R + color.G + color.B;
+            Color[,] colorGrid = new Color[cropArea.Width, cropArea.Height];
+            int colorGridY = 0;
+            foreach (var y in Enumerable.Range(cropArea.Y, cropArea.Height))
+            {
+                int colorGridX = 0;
+                foreach (var x in Enumerable.Range(cropArea.X, cropArea.Width))
+                {
+                    colorGrid[colorGridY, colorGridX] = image.GetPixel(x, y);
+                    colorGridX++;
+                }
+
+                colorGridY++;
+            }
+
+            return new Macroblock(colorGrid);
         }
     }
 }

@@ -20,6 +20,8 @@
  */
 
 using System;
+using System.Drawing;
+using System.Linq;
 
 namespace Dedup
 {
@@ -28,22 +30,66 @@ namespace Dedup
     /// </summary>
     internal sealed class FingerPrint : IEquatable<FingerPrint>
     {
-        public bool Equals(FingerPrint fingerPrint)
+        private readonly Macroblock _topLeft;
+        private readonly Macroblock _topRight;
+        private readonly Macroblock _center;
+        private readonly Macroblock _bottomLeft;
+        private readonly Macroblock _bottomRight;
+        private readonly Macroblock _focusSquareTopLeft;
+        private readonly Macroblock _focusSquareTopRight;
+        private readonly Macroblock _focusSquareBottomLeft;
+        private readonly Macroblock _focusSquareBottomRight;
+
+        /// <summary>
+        /// Create a new Fingerprint based on the provided Macroblocks
+        /// </summary>
+        public FingerPrint(
+            Macroblock topLeft,
+            Macroblock topRight,
+            Macroblock center,
+            Macroblock bottomLeft,
+            Macroblock bottomRight,
+            Macroblock focusSquareTopLeft,
+            Macroblock focusSquareTopRight,
+            Macroblock focusSquareBottomLeft,
+            Macroblock focusSquareBottomRight
+        )
         {
-            if (fingerPrint == null)
+            _topLeft = topLeft;
+            _topRight = topRight;
+            _center = center;
+            _bottomLeft = bottomLeft;
+            _bottomRight = bottomRight;
+
+            _focusSquareTopLeft = focusSquareBottomLeft;
+            _focusSquareTopRight = focusSquareTopRight;
+            _focusSquareBottomLeft = focusSquareBottomLeft;
+            _focusSquareBottomRight = focusSquareBottomRight;
+        }
+
+        public bool Equals(FingerPrint other)
+        {
+            if (other == null)
             {
                 return false;
             }
 
-            if (ReferenceEquals(this, fingerPrint))
+            if (ReferenceEquals(this, other))
             {
                 return true;
             }
 
-            return true;
+            return Equals(_topLeft, other._topLeft) &&
+                Equals(_topRight, other._topRight) &&
+                Equals(_center, other._center) &&
+                Equals(_bottomLeft, other._bottomLeft) &&
+                Equals(_bottomRight, other._bottomRight) &&
+                Equals(_focusSquareTopLeft, other._focusSquareTopLeft) &&
+                Equals(_focusSquareTopRight, other._focusSquareTopRight) &&
+                Equals(_focusSquareBottomLeft, other._focusSquareBottomLeft) &&
+                Equals(_focusSquareBottomRight, other._focusSquareBottomRight);
         }
 
-        // override object.Equals
         public override bool Equals(object obj)
         {
             if (obj == null || GetType() != obj.GetType())
@@ -54,11 +100,30 @@ namespace Dedup
             return Equals(obj as FingerPrint);
         }
 
-        // override object.GetHashCode
         public override int GetHashCode()
         {
-            // TODO: write your implementation of GetHashCode() here
-            return base.GetHashCode();
+            return _topLeft.GetHashCode() ^
+                _topRight.GetHashCode() ^
+                _center.GetHashCode() ^
+                _bottomLeft.GetHashCode() ^
+                _bottomRight.GetHashCode() ^
+                _focusSquareTopLeft.GetHashCode() ^
+                _focusSquareTopRight.GetHashCode() ^
+                _focusSquareBottomLeft.GetHashCode() ^
+                _focusSquareBottomRight.GetHashCode();
+        }
+
+        public bool IsSimilarTo(FingerPrint other)
+        {
+            return _topLeft.IsSimilarTo(other._topLeft) &&
+            _topRight.IsSimilarTo(other._topRight) &&
+            _center.IsSimilarTo(other._center) &&
+            _bottomLeft.IsSimilarTo(other._bottomLeft) &&
+            _bottomRight.IsSimilarTo(other._bottomRight) &&
+            _focusSquareTopLeft.IsSimilarTo(other._focusSquareTopLeft) &&
+            _focusSquareTopRight.IsSimilarTo(other._focusSquareTopRight) &&
+            _focusSquareBottomLeft.IsSimilarTo(other._focusSquareBottomLeft) &&
+            _focusSquareBottomRight.IsSimilarTo(other._focusSquareBottomRight);
         }
     }
 }

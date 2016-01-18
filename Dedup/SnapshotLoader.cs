@@ -54,29 +54,14 @@ namespace Dedup
                    from transformedImage in ImageTransformations.TryResizeImage(image, TARGET_WIDTH, TARGET_WIDTH)
                    let lockbitImage = new LockBitImage(transformedImage)
                    select CommonFunctions.ExecThenDispose(
-                        () => new SnapshotContext(snapshotPath, lockbitImage, GetFingerPrint(lockbitImage)),
+                        () => new SnapshotContext(
+                            snapshotPath,
+                            lockbitImage,
+                            ImageFingerPrinter.CalculateFingerPrint(lockbitImage)
+                        ),
                         image,
                         transformedImage
                    );
-        }
-
-        private static int GetFingerPrint(LockBitImage image)
-        {
-            // Remember: x,y is in the top left corner
-            Color topLeft = image.GetPixel(0, 0);
-            Color topRight = image.GetPixel(TARGET_WIDTH - 1, 0);
-            Color bottomLeft = image.GetPixel(0, TARGET_HEIGHT - 1);
-            Color bottomRight = image.GetPixel(TARGET_WIDTH - 1, TARGET_HEIGHT - 1);
-
-            return GetColorHashOut(topLeft) +
-                GetColorHashOut(topRight) +
-                GetColorHashOut(bottomLeft) +
-                GetColorHashOut(bottomRight);
-        }
-
-        private static int GetColorHashOut(Color color)
-        {
-            return color.R + color.G + color.B;
         }
 
         private static IEnumerable<string> GetAllImagePaths(ImageJobs imageJobs)

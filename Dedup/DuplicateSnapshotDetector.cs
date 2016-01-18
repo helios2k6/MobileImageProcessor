@@ -19,10 +19,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using CommonImageModel;
-using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace Dedup
@@ -32,8 +29,6 @@ namespace Dedup
     /// </summary>
     internal static class DuplicateSnapshotDetector
     {
-        private const int PIXEL_COLOR_EPSILON = 4;
-
         /// <summary>
         /// Detect images that are duplicates and group them together
         /// </summary>
@@ -57,7 +52,7 @@ namespace Dedup
                 foreach (HashSet<SnapshotContext> group in groupsOfSnapshots)
                 {
                     SnapshotContext representativeSnapshotContext = group.First();
-                    if (AreSnapshotsSimilarEnough(uncheckedSnapshot, representativeSnapshotContext))
+                    if (uncheckedSnapshot.FingerPrint.IsSimilarTo(representativeSnapshotContext.FingerPrint))
                     {
                         group.Add(uncheckedSnapshot);
                         addedToGroup = true;
@@ -75,90 +70,6 @@ namespace Dedup
             }
 
             return groupsOfSnapshots;
-        }
-
-        private static bool AreSnapshotsSimilarEnough(SnapshotContext a, SnapshotContext b)
-        {
-            return AreImagesSimilarEnough(a.ScaledDownSnapshot, b.ScaledDownSnapshot);
-        }
-
-        private static bool AreImagesSimilarEnough(LockBitImage a, LockBitImage b)
-        {
-            // Easy checks to prevent expensive cycling
-            if (a.Height != b.Height || a.Width != b.Width)
-            {
-                return false;
-            }
-
-            int maxPixelDifference = (a.Height * a.Width) / 10;
-            int pixelsThatMatch = 0;
-            foreach (var coordinate in GetPixelCoordinates(a.Width, a.Height))
-            {
-                var x = coordinate.Item1;
-                var y = coordinate.Item2;
-
-                if (ArePixelsCloseEnough(a.GetPixel(x, y), b.GetPixel(x, y)))
-                {
-                    pixelsThatMatch++;
-                    if (pixelsThatMatch >= maxPixelDifference)
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-
-#if false
-            var similarPixels = from coordinate in GetPixelCoordinates(a.Width, a.Height).AsParallel()
-                                let x = coordinate.Item1
-                                let y = coordinate.Item2
-                                let aPixel = a.GetPixel(x, y)
-                                let bPixel = b.GetPixel(x, y)
-                                select ArePixelsCloseEnough(aPixel, bPixel);
-
-            return similarPixels.Count(pixelIsSimilar => pixelIsSimilar == false) < (a.Height * a.Width) / 10; // 10% pixel non-similarity tolerance
-#endif
-        }
-
-        private static IEnumerable<Tuple<int, int>> GetPixelCoordinates(int width, int height)
-        {
-            var knownCoordinates = new HashSet<Tuple<int, int>>();
-            var random = new Random();
-            var numberOfPixelsToCheck = (int)Math.Floor((width * height * 2.0) / 5.0); // Check 40% of the pixels
-            for (int i = 0; i < numberOfPixelsToCheck; i++)
-            {
-                yield return GetNextTuple(width, height, random, knownCoordinates);
-            }
-        }
-
-        private static Tuple<int, int> GetNextTuple(
-            int width,
-            int height,
-            Random random,
-            HashSet<Tuple<int, int>> knownCoordinates
-        )
-        {
-            while (true)
-            {
-                var xCoord = random.Next(width);
-                var yCoord = random.Next(height);
-                var tupleCoord = Tuple.Create(xCoord, yCoord);
-                if (knownCoordinates.Contains(tupleCoord))
-                {
-                    continue;
-                }
-
-                knownCoordinates.Add(tupleCoord);
-                return tupleCoord;
-            }
-        }
-
-        private static bool ArePixelsCloseEnough(Color a, Color b)
-        {
-            return Math.Abs(a.R - b.R) < PIXEL_COLOR_EPSILON &&
-                Math.Abs(a.G - b.G) < PIXEL_COLOR_EPSILON &&
-                Math.Abs(a.B - b.B) < PIXEL_COLOR_EPSILON;
         }
     }
 }

@@ -45,12 +45,13 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DuplicateSnapshotGrouper.cs" />
     <Compile Include="DeletedSnapshotsCoalescer.cs" />
     <Compile Include="Driver.cs" />
     <Compile Include="DuplicateSnapshotDetector.cs" />
     <Compile Include="DuplicateSnapshotProcessor.cs" />
+    <Compile Include="FingerPrint.cs" />
     <Compile Include="ImageFingerPrinter.cs" />
+    <Compile Include="Macroblock.cs" />
     <Compile Include="SnapshotContext.cs" />
     <Compile Include="SnapshotLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

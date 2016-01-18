@@ -49,10 +49,7 @@ namespace Dedup
             using (new TimingToken("Dedup", true))
             {
                 IEnumerable<SnapshotContext> loadedSnapshots = SnapshotLoader.LoadSnapshots(imageJobsMaybe.Value);
-                IEnumerable<IEnumerable<SnapshotContext>> fingerprintGroup = DuplicateSnapshotGrouper.GroupPotientialDuplicates(loadedSnapshots);
-                IEnumerable<IEnumerable<SnapshotContext>> duplicateSnapshotGroups = from fingerPrintGroup in fingerprintGroup
-                                                                                    from detectedDuplicate in DuplicateSnapshotDetector.DetectDuplicates(fingerPrintGroup)
-                                                                                    select detectedDuplicate;
+                IEnumerable<IEnumerable<SnapshotContext>> duplicateSnapshotGroups = DuplicateSnapshotDetector.DetectDuplicates(loadedSnapshots);
                 IEnumerable<SnapshotContext> remainingSnapshots = DuplicateSnapshotProcessor.DeleteDuplicateImages(duplicateSnapshotGroups);
                 IEnumerable<string> pathToRemainingSnapshots = remainingSnapshots.Select(s => s.SnapshotPath);
 

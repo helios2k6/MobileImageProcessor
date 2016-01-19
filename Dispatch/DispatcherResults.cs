@@ -19,36 +19,29 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
+using CommonImageModel;
+using System.Collections.Generic;
 
-namespace CommonImageModel
+namespace Dispatch
 {
-    /// <summary>
-    /// This class deduces the process file name given the environment
-    /// </summary>
-    public static class ProcessNameDeducer
+    internal sealed class DispatcherResults
     {
-        /// <summary>
-        /// Deduce the process file name given the root process name
-        /// </summary>
-        public static string CalculateProcessName(string rootProcessName)
+        public DispatcherResults(
+            IEnumerable<ImageJob> processedImageJobs,
+            IEnumerable<ImageJob> unprocessedImageJobs
+        )
         {
-            var operationSystem = Environment.OSVersion;
-            switch (operationSystem.Platform)
-            {
-                case PlatformID.Win32NT:
-                case PlatformID.Win32S:
-                case PlatformID.Win32Windows:
-                case PlatformID.WinCE:
-                    return rootProcessName + ".exe";
-                case PlatformID.MacOSX:
-                case PlatformID.Unix:
-                    return rootProcessName;
-                case PlatformID.Xbox:
-                    throw new InvalidOperationException("Xbox OS not supported");
-                default:
-                    throw new InvalidOperationException("Unknown OS detected");
-            }
+            ProcessedImageJobs = processedImageJobs;
+            UnprocessedImageJobs = unprocessedImageJobs;
         }
+
+        /// <summary>
+        /// The IEnumerable of successfully processed image jobs
+        /// </summary>
+        public IEnumerable<ImageJob> ProcessedImageJobs { get; private set; }
+        /// <summary>
+        /// The IEnumerable of unsuccessfully processed image jobs
+        /// </summary>
+        public IEnumerable<ImageJob> UnprocessedImageJobs { get; private set; }
     }
 }

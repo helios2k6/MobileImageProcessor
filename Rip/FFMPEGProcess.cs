@@ -70,7 +70,7 @@ namespace Rip
 
             _hasExecuted = true;
             _process.StartInfo.UseShellExecute = true;
-            _process.StartInfo.FileName = ProcessNameDeducer.CalculateProcessName(FFMPEG_PROC_NAME);
+            _process.StartInfo.FileName = EnvironmentTools.CalculateProcessName(FFMPEG_PROC_NAME);
             _process.StartInfo.CreateNoWindow = true;
             _process.StartInfo.Arguments = GetArguments();
 
@@ -97,9 +97,9 @@ namespace Rip
                 FormatTimeSpanFileName(_snapshotTimestamp)
             );
             return string.Format(
-                "-i \"{0}\" -ss {1} -vframes 8 -vf fps=4 \"{2}\"",
-                _targetMediaFile,
+                "-ss {0} -i \"{1}\" -vframes 8 -vf fps=4 \"{2}\"",
                 _snapshotTimestamp - BUFFER_TIME,
+                _targetMediaFile,
                 outputPath
             );
         }

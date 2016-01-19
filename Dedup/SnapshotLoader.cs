@@ -21,9 +21,7 @@
 
 using CommonImageModel;
 using Functional.Maybe;
-using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace Dedup

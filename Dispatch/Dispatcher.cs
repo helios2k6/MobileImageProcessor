@@ -23,6 +23,7 @@ using CommonImageModel;
 using Functional.Maybe;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -85,9 +86,9 @@ namespace Dispatch
         /// Path to the folder of media files
         /// </param>
         /// <returns>
-        /// A Task representing this operation
+        /// A Task representing this operation and the results of this Dispatcher run
         /// </returns>
-        public async static Task DispatchAllProcessesAsync(
+        public async static Task<DispatcherResults> DispatchAllProcessesAsync(
             string folderOfSnapshots,
             string folderOfMediaFiles
         )
@@ -98,18 +99,38 @@ namespace Dispatch
                 {
                     var sliceOutput = await slice.ExecuteAsync(Maybe<string>.Nothing);
                     var scrapeOutput = await scrape.ExecuteAsync(sliceOutput.ToMaybe());
-                    await ProcessRipDedupAndMatchAsync(scrapeOutput, folderOfMediaFiles);
+                    return await ProcessRipDedupAndMatchAsync(scrapeOutput, folderOfMediaFiles);
                 }
             }
         }
 
-        private async static Task ProcessRipDedupAndMatchAsync(string scrapeOutput, string folderOfMediaFiles)
+        private async static Task<DispatcherResults> ProcessRipDedupAndMatchAsync(
+            string scrapeOutput,
+            string folderOfMediaFiles
+        )
         {
             ImageJobs deserializedModel = JsonConvert.DeserializeObject<ImageJobs>(scrapeOutput);
+            var unprocessedImageJobs = new List<ImageJob>();
+            var processedImageJobs = new List<ImageJob>();
             foreach (ImageJob imageJob in deserializedModel.Images)
             {
-                await ProcessImageJobAsync(imageJob, folderOfMediaFiles);
+                try
+                {
+                    await ProcessImageJobAsync(imageJob, folderOfMediaFiles);
+                    processedImageJobs.Add(imageJob);
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine(
+                        "Unable to process snapshot {0}. Exception: {1}",
+                        imageJob.OriginalFilePath,
+                        e.Message
+                    );
+                    unprocessedImageJobs.Add(imageJob);
+                }
             }
+            
+            return new DispatcherResults(processedImageJobs, unprocessedImageJobs);
         }
 
         private async static Task ProcessImageJobAsync(ImageJob imageJob, string folderOfMediaFiles)
@@ -150,7 +171,15 @@ namespace Dispatch
                 {
                     var fileName = Path.GetFileName(snapshot);
                     var destPath = Path.Combine("Finished", fileName);
-                    File.Move(snapshot, destPath);
+                    try
+                    {
+                        File.Move(snapshot, destPath);
+                    }
+                    catch (IOException)
+                    {
+                        Console.Error.WriteLine("File {0} already exists", destPath);
+                    }
+                    
                 }
             }
         }
@@ -158,6 +187,7 @@ namespace Dispatch
         private static string GetSnapshots(string pathToFolder)
         {
             return Directory.EnumerateFiles(pathToFolder, "*.png", SearchOption.AllDirectories)
+                .Concat(Directory.EnumerateFiles(pathToFolder, "*.PNG", SearchOption.AllDirectories))
                 .Select(Path.GetFullPath)
                 .Select(s => string.Format("\"{0}\"", s)) // Quote the paths
                 .Aggregate<string>((a, b) => string.Format("{0} {1}", a, b))

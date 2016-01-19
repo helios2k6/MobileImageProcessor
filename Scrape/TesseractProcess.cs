@@ -90,7 +90,7 @@ namespace Scrape
             }
             _hasExecuted = true;
             _process.StartInfo.UseShellExecute = true;
-            _process.StartInfo.FileName = ProcessNameDeducer.CalculateProcessName(TESSERACT_PROC_NAME);
+            _process.StartInfo.FileName = EnvironmentTools.CalculateProcessName(TESSERACT_PROC_NAME);
             _process.StartInfo.CreateNoWindow = true;
             _process.StartInfo.Arguments = string.Format("\"{0}\" {1}", _imagePath, _outputArgument);
 

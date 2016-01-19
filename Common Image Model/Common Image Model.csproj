@@ -51,7 +51,7 @@
     <Compile Include="ImageTransformations.cs" />
     <Compile Include="LockBitImage.cs" />
     <Compile Include="Predicates.cs" />
-    <Compile Include="ProcessNameDeducer.cs" />
+    <Compile Include="EnvironmentTools.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SSIMCalculator.cs" />
     <Compile Include="TimingToken.cs" />

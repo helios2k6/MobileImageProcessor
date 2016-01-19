@@ -19,6 +19,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommonImageModel;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -51,13 +52,25 @@ namespace Dispatch
         private static Process CreateProcess(ICollection<string> processNames, string arguments)
         {
             var process = new Process();
+            if (EnvironmentTools.NeedsMono())
+            {
+                var targetProcessName = GetProcessName(processNames);
+                process.StartInfo.Arguments = string.Format("{0} {1}", targetProcessName, arguments);
+                process.StartInfo.FileName = "mono";
+            }
+            else
+            {
+                process.StartInfo.Arguments = arguments;
+                process.StartInfo.FileName = GetProcessName(processNames);
+            }
+
             process.StartInfo.Arguments = arguments;
             process.StartInfo.CreateNoWindow = true;
             process.StartInfo.FileName = GetProcessName(processNames);
             process.StartInfo.RedirectStandardInput = true;
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.UseShellExecute = false;
-
+            
             return process;
         }
     }

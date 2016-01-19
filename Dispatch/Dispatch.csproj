@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="AutoPipingProcess.cs" />
     <Compile Include="Dispatcher.cs" />
+    <Compile Include="DispatcherResults.cs" />
     <Compile Include="Driver.cs" />
     <Compile Include="GeneralProcess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

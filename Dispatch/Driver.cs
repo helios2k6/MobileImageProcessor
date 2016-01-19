@@ -19,8 +19,11 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommonImageModel;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Dispatch
 {
@@ -49,14 +52,72 @@ namespace Dispatch
                 return;
             }
 
-            Dispatcher.DispatchAllProcessesAsync(folderOfPictures, folderOfVideos).Wait();
+            DispatcherResults results = Dispatcher.DispatchAllProcessesAsync(folderOfPictures, folderOfVideos).Result;
+            PostProcessSuccessfulJobs(results.ProcessedImageJobs);
+            PostProcessUnsuccessfulJobs(results.UnprocessedImageJobs);
         }
 
+        private static void PostProcessSuccessfulJobs(IEnumerable<ImageJob> imageJobs)
+        {
+            PostProcessCore(imageJobs, "Successful_Snapshots");
+        }
+        
+        private static void PostProcessUnsuccessfulJobs(IEnumerable<ImageJob> imageJobs)
+        {
+            PostProcessCore(imageJobs, "Unsuccessful_Snapshots");
+        }
+        
+        private static void PostProcessCore(IEnumerable<ImageJob> imageJobs, string folderName)
+        {
+            if (imageJobs.Any() == false)
+            {
+                return;
+            }
+
+            var containingFolder = Path.GetDirectoryName(imageJobs.First().OriginalFilePath);
+            var unfinishedSnapshotFolder = Path.Combine(containingFolder, folderName);
+            if (Directory.Exists(unfinishedSnapshotFolder) == false)
+            {
+                Directory.CreateDirectory(unfinishedSnapshotFolder);
+            }
+            
+            foreach (var imageJob in imageJobs)
+            {
+                var finalFileName = Path.GetFileName(imageJob.OriginalFilePath);
+                TryMoveFile(imageJob.OriginalFilePath, Path.Combine(unfinishedSnapshotFolder, finalFileName));
+                TryDeleteFile(imageJob.SliceImagePath);
+            }
+        }
+
+        private static void TryMoveFile(string source, string dest)
+        {
+            try
+            {
+                File.Move(source, dest);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Could not move file {0} to {1}. {2}", source, dest, e.Message);
+            }
+        }
+        
+        private static void TryDeleteFile(string path)
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Could not delete file {0}. {1}", path, e.Message);
+            }
+        }
+        
         private static bool ValidateFolder(string folder)
         {
             if (Directory.Exists(folder) == false)
             {
-                Console.Error.WriteLine("{0} does not exist", folder);
+                Console.Error.WriteLine("{0} does not exist", Path.GetFullPath(folder));
                 PrintHelp();
                 return false;
             }

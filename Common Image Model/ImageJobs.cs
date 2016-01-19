@@ -21,6 +21,7 @@
 
 using Newtonsoft.Json;
 using System;
+using System.Text;
 
 namespace CommonImageModel
 {
@@ -36,5 +37,16 @@ namespace CommonImageModel
         /// </summary>
         [JsonProperty(PropertyName = "Images", Required = Required.Always)]
         public ImageJob[] Images { get; set; }
+
+        public override string ToString()
+        {
+            var builder = new StringBuilder();
+            foreach (var i in Images)
+            {
+                builder.Append(i.ToString()).Append(", ");
+            }
+
+            return builder.ToString();
+        }
     }
 }

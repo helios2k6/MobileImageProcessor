@@ -95,6 +95,11 @@ namespace CommonImageModel
                 GetHashCodeOrZero(ImageSnapshots);
         }
 
+        public override string ToString()
+        {
+            return OriginalFilePath;
+        }
+
         private static int GetHashCodeOrZero(object obj)
         {
             if (obj == null)

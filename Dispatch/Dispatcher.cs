@@ -97,8 +97,8 @@ namespace Dispatch
             {
                 using (var scrape = new GeneralProcess(SCRAPE))
                 {
-                    var sliceOutput = await slice.ExecuteAsync(Maybe<string>.Nothing);
-                    var scrapeOutput = await scrape.ExecuteAsync(sliceOutput.ToMaybe());
+                    string sliceOutput = await slice.ExecuteAsync(Maybe<string>.Nothing);
+                    string scrapeOutput = await scrape.ExecuteAsync(sliceOutput.ToMaybe());
                     return await ProcessRipDedupAndMatchAsync(scrapeOutput, folderOfMediaFiles);
                 }
             }
@@ -148,9 +148,9 @@ namespace Dispatch
                 {
                     using (var match = new GeneralProcess(MATCH))
                     {
-                        var ripOutput = await rip.ExecuteAsync(serializedNewImageJobs.ToMaybe());
-                        var dedupOutput = await dedup.ExecuteAsync(ripOutput.ToMaybe());
-                        var matchOutput = await match.ExecuteAsync(dedupOutput.ToMaybe());
+                        string ripOutput = await rip.ExecuteAsync(serializedNewImageJobs.ToMaybe());
+                        string dedupOutput = await dedup.ExecuteAsync(ripOutput.ToMaybe());
+                        string matchOutput = await match.ExecuteAsync(dedupOutput.ToMaybe());
                         MoveCompletedPhotos(matchOutput);
                     }
                 }

@@ -57,7 +57,7 @@ namespace Shift
 
         private static Maybe<int> TryGetTimeShift(string[] args)
         {
-            if (args.Length > 1)
+            if (args.Length > 0)
             {
                 string arg = args[0];
                 int parsedInt;

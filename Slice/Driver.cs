@@ -66,9 +66,7 @@ namespace Slice
                 return;
             }
 
-            var parser = new Parser();
-            var parseSuccess = parser.ParseArguments(args, options);
-            if (parseSuccess)
+            if (Parser.Default.ParseArguments(args, options))
             {
                 IEnumerable<ImageSliceContext> processedSlices = ImageProcessor.ProcessFiles(options.InputFiles);
                 IEnumerable<Maybe<ImageJob>> imageJobsMaybe = processedSlices.Select(Convert);
@@ -77,10 +75,6 @@ namespace Slice
                     Images = imageJobsMaybe.SelectWhereValueExist(t => t).ToArray(),
                 };
                 Console.WriteLine(JsonConvert.SerializeObject(imageJobs, Formatting.None));
-            }
-            else
-            {
-                Console.Error.Write(options.GetUsage());
             }
 
             CommonFunctions.CloseAllStandardFileHandles();

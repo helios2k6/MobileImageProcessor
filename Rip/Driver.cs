@@ -67,9 +67,7 @@ namespace Rip
                 return;
             }
 
-            var parser = new Parser();
-            var parseSuccess = parser.ParseArguments(args, options);
-            if (parseSuccess)
+            if (Parser.Default.ParseArguments(args, options))
             {
                 var imageJobs = CommonFunctions.TryReadStandardIn();
                 if (imageJobs.IsNothing())
@@ -86,10 +84,6 @@ namespace Rip
 
                     Console.WriteLine(JsonConvert.SerializeObject(newImageJobs));
                 }
-            }
-            else
-            {
-                Console.Error.WriteLine(options.GetUsage());
             }
 
             CommonFunctions.CloseAllStandardFileHandles();

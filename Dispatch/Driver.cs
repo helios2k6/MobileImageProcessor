@@ -19,6 +19,8 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommandLine;
+using CommandLine.Text;
 using CommonImageModel;
 using System;
 using System.Collections.Generic;
@@ -27,6 +29,33 @@ using System.Linq;
 
 namespace Dispatch
 {
+    internal sealed class CommandLineOptions
+    {
+        [Option('v', "videos", Required = true, HelpText = "Folder to videos")]
+        public string VideoFolder { get; set; }
+
+        [Option('p', "pictures", Required = true, HelpText = "Folder to pictures")]
+        public string PictureFolder { get; set; }
+
+        [Option('t', "time-shift", Required = false, HelpText = "How much to timeshift the scraped timecodes")]
+        public int? TimeShift { get; set; }
+
+        [HelpOption(HelpText = "Display this help text")]
+        public string GetUsage()
+        {
+            var help = new HelpText
+            {
+                Heading = new HeadingInfo("Dispatch", "1.0"),
+                Copyright = new CopyrightInfo("Andrew Johnson", 2015),
+                AdditionalNewLineAfterOption = true,
+                AddDashesToOption = true,
+            };
+
+            help.AddOptions(this);
+            return help.ToString();
+        }
+    }
+
     /// <summary>
     /// The main entry point for the Dispatch process
     /// </summary>
@@ -38,35 +67,38 @@ namespace Dispatch
         /// <param name="args">Program arguments</param>
         public static void Main(string[] args)
         {
-            if (args.Length < 2)
+            var commandLineOptions = new CommandLineOptions();
+            if (Parser.Default.ParseArguments(args, commandLineOptions))
             {
-                PrintHelp();
-                return;
+                string pictureFolder = commandLineOptions.PictureFolder;
+                string videoFolder = commandLineOptions.VideoFolder;
+                if (Directory.Exists(pictureFolder) == false || Directory.Exists(videoFolder) == false)
+                {
+                    Console.Error.WriteLine(string.Format("{0} or {1} does not exist", pictureFolder, videoFolder));
+                    Console.Error.WriteLine(commandLineOptions.GetUsage());
+                    return;
+                }
+
+                DispatcherResults results = Dispatcher.DispatchAllProcessesAsync(
+                    pictureFolder,
+                    videoFolder,
+                    commandLineOptions.TimeShift
+                ).Result;
+                PostProcessSuccessfulJobs(results.ProcessedImageJobs);
+                PostProcessUnsuccessfulJobs(results.UnprocessedImageJobs);
             }
-
-            var folderOfPictures = args[0];
-            var folderOfVideos = args[1];
-
-            if (ValidateFolder(folderOfPictures) == false || ValidateFolder(folderOfVideos) == false)
-            {
-                return;
-            }
-
-            DispatcherResults results = Dispatcher.DispatchAllProcessesAsync(folderOfPictures, folderOfVideos).Result;
-            PostProcessSuccessfulJobs(results.ProcessedImageJobs);
-            PostProcessUnsuccessfulJobs(results.UnprocessedImageJobs);
         }
 
         private static void PostProcessSuccessfulJobs(IEnumerable<ImageJob> imageJobs)
         {
             PostProcessCore(imageJobs, "Successful_Snapshots");
         }
-        
+
         private static void PostProcessUnsuccessfulJobs(IEnumerable<ImageJob> imageJobs)
         {
             PostProcessCore(imageJobs, "Unsuccessful_Snapshots");
         }
-        
+
         private static void PostProcessCore(IEnumerable<ImageJob> imageJobs, string folderName)
         {
             if (imageJobs.Any() == false)
@@ -80,7 +112,7 @@ namespace Dispatch
             {
                 Directory.CreateDirectory(unfinishedSnapshotFolder);
             }
-            
+
             foreach (var imageJob in imageJobs)
             {
                 var finalFileName = Path.GetFileName(imageJob.OriginalFilePath);
@@ -100,7 +132,7 @@ namespace Dispatch
                 Console.Error.WriteLine("Could not move file {0} to {1}. {2}", source, dest, e.Message);
             }
         }
-        
+
         private static void TryDeleteFile(string path)
         {
             try
@@ -111,24 +143,6 @@ namespace Dispatch
             {
                 Console.Error.WriteLine("Could not delete file {0}. {1}", path, e.Message);
             }
-        }
-        
-        private static bool ValidateFolder(string folder)
-        {
-            if (Directory.Exists(folder) == false)
-            {
-                Console.Error.WriteLine("{0} does not exist", Path.GetFullPath(folder));
-                PrintHelp();
-                return false;
-            }
-
-            return true;
-        }
-
-        private static void PrintHelp()
-        {
-            Console.Error.WriteLine("Dispatch v1.0 - Manages the processing of multiple snapshots to prevent memory and CPU overflows");
-            Console.Error.WriteLine("Usage: <this executable> <folder of pictures> <folder of videos>");
         }
     }
 }

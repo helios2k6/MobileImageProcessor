@@ -37,41 +37,37 @@ namespace Dispatch
     {
         private static ICollection<string> SLICE = new HashSet<string>
         {
-            "Slice",
             "Slice.exe",
-            "slice",
             "slice.exe",
         };
 
         private static ICollection<string> RIP = new HashSet<string>
         {
-            "Rip",
             "Rip.exe",
-            "rip",
             "rip.exe",
+        };
+
+        private static ICollection<string> SHIFT = new HashSet<string>
+        {
+            "Shift.exe",
+            "shift.exe",
         };
 
         private static ICollection<string> SCRAPE = new HashSet<string>
         {
-            "Scrape",
             "Scrape.exe",
-            "scrape",
             "scrape.exe",
         };
 
         private static ICollection<string> DEDUP = new HashSet<string>
         {
-            "Dedup",
             "Dedup.exe",
-            "dedup",
             "dedup.exe",
         };
 
         private static ICollection<string> MATCH = new HashSet<string>
         {
-            "Match",
             "Match.exe",
-            "match",
             "match.exe",
         };
 
@@ -85,12 +81,16 @@ namespace Dispatch
         /// <param name="folderOfMediaFiles">
         /// Path to the folder of media files
         /// </param>
+        /// <param name="timeShift">
+        /// The amount of time to shift the timecodes by
+        /// </param>
         /// <returns>
         /// A Task representing this operation and the results of this Dispatcher run
         /// </returns>
         public async static Task<DispatcherResults> DispatchAllProcessesAsync(
             string folderOfSnapshots,
-            string folderOfMediaFiles
+            string folderOfMediaFiles,
+            int? timeShift
         )
         {
             using (var slice = new GeneralProcess(SLICE, GetSnapshots(folderOfSnapshots)))
@@ -99,12 +99,26 @@ namespace Dispatch
                 {
                     string sliceOutput = await slice.ExecuteAsync(Maybe<string>.Nothing);
                     string scrapeOutput = await scrape.ExecuteAsync(sliceOutput.ToMaybe());
-                    return await ProcessRipDedupAndMatchAsync(scrapeOutput, folderOfMediaFiles);
+                    string shiftOutput = await MaybeRunTimeShiftAsync(scrapeOutput, timeShift);
+                    return await RunImageRippers(scrapeOutput, folderOfMediaFiles);
                 }
             }
         }
 
-        private async static Task<DispatcherResults> ProcessRipDedupAndMatchAsync(
+        private async static Task<string> MaybeRunTimeShiftAsync(string scrapeOutput, int? timeShift)
+        {
+            if (timeShift == null)
+            {
+                return scrapeOutput;
+            }
+
+            using (var shift = new GeneralProcess(SCRAPE, timeShift.ToString()))
+            {
+                return await shift.ExecuteAsync(scrapeOutput.ToMaybe());
+            }
+        }
+
+        private async static Task<DispatcherResults> RunImageRippers(
             string scrapeOutput,
             string folderOfMediaFiles
         )

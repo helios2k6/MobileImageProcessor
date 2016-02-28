@@ -21,7 +21,9 @@
 
 using CommonImageModel;
 using Functional.Maybe;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 
 namespace Shift
 {
@@ -29,12 +31,63 @@ namespace Shift
     {
         public static void Main(string[] args)
         {
+            Maybe<int> timeShiftAmount = TryGetTimeShift(args);
+            if (timeShiftAmount.IsNothing())
+            {
+                PrintHelp();
+                return;
+            }
+
             Maybe<ImageJobs> imageJobs = CommonFunctions.TryReadStandardIn();
+            if (imageJobs.IsNothing())
+            {
+                PrintHelp();
+                return;
+            }
+
+            ImageJobs shiftedImageJobs = ShiftAllJobs(imageJobs.Value, timeShiftAmount.Value);
+            Console.WriteLine(JsonConvert.SerializeObject(shiftedImageJobs));
+            CommonFunctions.CloseAllStandardFileHandles();
         }
 
         private static void PrintHelp()
         {
             Console.Error.WriteLine("Usage: <this app> <number of seconds to timeshift>");
+        }
+
+        private static Maybe<int> TryGetTimeShift(string[] args)
+        {
+            if (args.Length > 1)
+            {
+                string arg = args[0];
+                int parsedInt;
+                if (int.TryParse(arg, out parsedInt))
+                {
+                    return parsedInt.ToMaybe();
+                }
+            }
+
+            return Maybe<int>.Nothing;
+        }
+
+        private static ImageJobs ShiftAllJobs(ImageJobs oldImageJobs, int secondsToShift)
+        {
+            var shiftedImageJobList = new List<ImageJob>();
+            foreach (ImageJob job in oldImageJobs.Images)
+            {
+                shiftedImageJobList.Add(new ImageJob
+                {
+                    ImageSnapshots = job.ImageSnapshots,
+                    OriginalFilePath = job.OriginalFilePath,
+                    SliceImagePath = job.SliceImagePath,
+                    SnapshotTimestamp = job.SnapshotTimestamp + new TimeSpan(0, 0, secondsToShift),
+                });
+            }
+
+            return new ImageJobs
+            {
+                Images = shiftedImageJobList.ToArray(),
+            };
         }
     }
 }

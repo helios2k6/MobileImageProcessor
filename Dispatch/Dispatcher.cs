@@ -129,7 +129,7 @@ namespace Dispatch
                     unprocessedImageJobs.Add(imageJob);
                 }
             }
-            
+
             return new DispatcherResults(processedImageJobs, unprocessedImageJobs);
         }
 
@@ -175,20 +175,21 @@ namespace Dispatch
                     {
                         File.Move(snapshot, destPath);
                     }
-                    catch (IOException)
+                    catch (IOException e)
                     {
-                        Console.Error.WriteLine("File {0} already exists", destPath);
+                        Console.Error.WriteLine("File {0} already exists. Exception: {1}", destPath, e);
                     }
-                    
+
                 }
             }
         }
 
         private static string GetSnapshots(string pathToFolder)
         {
-            return Directory.EnumerateFiles(pathToFolder, "*.png", SearchOption.AllDirectories)
-                .Concat(Directory.EnumerateFiles(pathToFolder, "*.PNG", SearchOption.AllDirectories))
+            return Directory.EnumerateFiles(pathToFolder, "*.png", SearchOption.TopDirectoryOnly)
+                .Concat(Directory.EnumerateFiles(pathToFolder, "*.PNG", SearchOption.TopDirectoryOnly))
                 .Select(Path.GetFullPath)
+                .Distinct()
                 .Select(s => string.Format("\"{0}\"", s)) // Quote the paths
                 .Aggregate<string>((a, b) => string.Format("{0} {1}", a, b))
                 .Trim();

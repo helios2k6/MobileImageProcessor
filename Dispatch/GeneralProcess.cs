@@ -64,13 +64,11 @@ namespace Dispatch
                 process.StartInfo.FileName = GetProcessName(processNames);
             }
 
-            process.StartInfo.Arguments = arguments;
             process.StartInfo.CreateNoWindow = true;
-            process.StartInfo.FileName = GetProcessName(processNames);
             process.StartInfo.RedirectStandardInput = true;
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.UseShellExecute = false;
-            
+
             return process;
         }
     }

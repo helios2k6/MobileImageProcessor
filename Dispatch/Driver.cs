@@ -37,7 +37,7 @@ namespace Dispatch
         [Option('p', "pictures", Required = true, HelpText = "Folder to pictures")]
         public string PictureFolder { get; set; }
 
-        [Option('t', "time-shift", Required = false, HelpText = "How much to timeshift the scraped timecodes")]
+        [Option('t', "time-shift", Required = false, HelpText = "How much to timeshift, in seconds, the scraped timecodes")]
         public int? TimeShift { get; set; }
 
         [HelpOption(HelpText = "Display this help text")]
@@ -84,8 +84,8 @@ namespace Dispatch
                     videoFolder,
                     commandLineOptions.TimeShift
                 ).Result;
-                PostProcessSuccessfulJobs(results.ProcessedImageJobs);
-                PostProcessUnsuccessfulJobs(results.UnprocessedImageJobs);
+                PostProcessSuccessfulJobs(results.SuccessfulJobs);
+                PostProcessUnsuccessfulJobs(results.UnsuccessfulJobs);
             }
         }
 

@@ -93,14 +93,31 @@ namespace Dispatch
             int? timeShift
         )
         {
-            using (var slice = new GeneralProcess(SLICE, GetSnapshots(folderOfSnapshots)))
+            Maybe<Task<DispatcherResults>> dispatchAttempt = from snapshots in TryGetSnapshots(folderOfSnapshots)
+                                                             select FireProcessesAsync(folderOfMediaFiles, timeShift, snapshots);
+
+            if (dispatchAttempt.IsNothing())
+            {
+                return new DispatcherResults(Enumerable.Empty<ImageJob>(), Enumerable.Empty<ImageJob>());
+            }
+
+            return await dispatchAttempt.Value;
+        }
+
+        private async static Task<DispatcherResults> FireProcessesAsync(
+            string folderOfMediaFiles,
+            int? timeShift,
+            string sliceProgramArgs
+        )
+        {
+            using (var slice = new GeneralProcess(SLICE, sliceProgramArgs))
             {
                 using (var scrape = new GeneralProcess(SCRAPE))
                 {
                     string sliceOutput = await slice.ExecuteAsync(Maybe<string>.Nothing);
                     string scrapeOutput = await scrape.ExecuteAsync(sliceOutput.ToMaybe());
                     string shiftOutput = await MaybeRunTimeShiftAsync(scrapeOutput, timeShift);
-                    return await RunImageRippers(scrapeOutput, folderOfMediaFiles);
+                    return await RunImageRippers(shiftOutput, folderOfMediaFiles);
                 }
             }
         }
@@ -124,14 +141,24 @@ namespace Dispatch
         )
         {
             ImageJobs deserializedModel = JsonConvert.DeserializeObject<ImageJobs>(scrapeOutput);
-            var unprocessedImageJobs = new List<ImageJob>();
-            var processedImageJobs = new List<ImageJob>();
+            var unsuccessfulImageJobs = new List<ImageJob>();
+            var sucessfulImageJobs = new List<ImageJob>();
             foreach (ImageJob imageJob in deserializedModel.Images)
             {
                 try
                 {
-                    await ProcessImageJobAsync(imageJob, folderOfMediaFiles);
-                    processedImageJobs.Add(imageJob);
+                    string matchOutput = await ProcessImageJobAsync(imageJob, folderOfMediaFiles);
+                    ImageJobs processedImageJobs = JsonConvert.DeserializeObject<ImageJobs>(matchOutput);
+                    ImageJob processedImageJob = processedImageJobs.Images.First();
+                    if (processedImageJob.ImageSnapshots.Any())
+                    {
+                        sucessfulImageJobs.Add(imageJob);
+                    }
+                    else
+                    {
+                        unsuccessfulImageJobs.Add(imageJob);
+                    }
+
                 }
                 catch (Exception e)
                 {
@@ -140,14 +167,14 @@ namespace Dispatch
                         imageJob.OriginalFilePath,
                         e.Message
                     );
-                    unprocessedImageJobs.Add(imageJob);
+                    unsuccessfulImageJobs.Add(imageJob);
                 }
             }
 
-            return new DispatcherResults(processedImageJobs, unprocessedImageJobs);
+            return new DispatcherResults(sucessfulImageJobs, unsuccessfulImageJobs);
         }
 
-        private async static Task ProcessImageJobAsync(ImageJob imageJob, string folderOfMediaFiles)
+        private async static Task<string> ProcessImageJobAsync(ImageJob imageJob, string folderOfMediaFiles)
         {
             var newImageJobs = new ImageJobs
             {
@@ -166,6 +193,7 @@ namespace Dispatch
                         string dedupOutput = await dedup.ExecuteAsync(ripOutput.ToMaybe());
                         string matchOutput = await match.ExecuteAsync(dedupOutput.ToMaybe());
                         MoveCompletedPhotos(matchOutput);
+                        return matchOutput;
                     }
                 }
             }
@@ -198,15 +226,17 @@ namespace Dispatch
             }
         }
 
-        private static string GetSnapshots(string pathToFolder)
+        private static Maybe<string> TryGetSnapshots(string pathToFolder)
         {
             return Directory.EnumerateFiles(pathToFolder, "*.png", SearchOption.TopDirectoryOnly)
                 .Concat(Directory.EnumerateFiles(pathToFolder, "*.PNG", SearchOption.TopDirectoryOnly))
                 .Select(Path.GetFullPath)
                 .Distinct()
                 .Select(s => string.Format("\"{0}\"", s)) // Quote the paths
-                .Aggregate<string>((a, b) => string.Format("{0} {1}", a, b))
-                .Trim();
+                .IfNotEmpty(
+                    e => e.Aggregate<string>((a, b) => string.Format("{0} {1}", a, b)).Trim(),
+                    null
+                ).ToMaybe();
         }
     }
 }

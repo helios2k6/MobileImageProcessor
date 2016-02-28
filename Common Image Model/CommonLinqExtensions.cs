@@ -19,6 +19,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -41,6 +42,24 @@ namespace CommonImageModel
             }
 
             return fallback;
+        }
+
+        /// <summary>
+        /// Invokes the action on this IEnumerable{T} if it isn't empty and returns its result or a default result
+        /// </summary>
+        /// <typeparam name="T">The element type</typeparam>
+        /// <param name="this">This IEnumerable{T}</param>
+        /// <param name="action">The action to take on this IEnumerable{T}</param>
+        /// <param name="defaultValue">The default value</param>
+        /// <returns>An IEnumerable{T} with the action applied or the default value</returns>
+        public static K IfNotEmpty<T, K>(this IEnumerable<T> @this, Func<IEnumerable<T>, K> action, K defaultValue)
+        {
+            if (@this.Any())
+            {
+                return action.Invoke(@this);
+            }
+
+            return defaultValue;
         }
     }
 }

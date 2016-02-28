@@ -27,21 +27,22 @@ namespace Dispatch
     internal sealed class DispatcherResults
     {
         public DispatcherResults(
-            IEnumerable<ImageJob> processedImageJobs,
-            IEnumerable<ImageJob> unprocessedImageJobs
+            IEnumerable<ImageJob> successfulJobs,
+            IEnumerable<ImageJob> unsuccessfulJobs
         )
         {
-            ProcessedImageJobs = processedImageJobs;
-            UnprocessedImageJobs = unprocessedImageJobs;
+            SuccessfulJobs = successfulJobs;
+            UnsuccessfulJobs = unsuccessfulJobs;
         }
 
         /// <summary>
         /// The IEnumerable of successfully processed image jobs
         /// </summary>
-        public IEnumerable<ImageJob> ProcessedImageJobs { get; private set; }
+        public IEnumerable<ImageJob> SuccessfulJobs { get; private set; }
+
         /// <summary>
         /// The IEnumerable of unsuccessfully processed image jobs
         /// </summary>
-        public IEnumerable<ImageJob> UnprocessedImageJobs { get; private set; }
+        public IEnumerable<ImageJob> UnsuccessfulJobs { get; private set; }
     }
 }

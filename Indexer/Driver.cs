@@ -51,11 +51,12 @@ namespace Indexer
             Parser.Default.ParseArguments<SearchCommandVerb, IndexCommandVerb>(args)
                 .WithParsed<SearchCommandVerb>(search =>
                 {
-                    Console.WriteLine("1");
                 })
                 .WithParsed<IndexCommandVerb>(index =>
                 {
-                    Console.WriteLine("2");
+                })
+                .WithNotParsed(errors =>
+                {
                 });
         }
     }

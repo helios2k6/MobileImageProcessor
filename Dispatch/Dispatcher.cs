@@ -129,18 +129,18 @@ namespace Dispatch
                 return scrapeOutput;
             }
 
-            using (var shift = new GeneralProcess(SCRAPE, timeShift.ToString()))
+            using (var shift = new GeneralProcess(SHIFT, timeShift.ToString()))
             {
                 return await shift.ExecuteAsync(scrapeOutput.ToMaybe());
             }
         }
 
         private async static Task<DispatcherResults> RunImageRippers(
-            string scrapeOutput,
+            string shiftOutput,
             string folderOfMediaFiles
         )
         {
-            ImageJobs deserializedModel = JsonConvert.DeserializeObject<ImageJobs>(scrapeOutput);
+            ImageJobs deserializedModel = JsonConvert.DeserializeObject<ImageJobs>(shiftOutput);
             var unsuccessfulImageJobs = new List<ImageJob>();
             var sucessfulImageJobs = new List<ImageJob>();
             foreach (ImageJob imageJob in deserializedModel.Images)

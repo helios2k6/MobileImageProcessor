@@ -19,8 +19,6 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using CommandLine;
-using CommandLine.Text;
 using CommonImageModel;
 using Functional.Maybe;
 using Newtonsoft.Json;
@@ -30,28 +28,6 @@ using System.Linq;
 
 namespace Slice
 {
-    internal sealed class CommandLineOptions
-    {
-        [ValueList(typeof(List<string>))]
-        public List<string> InputFiles { get; set; }
-
-        [HelpOption(HelpText = "Display this help text")]
-        public string GetUsage()
-        {
-            var help = new HelpText
-            {
-                Heading = new HeadingInfo("Slice", "1.0"),
-                Copyright = new CopyrightInfo("Andrew Johnson", 2015),
-                AdditionalNewLineAfterOption = true,
-                AddDashesToOption = true,
-            };
-
-            help.AddPreOptionsLine("Usage: <this app> (list of image files)");
-            help.AddOptions(this);
-            return help.ToString();
-        }
-    }
-
     /// <summary>
     /// The main entrypoint for the Slice program
     /// </summary>
@@ -59,25 +35,27 @@ namespace Slice
     {
         public static void Main(string[] args)
         {
-            var options = new CommandLineOptions();
             if (args.Length < 1)
             {
-                Console.Error.Write(options.GetUsage());
+                PrintHelp();
                 return;
             }
 
-            if (Parser.Default.ParseArguments(args, options))
+            IEnumerable<ImageSliceContext> processedSlices = ImageProcessor.ProcessFiles(args);
+            IEnumerable<Maybe<ImageJob>> imageJobsMaybe = processedSlices.Select(Convert);
+            var imageJobs = new ImageJobs
             {
-                IEnumerable<ImageSliceContext> processedSlices = ImageProcessor.ProcessFiles(options.InputFiles);
-                IEnumerable<Maybe<ImageJob>> imageJobsMaybe = processedSlices.Select(Convert);
-                var imageJobs = new ImageJobs
-                {
-                    Images = imageJobsMaybe.SelectWhereValueExist(t => t).ToArray(),
-                };
-                Console.WriteLine(JsonConvert.SerializeObject(imageJobs, Formatting.None));
-            }
+                Images = imageJobsMaybe.SelectWhereValueExist(t => t).ToArray(),
+            };
+            Console.WriteLine(JsonConvert.SerializeObject(imageJobs, Formatting.None));
 
             CommonFunctions.CloseAllStandardFileHandles();
+        }
+
+        private static void PrintHelp()
+        {
+            Console.Error.WriteLine("Slice 1.0");
+            Console.Error.WriteLine("Usage: <this app> <list of pictures to analyze and slice");
         }
 
         private static Maybe<ImageJob> Convert(ImageSliceContext context)

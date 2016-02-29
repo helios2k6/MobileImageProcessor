@@ -39,21 +39,6 @@ namespace Dispatch
 
         [Option('t', "time-shift", Required = false, HelpText = "How much to timeshift, in seconds, the scraped timecodes")]
         public int? TimeShift { get; set; }
-
-        [HelpOption(HelpText = "Display this help text")]
-        public string GetUsage()
-        {
-            var help = new HelpText
-            {
-                Heading = new HeadingInfo("Dispatch", "1.0"),
-                Copyright = new CopyrightInfo("Andrew Johnson", 2015),
-                AdditionalNewLineAfterOption = true,
-                AddDashesToOption = true,
-            };
-
-            help.AddOptions(this);
-            return help.ToString();
-        }
     }
 
     /// <summary>
@@ -67,26 +52,34 @@ namespace Dispatch
         /// <param name="args">Program arguments</param>
         public static void Main(string[] args)
         {
-            var commandLineOptions = new CommandLineOptions();
-            if (Parser.Default.ParseArguments(args, commandLineOptions))
-            {
-                string pictureFolder = commandLineOptions.PictureFolder;
-                string videoFolder = commandLineOptions.VideoFolder;
-                if (Directory.Exists(pictureFolder) == false || Directory.Exists(videoFolder) == false)
+            Parser.Default.ParseArguments<CommandLineOptions>(args)
+                .WithParsed(options =>
                 {
-                    Console.Error.WriteLine(string.Format("{0} or {1} does not exist", pictureFolder, videoFolder));
-                    Console.Error.WriteLine(commandLineOptions.GetUsage());
-                    return;
-                }
+                    ProcessJobs(options);
+                })
+                .WithNotParsed(errors =>
+                {
+                    Console.Error.WriteLine("Could not parse commandline arguments");
+                });
+        }
 
-                DispatcherResults results = Dispatcher.DispatchAllProcessesAsync(
-                    pictureFolder,
-                    videoFolder,
-                    commandLineOptions.TimeShift
-                ).Result;
-                PostProcessSuccessfulJobs(results.SuccessfulJobs);
-                PostProcessUnsuccessfulJobs(results.UnsuccessfulJobs);
+        private static void ProcessJobs(CommandLineOptions options)
+        {
+            string pictureFolder = options.PictureFolder;
+            string videoFolder = options.VideoFolder;
+            if (Directory.Exists(pictureFolder) == false || Directory.Exists(videoFolder) == false)
+            {
+                Console.Error.WriteLine(string.Format("{0} or {1} does not exist", pictureFolder, videoFolder));
+                return;
             }
+
+            DispatcherResults results = Dispatcher.DispatchAllProcessesAsync(
+                pictureFolder,
+                videoFolder,
+                options.TimeShift
+            ).Result;
+            PostProcessSuccessfulJobs(results.SuccessfulJobs);
+            PostProcessUnsuccessfulJobs(results.UnsuccessfulJobs);
         }
 
         private static void PostProcessSuccessfulJobs(IEnumerable<ImageJob> imageJobs)

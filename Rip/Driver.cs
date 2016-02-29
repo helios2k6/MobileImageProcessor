@@ -19,8 +19,6 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using CommandLine;
-using CommandLine.Text;
 using CommonImageModel;
 using Functional.Maybe;
 using Newtonsoft.Json;
@@ -31,28 +29,6 @@ using System.Linq;
 
 namespace Rip
 {
-    internal sealed class CommandLineOptions
-    {
-        [ValueList(typeof(List<string>))]
-        public List<string> InputFolders { get; set; }
-
-        [HelpOption(HelpText = "Display this help text")]
-        public string GetUsage()
-        {
-            var help = new HelpText
-            {
-                Heading = new HeadingInfo("Rip", "1.0"),
-                Copyright = new CopyrightInfo("Andrew Johnson", 2015),
-                AdditionalNewLineAfterOption = true,
-                AddDashesToOption = true,
-            };
-
-            help.AddPreOptionsLine("Usage: <this app> (list of folders containing media files)");
-            help.AddOptions(this);
-            return help.ToString();
-        }
-    }
-
     /// <summary>
     /// Main entry point to the Rip process
     /// </summary>
@@ -60,30 +36,26 @@ namespace Rip
     {
         public static void Main(string[] args)
         {
-            var options = new CommandLineOptions();
             if (args.Length < 1)
             {
-                Console.Error.WriteLine(options.GetUsage());
+                PrintHelp();
                 return;
             }
 
-            if (Parser.Default.ParseArguments(args, options))
+            var imageJobs = CommonFunctions.TryReadStandardIn();
+            if (imageJobs.IsNothing())
             {
-                var imageJobs = CommonFunctions.TryReadStandardIn();
-                if (imageJobs.IsNothing())
-                {
-                    Console.Error.WriteLine(options.GetUsage());
-                    return;
-                }
-                using (new TimingToken("Rip", true))
-                {
-                    var newImageJobs = SnapshotHarvester.HarvestCandidateImages(
-                        imageJobs.Value,
-                        GetAllMediaFiles(options.InputFolders)
-                    );
+                PrintHelp();
+                return;
+            }
+            using (new TimingToken("Rip", true))
+            {
+                var newImageJobs = SnapshotHarvester.HarvestCandidateImages(
+                    imageJobs.Value,
+                    GetAllMediaFiles(args)
+                );
 
-                    Console.WriteLine(JsonConvert.SerializeObject(newImageJobs));
-                }
+                Console.WriteLine(JsonConvert.SerializeObject(newImageJobs));
             }
 
             CommonFunctions.CloseAllStandardFileHandles();
@@ -96,18 +68,27 @@ namespace Rip
 
         private static IEnumerable<string> GetAllMediaFiles(string folderPath)
         {
-            var listOfFileLists = new[]
+            if (Directory.Exists(folderPath))
             {
-                Directory.EnumerateFiles(folderPath, "*.mkv", SearchOption.AllDirectories),
-                Directory.EnumerateFiles(folderPath, "*.mp4", SearchOption.AllDirectories),
-                Directory.EnumerateFiles(folderPath, "*.wmv", SearchOption.AllDirectories),
-            };
-            return listOfFileLists.SelectMany(x => x);
+                var listOfFileLists = new[]
+                {
+                    Directory.EnumerateFiles(folderPath, "*.mkv", SearchOption.AllDirectories),
+                    Directory.EnumerateFiles(folderPath, "*.mp4", SearchOption.AllDirectories),
+                    Directory.EnumerateFiles(folderPath, "*.wmv", SearchOption.AllDirectories),
+                };
+                return listOfFileLists.SelectMany(x => x);
+            }
+            else
+            {
+                Console.Error.WriteLine("Folder {0} does not exist", folderPath);
+            }
+            return Enumerable.Empty<string>();
         }
 
-        private static IEnumerable<string> GetImages(ImageJob imageJob, IEnumerable<string> mediaFiles)
+        private static void PrintHelp()
         {
-            return Enumerable.Empty<string>();
+            Console.Error.WriteLine("Rip 1.0");
+            Console.Error.WriteLine("Usage: <this app> <list of folders with video files>");
         }
     }
 }

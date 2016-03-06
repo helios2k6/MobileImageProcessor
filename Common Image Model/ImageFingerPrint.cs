@@ -21,6 +21,7 @@
 
 using Newtonsoft.Json;
 using System;
+using System.Text;
 
 namespace CommonImageModel
 {
@@ -91,6 +92,24 @@ namespace CommonImageModel
 
         [JsonProperty(PropertyName = "FocusSquareBottomRight", Required = Required.Always)]
         public Macroblock FocusSquareBottomRight { get; set; }
+
+        public override string ToString()
+        {
+            var stringBuilder = new StringBuilder();
+            stringBuilder
+                .Append("Image FingerPrint with: ")
+                .AppendFormat("Top Left {0} - ", TopLeft)
+                .AppendFormat("Top Right {0} - ", TopRight)
+                .AppendFormat("Center {0} - ", Center)
+                .AppendFormat("Bottom Left {0} - ", BottomLeft)
+                .AppendFormat("Bottom Right {0} - ", BottomRight)
+                .AppendFormat("Focus Square Top Left {0} - ", FocusSquareTopLeft)
+                .AppendFormat("Focus Square Top Right {0} - ", FocusSquareTopRight)
+                .AppendFormat("Focus Square Bottom Left {0} - ", FocusSquareBottomLeft)
+                .AppendFormat("Focus Square Bottom Right {0}", FocusSquareBottomRight);
+
+            return stringBuilder.ToString();
+        }
 
         public bool Equals(ImageFingerPrint other)
         {

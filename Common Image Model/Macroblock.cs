@@ -109,6 +109,11 @@ namespace CommonImageModel
             return _hashCode.Value;
         }
 
+        public override string ToString()
+        {
+            return string.Format("Macroblock HashCode: {0}", GetHashCode());
+        }
+
         /// <summary>
         /// Compare two Macroblocks to see if they're similar enough to be considered the same
         /// </summary>

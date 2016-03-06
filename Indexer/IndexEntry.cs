@@ -20,22 +20,78 @@
  */
 
 using CommonImageModel;
+using Newtonsoft.Json;
 using System;
 
 namespace Indexer
 {
+    /// <summary>
+    /// Represents an entry in the indexing file
+    /// </summary>
     [Serializable]
+    [JsonObject(MemberSerialization.OptIn)]
     internal sealed class IndexEntry : IEquatable<IndexEntry>
     {
-        public string File { get; set; }
+        /// <summary>
+        /// The video file that was indexed
+        /// </summary>
+        [JsonProperty(PropertyName = "VideoFile", Required = Required.Always)]
+        public string VideoFile { get; set; }
 
-        public DateTime TimeStamp { get; set; }
+        /// <summary>
+        /// The timestamp of the frame
+        /// </summary>
+        [JsonProperty(PropertyName = "FrameTimeStamp", Required = Required.Always)]
+        public DateTime FrameTimeStamp { get; set; }
 
-        public ImageFingerPrint FingerPrint { get; set; }
+        /// <summary>
+        /// The frame's hash (fingerprint)
+        /// </summary>
+        [JsonProperty(PropertyName = "FrameHash", Required = Required.Always)]
+        public ImageFingerPrint FrameHash { get; set; }
+
+        public override string ToString()
+        {
+            return string.Format(
+                "{0} at {1} with fingerprint {2}",
+                VideoFile,
+                FrameTimeStamp,
+                FrameHash
+            );
+        }
+
+        public override bool Equals(object other)
+        {
+            if (other == null || GetType() != other.GetType())
+            {
+                return false;
+            }
+
+            return Equals(other as IndexEntry);
+        }
+
+        public override int GetHashCode()
+        {
+            return VideoFile.GetHashCode() ^
+                FrameTimeStamp.GetHashCode() ^
+                FrameHash.GetHashCode();
+        }
 
         public bool Equals(IndexEntry other)
         {
-            throw new NotImplementedException();
+            if (other == null || GetType() != other.GetType())
+            {
+                return false;
+            }
+
+            if (this == other)
+            {
+                return true;
+            }
+
+            return string.Equals(VideoFile, other.VideoFile, StringComparison.Ordinal) &&
+                DateTime.Equals(FrameTimeStamp, other.FrameTimeStamp) &&
+                Equals(FrameHash, other.FrameHash);
         }
     }
 }

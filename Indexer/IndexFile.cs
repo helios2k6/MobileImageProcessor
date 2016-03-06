@@ -19,42 +19,25 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Newtonsoft.Json;
 using System;
-using System.IO;
+using System.Linq;
 
 namespace Indexer
 {
     /// <summary>
     /// Represents an index file residing on disk
     /// </summary>
-    internal sealed class IndexFile : IEquatable<IndexFile>
+    [Serializable]
+    [JsonObject(MemberSerialization.OptIn)]
+    internal sealed class IndexEntries : IEquatable<IndexEntries>
     {
-        private readonly string _indexFilePath;
-
         /// <summary>
-        /// Construct a new object that represents an index file that may or may not
-        /// exist on disk
+        /// The array of entries in this index file
         /// </summary>
-        /// <param name="indexFilePath">The path to the index file</param>
-        public IndexFile(string indexFilePath)
-        {
-            if (string.IsNullOrWhiteSpace(indexFilePath))
-            {
-                throw new ArgumentException();
-            }
+        [JsonProperty(PropertyName = "Entries", Required = Required.Always)]
+        public IndexEntry[] Entries { get; set; }
 
-            _indexFilePath = indexFilePath;
-        }
-
-        /// <summary>
-        /// The path to the index file path
-        /// </summary>
-        public string Path
-        {
-            get { return _indexFilePath; }
-        }
-
-        // override object.Equals
         public override bool Equals(object obj)
         {
             if (obj == null || GetType() != obj.GetType())
@@ -62,15 +45,21 @@ namespace Indexer
                 return false;
             }
 
-            return Equals(obj as IndexFile);
+            return Equals(obj as IndexEntries);
         }
 
         public override int GetHashCode()
         {
-            return Path.GetHashCode();
+            int runningHashCode = 0;
+            foreach (var e in Entries)
+            {
+                runningHashCode = runningHashCode ^ e.GetHashCode();
+            }
+
+            return runningHashCode;
         }
 
-        public bool Equals(IndexFile other)
+        public bool Equals(IndexEntries other)
         {
             if (other == null || GetType() != other.GetType())
             {
@@ -82,16 +71,12 @@ namespace Indexer
                 return true;
             }
 
-            return string.Equals(
-                Path,
-                other.Path,
-                StringComparison.Ordinal
-            );
+            return Enumerable.SequenceEqual(Entries, other.Entries);
         }
 
         public override string ToString()
         {
-            return Path;
+            return string.Format("Index Entries with {0}", Entries);
         }
     }
 }

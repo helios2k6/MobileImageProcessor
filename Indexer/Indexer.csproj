@@ -49,8 +49,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Driver.cs" />
+    <Compile Include="IndexDatabase.cs" />
     <Compile Include="IndexEntry.cs" />
-    <Compile Include="Indexer.cs" />
     <Compile Include="IndexFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

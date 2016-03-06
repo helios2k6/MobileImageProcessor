@@ -19,16 +19,15 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using CommonImageModel;
 using System.Drawing;
 using System.Linq;
 
-namespace Dedup
+namespace CommonImageModel
 {
     /// <summary>
     /// Class that fingerprints an image
     /// </summary>
-    internal static class ImageFingerPrinter
+    public static class ImageFingerPrinter
     {
         private const int MACROBLOCK_LENGTH = 4;
 
@@ -37,7 +36,7 @@ namespace Dedup
         /// </summary>
         /// <param name="image">The LockBitImage</param>
         /// <returns>A FingerPrint representing this LockBitImage</returns>
-        public static FingerPrint CalculateFingerPrint(LockBitImage image)
+        public static ImageFingerPrint CalculateFingerPrint(LockBitImage image)
         {
             var cropWindow = new Size(MACROBLOCK_LENGTH, MACROBLOCK_LENGTH);
 
@@ -52,7 +51,7 @@ namespace Dedup
             var focusBottomLeftPoint = new Point((image.Width / 3) - (MACROBLOCK_LENGTH / 2), (image.Height * 2 / 3) - (MACROBLOCK_LENGTH / 2));
             var focusBottomRightPoint = new Point((image.Width * 2 / 3) - (MACROBLOCK_LENGTH / 2), (image.Height * 2 / 3) - (MACROBLOCK_LENGTH / 2));
 
-            return new FingerPrint(
+            return new ImageFingerPrint(
                 GetMacroblock(image, new Rectangle(topLeftPoint, cropWindow)),
                 GetMacroblock(image, new Rectangle(topRightPoint, cropWindow)),
                 GetMacroblock(image, new Rectangle(centerPoint, cropWindow)),

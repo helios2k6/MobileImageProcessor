@@ -19,43 +19,120 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Newtonsoft.Json;
 using System;
 using System.Drawing;
 
-namespace Dedup
+namespace CommonImageModel
 {
     /// <summary>
     /// Represents a contiguous grid of colors
     /// </summary>
-    internal sealed class Macroblock : IEquatable<Macroblock>
+    [Serializable]
+    [JsonObject(MemberSerialization.OptIn)]
+    public sealed class Macroblock : IEquatable<Macroblock>
     {
-        private readonly Color[,] _colorGrid;
-        private readonly int _width;
-        private readonly int _height;
         private readonly Lazy<int> _hashCode;
         private readonly Lazy<Color> _averageColor;
 
         /// <summary>
-        /// Create a fingerprint with the provided macroblock
+        /// Constructs a new Macroblock 
+        /// </summary>
+        public Macroblock()
+        {
+            _hashCode = new Lazy<int>(CalculateHashCode);
+            _averageColor = new Lazy<Color>(CalculateAverageColor);
+        }
+
+        /// <summary>
+        /// Constructs a new Macroblock with the provided two dimensional color grid as 
+        /// the Macroblock
         /// </summary>
         /// <param name="colorGrid"></param>
         public Macroblock(Color[,] colorGrid)
+            : this()
         {
-            _colorGrid = colorGrid;
-            _width = colorGrid.GetLength(0);
-            _height = colorGrid.GetLength(1);
-            _hashCode = new Lazy<int>(() => CalculateHashCode(_colorGrid));
-            _averageColor = new Lazy<Color>(() => CalculateAverageColor(_colorGrid));
+            ColorGrid = colorGrid;
         }
 
+        /// <summary>
+        /// The width of the Macroblock
+        /// </summary>
         public int Width
         {
-            get { return _width; }
+            get { return ColorGrid.GetLength(0); }
         }
 
+        /// <summary>
+        /// The height of the Macroblock
+        /// </summary>
         public int Height
         {
-            get { return _height; }
+            get { return ColorGrid.GetLength(1); }
+        }
+
+        /// <summary>
+        /// The actual grid of colors itself
+        /// </summary>
+        [JsonProperty(PropertyName = "ColorGrid", Required = Required.Always)]
+        public Color[,] ColorGrid { get; set; }
+
+        public bool Equals(Macroblock other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            return Width == other.Width &&
+                Height == other.Height &&
+                CompareGrids(ColorGrid, other.ColorGrid);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            return Equals(obj as Macroblock);
+        }
+
+        public override int GetHashCode()
+        {
+            return _hashCode.Value;
+        }
+
+        /// <summary>
+        /// Compare two Macroblocks to see if they're similar enough to be considered the same
+        /// </summary>
+        /// <param name="other">The other macroblock to compare against</param>
+        /// <returns>True if the other Macroblock is similar enough to be considered the same. False otherwise</returns>
+        public bool IsSimilarTo(Macroblock other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            // Can't compare two macroblocks if they have different dimensions
+            if (Height != other.Height || Width != other.Width)
+            {
+                return false;
+            }
+
+            return AreColorsCloseEnough(_averageColor.Value, other._averageColor.Value);
         }
 
         private static bool CompareGrids(Color[,] a, Color[,] b)
@@ -79,68 +156,15 @@ namespace Dedup
             return true;
         }
 
-        public bool Equals(Macroblock other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return Width == other.Width &&
-                Height == other.Height &&
-                CompareGrids(_colorGrid, other._colorGrid);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj == null || GetType() != obj.GetType())
-            {
-                return false;
-            }
-
-            return Equals(obj as Macroblock);
-        }
-
-        private static int CalculateHashCode(Color[,] colorGrid)
+        private int CalculateHashCode()
         {
             int currentHashCode = 0;
-            foreach (var c in colorGrid)
+            foreach (var c in ColorGrid)
             {
                 currentHashCode = currentHashCode ^ c.GetHashCode();
             }
 
             return currentHashCode;
-        }
-
-        public override int GetHashCode()
-        {
-            return _hashCode.Value;
-        }
-
-        public bool IsSimilarTo(Macroblock other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            // Can't compare two macroblocks if they have different dimensions
-            if (Height != other.Height || Width != other.Width)
-            {
-                return false;
-            }
-
-            return AreColorsCloseEnough(_averageColor.Value, other._averageColor.Value);
         }
 
         private static bool AreColorsCloseEnough(Color a, Color b)
@@ -152,12 +176,12 @@ namespace Dedup
             return redDiff + greenDiff + blueDiff < 45;
         }
 
-        private static Color CalculateAverageColor(Color[,] colorGrid)
+        private Color CalculateAverageColor()
         {
             int red, green, blue, runningCount;
             red = green = blue = runningCount = 0;
 
-            foreach (var color in colorGrid)
+            foreach (var color in ColorGrid)
             {
                 red += color.R;
                 green += color.G;

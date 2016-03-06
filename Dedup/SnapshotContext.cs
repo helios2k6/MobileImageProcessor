@@ -38,7 +38,7 @@ namespace Dedup
         public SnapshotContext(
             string snapshotPath,
             LockBitImage scaledDownSnapshot,
-            FingerPrint fingerPrint
+            ImageFingerPrint fingerPrint
         )
         {
             SnapshotPath = snapshotPath;
@@ -59,7 +59,7 @@ namespace Dedup
         /// <summary>
         /// The snapshot fingerprint 
         /// </summary>
-        public FingerPrint FingerPrint { get; private set; }
+        public ImageFingerPrint FingerPrint { get; private set; }
 
         /// <summary>
         /// Dispose of this object

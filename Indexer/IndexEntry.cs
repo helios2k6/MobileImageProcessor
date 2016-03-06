@@ -19,20 +19,23 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommonImageModel;
+using System;
+
 namespace Indexer
 {
-    /// <summary>
-    /// Indexes a single video file
-    /// </summary>
-    internal static class Indexer
+    [Serializable]
+    internal sealed class IndexEntry : IEquatable<IndexEntry>
     {
-        /// <summary>
-        /// </summary>
-        /// <param name="videoFile"></param>
-        /// <param name="indexFile"></param>
-        public static void IndexVideoFile(string videoFile, string indexFile)
-        {
+        public string File { get; set; }
 
+        public DateTime TimeStamp { get; set; }
+
+        public ImageFingerPrint FingerPrint { get; set; }
+
+        public bool Equals(IndexEntry other)
+        {
+            throw new NotImplementedException();
         }
     }
 }

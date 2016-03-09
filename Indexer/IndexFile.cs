@@ -32,6 +32,11 @@ namespace Indexer
     [JsonObject(MemberSerialization.OptIn)]
     internal sealed class IndexEntries : IEquatable<IndexEntries>
     {
+        public IndexEntries()
+        {
+            Entries = new IndexEntry[0];
+        }
+        
         /// <summary>
         /// The array of entries in this index file
         /// </summary>

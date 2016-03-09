@@ -34,22 +34,15 @@ namespace Indexer
     /// </summary>
     internal sealed class IndexDatabase
     {
-        private readonly IndexEntries _indexFile;
+        private readonly string _pathToIndexFile;
+        private readonly IndexEntries _indexEntries;
         private readonly Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>> _hashToEntriesMap;
+        private readonly List<IndexEntry> _queuedIndexEntriesForAddition;
 
         private IndexDatabase()
         {
-            _hashToEntriesMap = new Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>>(IndexAllEntries);
-        }
-
-        /// <summary>
-        /// The deserialized index file
-        /// </summary>
-        /// <param name="indexFile">The index entries</param>
-        public IndexDatabase(IndexEntries indexFile)
-            : this()
-        {
-            _indexFile = indexFile;
+            _hashToEntriesMap =
+                new Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>>(IndexAllEntries);
         }
 
         /// <summary>
@@ -64,14 +57,120 @@ namespace Indexer
         public IndexDatabase(string pathToIndexFile)
             : this()
         {
-            _indexFile = File.Exists(pathToIndexFile)
-                ? JsonConvert.DeserializeObject<IndexEntries>(File.ReadAllText(pathToIndexFile))
+            _pathToIndexFile = pathToIndexFile;
+            _indexEntries = File.Exists(_pathToIndexFile)
+                ? JsonConvert.DeserializeObject<IndexEntries>(File.ReadAllText(_pathToIndexFile))
                 : new IndexEntries();
+        }
+
+        /// <summary>
+        /// Attempts to find the set of entries that match the given fingerprint
+        /// </summary>
+        /// <param name="fingerPrint">The image fingerprint to look for</param>
+        public Maybe<IEnumerable<IndexEntry>> TryFindEntries(ImageFingerPrint fingerPrint)
+        {
+            ICollection<IndexEntry> bucket;
+            if (_hashToEntriesMap.Value.TryGetValue(fingerPrint, out bucket))
+            {
+                return bucket.ToMaybe<IEnumerable<IndexEntry>>();
+            }
+
+            return Maybe<IEnumerable<IndexEntry>>.Nothing;
+        }
+
+        /// <summary>
+        /// Queue an entry to be added to the database. In order to completely serialize
+        /// the entry to disk, you must call Flush()
+        /// </summary>
+        public void QueueAddEntry(IndexEntry entry)
+        {
+            _queuedIndexEntriesForAddition.Add(entry);
+        }
+
+        /// <summary>
+        /// Flush any queued entries for addition to disk
+        /// </summary>
+        public void Flush()
+        {
+            var freshEntries = new List<IndexEntry>(_indexEntries.Entries);
+            freshEntries.AddRange(_queuedIndexEntriesForAddition);
+
+            var updatedIndexEntriesObject = new IndexEntries
+            {
+                Entries = freshEntries.ToArray(),
+            };
+
+            var serializedEntriesFile = JsonConvert.SerializeObject(updatedIndexEntriesObject);
+
+            // Rename old file first
+            if (TrySerializeNewEntries(_pathToIndexFile, serializedEntriesFile) == false)
+            {
+                throw new InvalidOperationException("Unable to serialize index file");
+            }
+            
+             _queuedIndexEntriesForAddition.Clear();
+        }
+
+        private static bool TrySerializeNewEntries(string pathToIndexFile, string jsonBlob)
+        {
+            string movedOriginalFilePath = null;
+            try
+            {
+                movedOriginalFilePath = Path.Combine(
+                    Path.GetDirectoryName(pathToIndexFile),
+                    string.Format(
+                        "{0}_temp_move{1}",
+                        Path.GetFileNameWithoutExtension(pathToIndexFile),
+                        Path.GetExtension(pathToIndexFile)
+                    )
+                );
+                if (File.Exists(pathToIndexFile))
+                {
+                    // Attempt to move the file
+                    File.Move(pathToIndexFile, movedOriginalFilePath);
+                }
+
+                // Attempt to write the new file to 
+                File.WriteAllText(pathToIndexFile, jsonBlob);
+
+                // Attempt to delete original index file
+                if (File.Exists(movedOriginalFilePath))
+                {
+                    File.Delete(movedOriginalFilePath);
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("Unable to write index file. {0}", e);
+
+                // Attempt to roll back and move the original index file back
+                if (movedOriginalFilePath != null && File.Exists(movedOriginalFilePath))
+                {
+                    File.Move(movedOriginalFilePath, pathToIndexFile);
+                }
+            }
+
+            return false;
         }
 
         private IDictionary<ImageFingerPrint, ICollection<IndexEntry>> IndexAllEntries()
         {
-            throw new NotImplementedException();
+            var indexMap = new Dictionary<ImageFingerPrint, ICollection<IndexEntry>>();
+            foreach (var entry in _indexEntries.Entries)
+            {
+                ICollection<IndexEntry> entryBucket;
+                if (indexMap.TryGetValue(entry.FrameHash, out entryBucket) == false)
+                {
+                    entryBucket = new HashSet<IndexEntry>();
+                    indexMap.Add(entry.FrameHash, entryBucket);
+                }
+
+                entryBucket.Add(entry);
+            }
+
+            return indexMap;
         }
     }
 }

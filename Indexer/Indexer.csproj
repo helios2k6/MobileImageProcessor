@@ -50,8 +50,11 @@
   <ItemGroup>
     <Compile Include="Driver.cs" />
     <Compile Include="IndexDatabase.cs" />
+    <Compile Include="Indexer.cs" />
     <Compile Include="IndexEntry.cs" />
     <Compile Include="IndexFile.cs" />
+    <Compile Include="MediaInfo.cs" />
+    <Compile Include="MediaInfoProcess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

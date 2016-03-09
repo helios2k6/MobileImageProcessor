@@ -35,9 +35,10 @@ namespace Indexer
     internal sealed class IndexDatabase
     {
         private readonly string _pathToIndexFile;
-        private readonly IndexEntries _indexEntries;
-        private readonly Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>> _hashToEntriesMap;
         private readonly List<IndexEntry> _queuedIndexEntriesForAddition;
+        
+        private IndexEntries _indexEntries;
+        private Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>> _hashToEntriesMap;
 
         private IndexDatabase()
         {
@@ -107,8 +108,10 @@ namespace Indexer
             {
                 throw new InvalidOperationException("Unable to serialize index file");
             }
-            
+
+            _indexEntries = updatedIndexEntriesObject;
              _queuedIndexEntriesForAddition.Clear();
+             _hashToEntriesMap = new Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>>(IndexAllEntries);
         }
 
         private static bool TrySerializeNewEntries(string pathToIndexFile, string jsonBlob)

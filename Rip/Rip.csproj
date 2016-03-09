@@ -39,7 +39,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Driver.cs" />
-    <Compile Include="FFMPEGProcess.cs" />
     <Compile Include="ImageJobGroup.cs" />
     <Compile Include="ImageJobGrouper.cs" />
     <Compile Include="SnapshotHarvester.cs" />

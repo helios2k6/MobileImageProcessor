@@ -20,7 +20,6 @@
  */
 
 using CommandLine;
-using System;
 
 namespace Indexer
 {

@@ -46,6 +46,12 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.XML" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="YAXLib, Version=2.13.0.0, Culture=neutral, PublicKeyToken=7cc39f8266ad1835, processorArchitecture=MSIL">
+      <HintPath>..\packages\YAXLib.2.13\lib\YAXLib.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Driver.cs" />
@@ -53,8 +59,10 @@
     <Compile Include="Indexer.cs" />
     <Compile Include="IndexEntry.cs" />
     <Compile Include="IndexFile.cs" />
-    <Compile Include="MediaInfo.cs" />
-    <Compile Include="MediaInfoProcess.cs" />
+    <Compile Include="MediaInfo\FileXMLNode.cs" />
+    <Compile Include="MediaInfo\Track.cs" />
+    <Compile Include="MediaInfo\MediaInfo.cs" />
+    <Compile Include="MediaInfo\MediaInfoProcess.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

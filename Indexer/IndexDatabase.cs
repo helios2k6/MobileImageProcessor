@@ -36,7 +36,7 @@ namespace Indexer
     {
         private readonly string _pathToIndexFile;
         private readonly List<IndexEntry> _queuedIndexEntriesForAddition;
-        
+
         private IndexEntries _indexEntries;
         private Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>> _hashToEntriesMap;
 
@@ -44,6 +44,7 @@ namespace Indexer
         {
             _hashToEntriesMap =
                 new Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>>(IndexAllEntries);
+            _queuedIndexEntriesForAddition = new List<IndexEntry>();
         }
 
         /// <summary>
@@ -110,8 +111,8 @@ namespace Indexer
             }
 
             _indexEntries = updatedIndexEntriesObject;
-             _queuedIndexEntriesForAddition.Clear();
-             _hashToEntriesMap = new Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>>(IndexAllEntries);
+            _queuedIndexEntriesForAddition.Clear();
+            _hashToEntriesMap = new Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>>(IndexAllEntries);
         }
 
         private static bool TrySerializeNewEntries(string pathToIndexFile, string jsonBlob)

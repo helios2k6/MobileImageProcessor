@@ -32,6 +32,7 @@ namespace Indexer
     [JsonObject(MemberSerialization.OptIn)]
     internal sealed class IndexEntry : IEquatable<IndexEntry>
     {
+        #region public properties
         /// <summary>
         /// The video file that was indexed
         /// </summary>
@@ -42,14 +43,24 @@ namespace Indexer
         /// The timestamp of the frame
         /// </summary>
         [JsonProperty(PropertyName = "FrameTimeStamp", Required = Required.Always)]
-        public DateTime FrameTimeStamp { get; set; }
+        public TimeSpan FrameTimeStamp { get; set; }
 
         /// <summary>
         /// The frame's hash (fingerprint)
         /// </summary>
         [JsonProperty(PropertyName = "FrameHash", Required = Required.Always)]
         public ImageFingerPrint FrameHash { get; set; }
+        #endregion
 
+        #region ctor
+        public IndexEntry()
+        {
+            VideoFile = string.Empty;
+            FrameHash = new ImageFingerPrint();
+        }
+        #endregion
+
+        #region public methods
         public override string ToString()
         {
             return string.Format(
@@ -90,8 +101,12 @@ namespace Indexer
             }
 
             return string.Equals(VideoFile, other.VideoFile, StringComparison.Ordinal) &&
-                DateTime.Equals(FrameTimeStamp, other.FrameTimeStamp) &&
+                Equals(FrameTimeStamp, other.FrameTimeStamp) &&
                 Equals(FrameHash, other.FrameHash);
         }
+        #endregion
+
+        #region private methods
+        #endregion
     }
 }

@@ -85,7 +85,7 @@ namespace Rip
 
         private static IEnumerable<string> ExecuteFFMPEGAndGetImageFiles(ImageJobGroup imageJobGroup, string mediaFilePath)
         {
-            using (var ffmpeg = new FFMPEGProcess(imageJobGroup.Timestamp, mediaFilePath))
+            using (var ffmpeg = new FFMPEGProcess(new FFMPEGProcessSettings(mediaFilePath, imageJobGroup.Timestamp - TimeSpan.FromSeconds(1))))
             {
                 ffmpeg.Execute();
             }

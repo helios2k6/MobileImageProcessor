@@ -18,7 +18,11 @@
  * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
- 
+
+using CommonImageModel;
+using Functional.Maybe;
+using Indexer.Media;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -26,9 +30,67 @@ namespace Indexer
 {
     internal static class Indexer
     {
-        public static Task<IEnumerable<IndexEntry>> IndexVideoAsync(string pathToVideoFile)
+        #region private classes
+        private sealed class IndexingJob
+        {
+            public TimeSpan Start { get; set; }
+
+            public TimeSpan Duration { get; set; }
+
+            public string VideoFile { get; set; }
+        }
+
+        private sealed class IndexingResult
+        {
+            public string VideoFile { get; set; }
+
+            public string Image { get; set; }
+
+            public TimeSpan TimeStamp { get; set; }
+        }
+        #endregion
+
+        #region public methods
+        public async static Task<IEnumerable<IndexEntry>> IndexVideoAsync(string videoFile)
+        {
+            MediaInfo info = await GetMediaInfoAsync(videoFile);
+
+            throw new NotImplementedException();
+        }
+        #endregion
+
+        #region private methods
+        private static Task<MediaInfo> GetMediaInfoAsync(string videoFile)
         {
             return null;
         }
+
+        private static IEnumerable<IndexingJob> CreateIndexingJobs(string videoFile, MediaInfo mediaInfo)
+        {
+            return null;
+        }
+
+        private static Task<IEnumerable<IndexEntry>> ExecuteJobAsync(IndexingJob job)
+        {
+            return null;
+        }
+
+        private static Task<IEnumerable<string>> ProduceImagesAsync(IndexingJob job)
+        {
+            return null;
+        }
+
+        private static Maybe<IndexEntry> TryIndexImage(IndexingResult indexingResult)
+        {
+            return from image in CommonFunctions.TryLoadImageAsLockBit(indexingResult.Image)
+                   let fingerPrint = ImageFingerPrinter.CalculateFingerPrint(image)
+                   select new IndexEntry
+                   {
+                       FrameTimeStamp = indexingResult.TimeStamp,
+                       FrameHash = fingerPrint,
+                       VideoFile = indexingResult.VideoFile,
+                   };
+        }
+        #endregion
     }
 }

@@ -24,7 +24,7 @@ using System;
 using System.Diagnostics;
 using YAXLib;
 
-namespace Indexer.MediaInfo
+namespace Indexer.Media
 {
     internal sealed class MediaInfoProcess : IDisposable
     {

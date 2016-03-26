@@ -30,30 +30,31 @@ namespace CommonImageModel
     /// </summary>
     public sealed class FFMPEGProcess : IDisposable
     {
+        #region private fields
         private static readonly string FFMPEG_PROC_NAME = "ffmpeg";
-        private static readonly TimeSpan BUFFER_TIME = new TimeSpan(0, 0, 1);
 
         private readonly Process _process;
-        private readonly TimeSpan _snapshotTimestamp;
-        private readonly string _targetMediaFile;
+        private readonly FFMPEGProcessSettings _settings;
 
         private bool _isDisposed;
         private bool _hasExecuted;
-        
+        #endregion
+
+        #region ctor
         /// <summary>
-        /// Create a new process that represents the FFMPEG executable
+        /// Constructs a new FFMPEG Process object with the provided settings
         /// </summary>
-        /// <param name="snapshotTimestamp">The timestamp of the frame</param>
-        /// <param name="targetMediaFile">The path to the video file</param>
-        public FFMPEGProcess(TimeSpan snapshotTimestamp, string targetMediaFile)
+        /// <param name="settings">The process settings</param>
+        public FFMPEGProcess(FFMPEGProcessSettings settings)
         {
+            _settings = settings;
             _process = new Process();
-            _snapshotTimestamp = snapshotTimestamp;
-            _targetMediaFile = targetMediaFile;
             _isDisposed = false;
             _hasExecuted = false;
         }
+        #endregion
 
+        #region public methods
         public void Dispose()
         {
             if (_isDisposed)
@@ -97,22 +98,6 @@ namespace CommonImageModel
             }
         }
 
-        private string GetArguments()
-        {
-            var rootFileName = Path.GetFileNameWithoutExtension(_targetMediaFile);
-            var outputPath = string.Format(
-                "AUTOGEN_({0})_TIME_({1})_SNAPSHOT_(%02d).png",
-                rootFileName,
-                FormatTimeSpanFileName(_snapshotTimestamp)
-            );
-            return string.Format(
-                "-ss {0} -i \"{1}\" -vframes 8 -vf fps=4 \"{2}\"",
-                _snapshotTimestamp - BUFFER_TIME,
-                _targetMediaFile,
-                outputPath
-            );
-        }
-
         /// <summary>
         /// Calculate what the timespan string should be when it is embedded in a file name
         /// </summary>
@@ -122,5 +107,27 @@ namespace CommonImageModel
         {
             return string.Format("{0}_{1}_{2}", timespan.Hours, timespan.Minutes, timespan.Seconds);
         }
+        #endregion
+
+        #region private methods
+        private string GetArguments()
+        {
+            var rootFileName = Path.GetFileNameWithoutExtension(_settings.TargetMediaFile);
+            var outputPath = string.Format(
+                "AUTOGEN_({0})_TIME_({1})_SNAPSHOT_(%02d).png",
+                rootFileName,
+                FormatTimeSpanFileName(_settings.StartTime)
+            );
+
+            return string.Format(
+                "-ss {0} -i \"{1}\" -vframes {2} -vf fps={2}/{3} \"{4}\"",
+                _settings.StartTime,
+                _settings.TargetMediaFile,
+                _settings.FramesToOutput,
+                _settings.Duration,
+                Path.Combine(_settings.OutputDirectory, outputPath)
+            );
+        }
+        #endregion
     }
 }

@@ -22,14 +22,14 @@
 using System;
 using YAXLib;
 
-namespace Indexer.MediaInfo
+namespace Indexer.Media
 {
     internal sealed class Track : IEquatable<Track>
     {
         #region ctor
         public Track()
         {
-            Type = Duration = string.Empty;
+            CompleteName = Type = Duration = string.Empty;
             ID = -1;
         }
         #endregion
@@ -47,6 +47,10 @@ namespace Indexer.MediaInfo
         [YAXSerializeAs("ID")]
         [YAXErrorIfMissed(YAXExceptionTypes.Ignore)]
         public int ID { get; set; }
+
+        [YAXSerializeAs("Complete_name")]
+        [YAXErrorIfMissed(YAXExceptionTypes.Ignore)]
+        public string CompleteName { get; set; }
         #endregion
 
         #region public methods
@@ -57,7 +61,10 @@ namespace Indexer.MediaInfo
                 return false;
             }
 
-            return true;
+            return Equals(Type, other.Type) &&
+                Equals(Duration, other.Duration) &&
+                Equals(ID, other.ID) &&
+                Equals(CompleteName, other.CompleteName);
         }
 
         public override bool Equals(object other)
@@ -69,7 +76,8 @@ namespace Indexer.MediaInfo
         {
             return Type.GetHashCode() ^
                 Duration.GetHashCode() ^
-                ID.GetHashCode();
+                ID.GetHashCode() ^
+                CompleteName.GetHashCode();
         }
 
         /// <summary>

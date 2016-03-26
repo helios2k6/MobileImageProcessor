@@ -1,4 +1,4 @@
-﻿/* 
+/* 
  * Copyright (c) 2015 Andrew Johnson
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -23,51 +23,65 @@ using System;
 using System.Linq;
 using YAXLib;
 
-namespace Indexer.MediaInfo
+namespace Indexer.Media
 {
-    /// <summary>
-    /// Represents the File child node
-    /// </summary>
     [Serializable]
-    [YAXSerializeAs("File")]
-    internal sealed class FileXMLNode : IEquatable<FileXMLNode>
+    [YAXSerializeAs("Mediainfo")]
+    internal sealed class MediaInfo : IEquatable<MediaInfo>
     {
+        #region private fields
+        private static readonly string GENERAL_TRACK = "General";
+
+        private readonly Lazy<Track> _generalTrack;
+        #endregion
+
         #region ctor
-        public FileXMLNode()
+        public MediaInfo()
         {
-            Tracks = new Track[0];
+            _generalTrack = new Lazy<Track>(GetGeneralTrack);
         }
         #endregion
 
         #region public properties
-        [YAXErrorIfMissed(YAXExceptionTypes.Ignore)]
-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "track")]
-        public Track[] Tracks { get; set; }
+        [YAXSerializeAs("File")]
+        public FileXMLNode File { get; set; }
         #endregion
 
         #region public methods
-        public bool Equals(FileXMLNode other)
+        public string GetFileName()
+        {
+            return _generalTrack.Value?.CompleteName ?? string.Empty;
+        }
+
+        public bool Equals(MediaInfo other)
         {
             if (EqualsPreamble(other) == false)
             {
                 return false;
             }
 
-            return Enumerable.SequenceEqual(Tracks, other.Tracks);
+            return Equals(File, other.File);
         }
 
         public override bool Equals(object other)
         {
-            return Equals(other as FileXMLNode);
+            return Equals(other as MediaInfo);
         }
 
         public override int GetHashCode()
         {
-            return Tracks.Aggregate(0, (acc, t) => acc ^ t.GetHashCode());
+            return File.GetHashCode();
         }
         #endregion
 
         #region private methods
+        private Track GetGeneralTrack()
+        {
+            return (from track in File.Tracks
+                    where string.Equals(track.Type, GENERAL_TRACK, StringComparison.OrdinalIgnoreCase)
+                    select track).SingleOrDefault();
+        }
+
         private bool EqualsPreamble(object other)
         {
             if (ReferenceEquals(null, other)) return false;

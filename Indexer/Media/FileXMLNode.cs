@@ -1,4 +1,4 @@
-/* 
+﻿/* 
  * Copyright (c) 2015 Andrew Johnson
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -20,39 +20,50 @@
  */
 
 using System;
-using System.Diagnostics;
+using System.Linq;
 using YAXLib;
 
-namespace Indexer.MediaInfo
+namespace Indexer.Media
 {
+    /// <summary>
+    /// Represents the File child node
+    /// </summary>
     [Serializable]
-    [YAXSerializeAs("Mediainfo")]
-    internal sealed class MediaInfo : IEquatable<MediaInfo>
+    [YAXSerializeAs("File")]
+    internal sealed class FileXMLNode : IEquatable<FileXMLNode>
     {
+        #region ctor
+        public FileXMLNode()
+        {
+            Tracks = new Track[0];
+        }
+        #endregion
+
         #region public properties
-        [YAXSerializeAs("File")]
-        public FileXMLNode File { get; set; }
+        [YAXErrorIfMissed(YAXExceptionTypes.Ignore)]
+        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "track")]
+        public Track[] Tracks { get; set; }
         #endregion
 
         #region public methods
-        public bool Equals(MediaInfo other)
+        public bool Equals(FileXMLNode other)
         {
             if (EqualsPreamble(other) == false)
             {
                 return false;
             }
 
-            return Equals(File, other.File);
+            return Enumerable.SequenceEqual(Tracks, other.Tracks);
         }
 
         public override bool Equals(object other)
         {
-            return Equals(other as MediaInfo);
+            return Equals(other as FileXMLNode);
         }
 
         public override int GetHashCode()
         {
-            return File.GetHashCode();
+            return Tracks.Aggregate(0, (acc, t) => acc ^ t.GetHashCode());
         }
         #endregion
 

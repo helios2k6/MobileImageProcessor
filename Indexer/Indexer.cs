@@ -31,7 +31,7 @@ namespace Indexer
     internal static class Indexer
     {
         #region private classes
-        private sealed class IndexingJob
+        private sealed class ImageProductionJob
         {
             public TimeSpan Start { get; set; }
 
@@ -40,7 +40,7 @@ namespace Indexer
             public string VideoFile { get; set; }
         }
 
-        private sealed class IndexingResult
+        private sealed class ImageProductionJobResult
         {
             public string VideoFile { get; set; }
 
@@ -62,25 +62,27 @@ namespace Indexer
         #region private methods
         private static Task<MediaInfo> GetMediaInfoAsync(string videoFile)
         {
+            return Task.Factory.StartNew(() =>
+            {
+                return (new MediaInfoProcess(videoFile)).Execute();
+            });
+        }
+
+        private static IEnumerable<ImageProductionJob> CreateImageProductionJobs(string videoFile, MediaInfo mediaInfo)
+        {
+            for (var i = TimeSpan.FromSeconds(0); i < mediaInfo.GetDuration(); i += TimeSpan.FromSeconds(30))
+            {
+
+            }
             return null;
         }
 
-        private static IEnumerable<IndexingJob> CreateIndexingJobs(string videoFile, MediaInfo mediaInfo)
+        private static Task<IEnumerable<IndexEntry>> ExecuteImageProductionJobAsync(ImageProductionJob job)
         {
             return null;
         }
 
-        private static Task<IEnumerable<IndexEntry>> ExecuteJobAsync(IndexingJob job)
-        {
-            return null;
-        }
-
-        private static Task<IEnumerable<string>> ProduceImagesAsync(IndexingJob job)
-        {
-            return null;
-        }
-
-        private static Maybe<IndexEntry> TryIndexImage(IndexingResult indexingResult)
+        private static Maybe<IndexEntry> TryIndexImage(ImageProductionJobResult indexingResult)
         {
             return from image in CommonFunctions.TryLoadImageAsLockBit(indexingResult.Image)
                    let fingerPrint = ImageFingerPrinter.CalculateFingerPrint(image)

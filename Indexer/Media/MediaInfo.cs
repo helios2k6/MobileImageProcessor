@@ -48,9 +48,25 @@ namespace Indexer.Media
         #endregion
 
         #region public methods
+        /// <summary>
+        /// Get the name of the file that this MediaInfo describes
+        /// </summary>
+        /// <returns>The file name or string.Empty if it cannot be determined</returns>
         public string GetFileName()
         {
             return _generalTrack.Value?.CompleteName ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Get the duration of this media file, if possible
+        /// </summary>
+        /// <returns>
+        /// Returns the duration of this media file as a TimeSpan or a TimeSpan of 0 if the duration
+        /// cannot be determined
+        /// </returns>
+        public TimeSpan GetDuration()
+        {
+            return _generalTrack.Value?.GetDurationAsTimeSpan() ?? TimeSpan.FromSeconds(0);
         }
 
         public bool Equals(MediaInfo other)

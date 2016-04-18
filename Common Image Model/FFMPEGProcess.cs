@@ -124,8 +124,8 @@ namespace CommonImageModel
                 _settings.StartTime,
                 _settings.TargetMediaFile,
                 _settings.FramesToOutput,
-                _settings.FPSNumerator,
-                _settings.FPSDenominator,
+                _settings.Framerate.Numerator,
+                _settings.Framerate.Denominator,
                 Path.Combine(_settings.OutputDirectory, outputPath)
             );
         }

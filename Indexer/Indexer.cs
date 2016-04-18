@@ -60,7 +60,7 @@ namespace Indexer
         
         private static Task<IndexEntry> GetIndexEntryAsync(string videoFile, TimeSpan index, string outputDirectory)
         {
-            var ffmpegProcessSettings = new FFMPEGProcessSettings(videoFile, outputDirectory, );
+            //var ffmpegProcessSettings = new FFMPEGProcessSettings(videoFile, outputDirectory, );
             throw new NotImplementedException();
         }
         #endregion

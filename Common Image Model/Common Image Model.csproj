@@ -49,6 +49,7 @@
     <Compile Include="CommonMaybeExtensions.cs" />
     <Compile Include="FFMPEGProcess.cs" />
     <Compile Include="FFMPEGProcessSettings.cs" />
+    <Compile Include="FPS.cs" />
     <Compile Include="ImageFingerPrint.cs" />
     <Compile Include="ImageFingerPrinter.cs" />
     <Compile Include="ImageJob.cs" />

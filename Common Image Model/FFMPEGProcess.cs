@@ -120,11 +120,12 @@ namespace CommonImageModel
             );
 
             return string.Format(
-                "-ss {0} -i \"{1}\" -vframes {2} -vf fps={2}/{3} \"{4}\"",
+                "-ss {0} -i \"{1}\" -vframes {2} -vf fps={3}/{4} \"{5}\"",
                 _settings.StartTime,
                 _settings.TargetMediaFile,
                 _settings.FramesToOutput,
-                _settings.Duration,
+                _settings.FPSNumerator,
+                _settings.FPSDenominator,
                 Path.Combine(_settings.OutputDirectory, outputPath)
             );
         }

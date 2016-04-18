@@ -68,7 +68,14 @@ namespace Indexer.Media
         {
             return _generalTrack.Value?.GetDurationAsTimeSpan() ?? TimeSpan.FromSeconds(0);
         }
-
+        
+        /// <summary>
+        /// </summary>
+        public Tuple<int, int> GetFPS()
+        {
+            throw new NotImplementedException();
+        }
+        
         public bool Equals(MediaInfo other)
         {
             if (EqualsPreamble(other) == false)

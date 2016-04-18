@@ -19,7 +19,6 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 using System;
 
 namespace CommonImageModel
@@ -49,11 +48,15 @@ namespace CommonImageModel
         /// The number of frames to output
         /// </summary>
         public int FramesToOutput { get; }
-
+        
         /// <summary>
-        /// The length of time to decode the video
+        /// The FPS numerator for snapshot playback
         /// </summary>
-        public int Duration { get; }
+        public int FPSNumerator { get; }
+        
+        /// <summary>
+        /// The FPS denominator for snapshot playback
+        public int FPSDenominator { get; }
         #endregion
 
         #region ctor
@@ -65,20 +68,23 @@ namespace CommonImageModel
         /// <param name="outputDirectory">The path to the folder where the output images will be placed</param>
         /// <param name="startTime">The time to seek to before outputting images</param>
         /// <param name="framesToOutput">The number of frames to output</param>
-        /// <param name="duration">The length of time to decode the video</param>
+        /// <param name="fpsNumerator">The FPS numerator</param>
+        /// <param name="fpsDenominator">The FPS denominator</param>
         public FFMPEGProcessSettings(
             string targetMediaFile,
             string outputDirectory,
             TimeSpan startTime,
             int framesToOutput,
-            int duration
+            int fpsNumerator,
+            int fpsDenominator
         )
         {
             TargetMediaFile = targetMediaFile;
             OutputDirectory = outputDirectory;
             StartTime = startTime;
             FramesToOutput = framesToOutput;
-            Duration = duration;
+            FPSNumerator = fpsNumerator;
+            FPSDenominator = fpsDenominator;
         }
 
         /// <summary>
@@ -90,7 +96,7 @@ namespace CommonImageModel
         public FFMPEGProcessSettings(
             string targetMediaFile,
             TimeSpan startTime
-        ) : this(targetMediaFile, string.Empty, startTime, 8, 2)
+        ) : this(targetMediaFile, string.Empty, startTime, 8, 4, 1)
         {
         }
         #endregion
@@ -107,7 +113,8 @@ namespace CommonImageModel
                 OutputDirectory.GetHashCode() ^
                 StartTime.GetHashCode() ^
                 FramesToOutput.GetHashCode() ^
-                Duration.GetHashCode();
+                FPSNumerator.GetHashCode() ^
+                FPSDenominator.GetHashCode();
         }
 
         public bool Equals(FFMPEGProcessSettings other)
@@ -121,7 +128,8 @@ namespace CommonImageModel
                 Equals(OutputDirectory, other.OutputDirectory) &&
                 Equals(StartTime, other.StartTime) &&
                 Equals(FramesToOutput, other.FramesToOutput) &&
-                Equals(Duration, other.Duration);
+                Equals(FPSNumerator, other.FPSNumerator) &&
+                Equals(FPSDenominator, other.FPSDenominator);
         }
         #endregion
 

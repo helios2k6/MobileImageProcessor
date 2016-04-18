@@ -20,10 +20,10 @@
  */
 
 using CommonImageModel;
-using Functional.Maybe;
 using Indexer.Media;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Indexer
@@ -34,7 +34,7 @@ namespace Indexer
         public async static Task<IEnumerable<IndexEntry>> IndexVideoAsync(string videoFile)
         {
             MediaInfo info = await GetMediaInfoAsync(videoFile);
-            return await GetIndexEntriesAsync(info);
+            return await GetIndexEntriesAsync(videoFile, info, Path.GetRandomFileName());
         }
         #endregion
 
@@ -47,8 +47,20 @@ namespace Indexer
             });
         }
 
-        private static Task<IEnumerable<IndexEntry>> GetIndexEntriesAsync(MediaInfo info)
+        private async static Task<IEnumerable<IndexEntry>> GetIndexEntriesAsync(string videoFile, MediaInfo info, string outputDirectory)
         {
+            var indexEntries = new List<IndexEntry>();
+            for (var index = TimeSpan.FromSeconds(0); index < info.GetDuration(); index += TimeSpan.FromSeconds(30)) {
+                IndexEntry indexEntry = await GetIndexEntryAsync(videoFile, index, outputDirectory);
+                indexEntries.Add(indexEntry);
+            }
+            
+            return indexEntries;
+        }
+        
+        private static Task<IndexEntry> GetIndexEntryAsync(string videoFile, TimeSpan index, string outputDirectory)
+        {
+            var ffmpegProcessSettings = new FFMPEGProcessSettings(videoFile, outputDirectory, );
             throw new NotImplementedException();
         }
         #endregion

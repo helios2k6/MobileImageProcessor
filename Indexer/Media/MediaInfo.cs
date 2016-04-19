@@ -19,6 +19,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommonImageModel;
 using System;
 using System.Linq;
 using YAXLib;
@@ -33,12 +34,14 @@ namespace Indexer.Media
         private static readonly string GENERAL_TRACK = "General";
 
         private readonly Lazy<Track> _generalTrack;
+        private readonly Lazy<TimeSpan> _duration;
         #endregion
 
         #region ctor
         public MediaInfo()
         {
-            _generalTrack = new Lazy<Track>(GetGeneralTrack);
+            _generalTrack = new Lazy<Track>(CalculateGeneralTrack);
+            _duration = new Lazy<TimeSpan>(CalculateDuration);
         }
         #endregion
 
@@ -66,12 +69,13 @@ namespace Indexer.Media
         /// </returns>
         public TimeSpan GetDuration()
         {
-            return _generalTrack.Value?.GetDurationAsTimeSpan() ?? TimeSpan.FromSeconds(0);
+            return _duration.Value;
         }
         
         /// <summary>
+        /// Get the framerate of the video track
         /// </summary>
-        public Tuple<int, int> GetFPS()
+        public FPS GetFramerate()
         {
             throw new NotImplementedException();
         }
@@ -98,7 +102,12 @@ namespace Indexer.Media
         #endregion
 
         #region private methods
-        private Track GetGeneralTrack()
+        private TimeSpan CalculateDuration()
+        {
+            return _generalTrack.Value?.GetDurationAsTimeSpan() ?? TimeSpan.FromSeconds(0);
+        }
+        
+        private Track CalculateGeneralTrack()
         {
             return (from track in File.Tracks
                     where string.Equals(track.Type, GENERAL_TRACK, StringComparison.OrdinalIgnoreCase)

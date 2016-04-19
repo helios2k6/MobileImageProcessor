@@ -19,6 +19,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Functional.Maybe;
 using System.Drawing;
 using System.Linq;
 
@@ -30,7 +31,22 @@ namespace CommonImageModel
     public static class ImageFingerPrinter
     {
         private const int MACROBLOCK_LENGTH = 4;
-
+        
+        /// <summary>
+        /// Attempts to calculate the fingerprint of the image by automatically loading the 
+        /// image specified by pathToImageFile and calculating its fingerprint
+        /// </summary>
+        /// <param name="pathToImageFile">The path to the image file</param>
+        /// <returns>A image finger print or None if the image could not be loaded</returns>
+        public static Maybe<ImageFingerPrint> TryCalculateFingerPrint(string pathToImageFile)
+        {
+            return from lockBitImage in CommonFunctions.TryLoadImageAsLockBit(pathToImageFile)
+                   select CommonFunctions.ExecThenDispose(
+                       () => CalculateFingerPrint(lockBitImage),
+                       lockBitImage
+                   );
+        }
+        
         /// <summary>
         /// Calculates the FingerPrint of the LockBitImage
         /// </summary>

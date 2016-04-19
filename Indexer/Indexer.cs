@@ -30,6 +30,10 @@ namespace Indexer
 {
     internal static class Indexer
     {
+        #region private static fields
+        private const int PLAYBACK_DURATION = 15;
+        #endregion
+        
         #region public methods
         public async static Task<IEnumerable<IndexEntry>> IndexVideoAsync(string videoFile)
         {
@@ -50,18 +54,50 @@ namespace Indexer
         private async static Task<IEnumerable<IndexEntry>> GetIndexEntriesAsync(string videoFile, MediaInfo info, string outputDirectory)
         {
             var indexEntries = new List<IndexEntry>();
-            for (var index = TimeSpan.FromSeconds(0); index < info.GetDuration(); index += TimeSpan.FromSeconds(30)) {
-                IndexEntry indexEntry = await GetIndexEntryAsync(videoFile, index, outputDirectory);
-                indexEntries.Add(indexEntry);
+            for (var index = TimeSpan.FromSeconds(0); index < info.GetDuration(); index += TimeSpan.FromSeconds(PLAYBACK_DURATION)) {
+                IEnumerable<IndexEntry> indexEntry = await GetIndexEntriesAtIndexAsync(videoFile, index, outputDirectory, info.GetFramerate());
+                indexEntries.AddRange(indexEntry);
             }
             
             return indexEntries;
         }
         
-        private static Task<IndexEntry> GetIndexEntryAsync(string videoFile, TimeSpan index, string outputDirectory)
+        private async static Task<IEnumerable<IndexEntry>> GetIndexEntriesAtIndexAsync(
+            string videoFile,
+            TimeSpan index,
+            string outputDirectory,
+            FPS framerate
+        )
         {
-            //var ffmpegProcessSettings = new FFMPEGProcessSettings(videoFile, outputDirectory, );
+            var ffmpegProcessSettings = new FFMPEGProcessSettings(
+                videoFile,
+                outputDirectory,
+                index,
+                CalculateFramesToOutputFromFramerate(framerate),
+                framerate
+            );
+            var ffmpegProcess = new FFMPEGProcess(ffmpegProcessSettings);
+            await ffmpegProcess.ExecuteAsync();
+            var indexEntries = new List<IndexEntry>();
+            foreach (string picturefile in Directory.EnumerateFiles(outputDirectory, "*.png", SearchOption.AllDirectories)) 
+            {
+                ImageFingerPrinter
+                    .TryCalculateFingerPrint(picturefile)
+                    .Apply(fingerPrint => indexEntries.Add(
+                        new IndexEntry
+                        {
+                            VideoFile = videoFile,
+                            FrameTimeStamp = index,
+                            FrameHash = fingerPrint,
+                        }
+                    ));
+            }
             throw new NotImplementedException();
+        }
+        
+        private static int CalculateFramesToOutputFromFramerate(FPS framerate)
+        {
+            return (framerate.Numerator * PLAYBACK_DURATION) / framerate.Denominator;
         }
         #endregion
     }

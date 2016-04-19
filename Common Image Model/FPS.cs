@@ -23,6 +23,9 @@ using System;
 
 namespace CommonImageModel
 {
+    /// <summary>
+    /// Represents the frames per second of a media file as a rational number
+    /// </summary>
     public sealed class FPS : IEquatable<FPS>, IComparable<FPS>
     {
         #region ctor
@@ -35,13 +38,13 @@ namespace CommonImageModel
             Numerator = 0;
             Denominator = 1;
         }
-        
+
         /// <summary>
         /// Construct an FPS given the numerator and denominator
         /// </summary>
         public FPS(int numerator, int denominator)
         {
-            if (numerator < 0 || denominator < 1) 
+            if (numerator < 0 || denominator < 1)
             {
                 throw new ArgumentException("Numerator must be greater than or equal to 0 and denominator must be strictly greater than 0");
             }
@@ -49,13 +52,13 @@ namespace CommonImageModel
             Denominator = denominator;
         }
         #endregion
-        
+
         #region public properties
         /// <summary>
         /// The FPS numerator
         /// </summary>
         public int Numerator { get; }
-        
+
         /// <summary>
         /// The FPS denominator
         /// </summary>
@@ -67,35 +70,38 @@ namespace CommonImageModel
         {
             return Equals(other as FPS);
         }
-        
+
         public override int GetHashCode()
         {
             return Numerator.GetHashCode() ^
                 Denominator.GetHashCode();
         }
-        
+
         public override string ToString()
         {
             return string.Format("FPS: {0}/{1}", Numerator, Denominator);
         }
-        
+
         public bool Equals(FPS other)
         {
             if (EqualsPreamble(other) == false)
             {
                 return false;
             }
-            
+
             return Equals(Numerator, other.Numerator) &&
                 Equals(Denominator, other.Denominator);
         }
 
         public int CompareTo(FPS other)
         {
-            throw new NotImplementedException();
+            int ourMultipliedNumerator = Numerator * other.Denominator;
+            int otherMultipliedNumerator = other.Numerator * Denominator;
+
+            return ourMultipliedNumerator.CompareTo(otherMultipliedNumerator);
         }
         #endregion
-        
+
         #region private methods
         private bool EqualsPreamble(object other)
         {

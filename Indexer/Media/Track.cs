@@ -29,7 +29,7 @@ namespace Indexer.Media
         #region ctor
         public Track()
         {
-            CompleteName = Type = Duration = FramesPerSecond = string.Empty;
+            CompleteName = Type = Duration = Framerate = string.Empty;
             ID = -1;
         }
         #endregion
@@ -51,10 +51,10 @@ namespace Indexer.Media
         [YAXSerializeAs("Complete_name")]
         [YAXErrorIfMissed(YAXExceptionTypes.Ignore)]
         public string CompleteName { get; set; }
-        
-        [YAXSerializeAs("Frames_per_second")]
+
+        [YAXSerializeAs("Frame_rate")]
         [YAXErrorIfMissedAttribute(YAXExceptionTypes.Ignore)]
-        public string FramesPerSecond { get; set; }
+        public string Framerate { get; set; }
         #endregion
 
         #region public methods
@@ -68,8 +68,8 @@ namespace Indexer.Media
             return Equals(Type, other.Type) &&
                 Equals(Duration, other.Duration) &&
                 Equals(ID, other.ID) &&
-                Equals(CompleteName, other.CompleteName) && 
-                Equals(FramesPerSecond, other.FramesPerSecond);
+                Equals(CompleteName, other.CompleteName) &&
+                Equals(Framerate, other.Framerate);
         }
 
         public override bool Equals(object other)
@@ -83,7 +83,7 @@ namespace Indexer.Media
                 Duration.GetHashCode() ^
                 ID.GetHashCode() ^
                 CompleteName.GetHashCode() ^
-                FramesPerSecond.GetHashCode();
+                Framerate.GetHashCode();
         }
 
         /// <summary>

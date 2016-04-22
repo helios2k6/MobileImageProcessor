@@ -88,7 +88,16 @@ namespace Indexer
         {
             _queuedIndexEntriesForAddition.Add(entry);
         }
-
+        
+        /// <summary>
+        /// Queue an IEnumerable{IndexEntry} to be added to the database. In order to completely
+        /// serialize the entries to disk, you must call Flush()
+        /// </summary>
+        public void QueueAddEntries(IEnumerable<IndexEntry> entries)
+        {
+            _queuedIndexEntriesForAddition.AddRange(entries);
+        }
+        
         /// <summary>
         /// Flush any queued entries for addition to disk
         /// </summary>

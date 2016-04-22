@@ -19,7 +19,12 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using CommonImageModel;
 using CommandLine;
+using Functional.Maybe;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Indexer
 {
@@ -50,9 +55,32 @@ namespace Indexer
             Parser.Default.ParseArguments<SearchCommandVerb, IndexCommandVerb>(args)
                 .WithParsed<SearchCommandVerb>(search =>
                 {
+                    var database = new IndexDatabase(search.IndexFile);
+                    Maybe<IEnumerable<IndexEntry>> queryResultMaybe = 
+                        from fingerPrint in ImageFingerPrinter.TryCalculateFingerPrint(search.PictureFile)
+                        from queryResult in database.TryFindEntries(fingerPrint)
+                        select queryResult;
+                    
+                    if (queryResultMaybe.HasValue)
+                    {
+                        IEnumerable<IndexEntry> queryResults = queryResultMaybe.Value.ToList();
+                        Console.Error.WriteLine(string.Format("{0} Result(s) Found:", queryResults.Count()));
+                        foreach (IndexEntry entry in queryResults)
+                        {
+                            Console.Error.WriteLine(string.Format("{0} @ {1}", entry.VideoFile, entry.FrameTimeStamp));
+                        }
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine("No results found.");
+                    }
                 })
                 .WithParsed<IndexCommandVerb>(index =>
                 {
+                    var database = new IndexDatabase(index.IndexFile);
+                    IEnumerable<IndexEntry> indexEntries = Indexer.IndexVideoAsync(index.VideoFile).Result;
+                    database.QueueAddEntries(indexEntries);
+                    database.Flush();
                 })
                 .WithNotParsed(errors =>
                 {

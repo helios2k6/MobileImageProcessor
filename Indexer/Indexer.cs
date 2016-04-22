@@ -76,23 +76,31 @@ namespace Indexer
                 CalculateFramesToOutputFromFramerate(framerate),
                 framerate
             );
-            var ffmpegProcess = new FFMPEGProcess(ffmpegProcessSettings);
-            await ffmpegProcess.ExecuteAsync();
-            var indexEntries = new List<IndexEntry>();
-            foreach (string picturefile in Directory.EnumerateFiles(outputDirectory, "*.png", SearchOption.AllDirectories)) 
+            
+            if (Directory.Exists(outputDirectory) == false)
             {
-                ImageFingerPrinter
-                    .TryCalculateFingerPrint(picturefile)
-                    .Apply(fingerPrint => indexEntries.Add(
-                        new IndexEntry
-                        {
-                            VideoFile = videoFile,
-                            FrameTimeStamp = index,
-                            FrameHash = fingerPrint,
-                        }
-                    ));
+                Directory.CreateDirectory(outputDirectory);
             }
-            throw new NotImplementedException();
+            
+            using(var ffmpegProcess = new FFMPEGProcess(ffmpegProcessSettings))
+            {
+                await ffmpegProcess.ExecuteAsync();
+                var indexEntries = new List<IndexEntry>();
+                foreach (string picturefile in Directory.EnumerateFiles(outputDirectory, "*.png", SearchOption.AllDirectories)) 
+                {
+                    ImageFingerPrinter
+                        .TryCalculateFingerPrint(picturefile)
+                        .Apply(fingerPrint => indexEntries.Add(
+                            new IndexEntry
+                            {
+                                VideoFile = videoFile,
+                                FrameTimeStamp = index,
+                                FrameHash = fingerPrint,
+                            }
+                        ));
+                }
+                return indexEntries;
+            }
         }
         
         private static int CalculateFramesToOutputFromFramerate(FPS framerate)

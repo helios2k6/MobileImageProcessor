@@ -32,16 +32,21 @@ namespace Indexer.Media
     {
         #region private fields
         private static readonly string GENERAL_TRACK = "General";
+        private static readonly string VIDEO_TRACK = "Video";
 
         private readonly Lazy<Track> _generalTrack;
+        private readonly Lazy<Track> _videoTrack;
         private readonly Lazy<TimeSpan> _duration;
+        private readonly Lazy<FPS> _framerate;
         #endregion
 
         #region ctor
         public MediaInfo()
         {
             _generalTrack = new Lazy<Track>(CalculateGeneralTrack);
+            _videoTrack = new Lazy<Track>(CalculateVideoTrack);
             _duration = new Lazy<TimeSpan>(CalculateDuration);
+            _framerate = new Lazy<FPS>(CalculateFramerate);
         }
         #endregion
 
@@ -77,7 +82,7 @@ namespace Indexer.Media
         /// </summary>
         public FPS GetFramerate()
         {
-            throw new NotImplementedException();
+            return _framerate.Value;
         }
         
         public bool Equals(MediaInfo other)
@@ -112,6 +117,50 @@ namespace Indexer.Media
             return (from track in File.Tracks
                     where string.Equals(track.Type, GENERAL_TRACK, StringComparison.OrdinalIgnoreCase)
                     select track).SingleOrDefault();
+        }
+        
+        private Track CalculateVideoTrack()
+        {
+            return (from track in File.Tracks
+                    where string.Equals(track.Type, VIDEO_TRACK, StringComparison.OrdinalIgnoreCase)
+                    select track).SingleOrDefault();
+        }
+        
+        private FPS CalculateFramerate()
+        {
+            Track videoTrack = _videoTrack.Value;
+            if (videoTrack == null)
+            {
+                return new FPS();
+            }
+            
+            string rawFramerate = videoTrack.Framerate;
+            if (rawFramerate == null)
+            {
+                return new FPS();
+            }
+            
+            int startParenths = rawFramerate.IndexOf('(');
+            int endParenths = rawFramerate.IndexOf(')');
+            if (startParenths == -1 || endParenths == -1)
+            {
+                return new FPS();
+            }
+            
+            string fpsSubstring = rawFramerate.Substring(startParenths + 1, endParenths - startParenths - 1);
+            string[] splitOnSlash = fpsSubstring.Split('/');
+            if (splitOnSlash.Length != 2)
+            {
+                return new FPS();
+            }
+            
+            int numerator = 0, denominator = 0;
+            if (int.TryParse(splitOnSlash[0], out numerator) && int.TryParse(splitOnSlash[1], out denominator))
+            {
+                return new FPS(numerator, denominator);
+            }
+            
+            return new FPS();
         }
 
         private bool EqualsPreamble(object other)

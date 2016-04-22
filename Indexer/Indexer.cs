@@ -31,14 +31,14 @@ namespace Indexer
     internal static class Indexer
     {
         #region private static fields
-        private static readonly TimeSpan PLAYBACK_DURATION = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan PLAYBACK_DURATION = TimeSpan.FromSeconds(15);
         #endregion
         
         #region public methods
         public async static Task<IEnumerable<IndexEntry>> IndexVideoAsync(string videoFile)
         {
             MediaInfo info = await GetMediaInfoAsync(videoFile);
-            return await GetIndexEntriesAsync(videoFile, info, Path.GetRandomFileName());
+            return await GetIndexEntriesAsync(videoFile, info);
         }
         #endregion
 
@@ -51,12 +51,12 @@ namespace Indexer
             });
         }
 
-        private async static Task<IEnumerable<IndexEntry>> GetIndexEntriesAsync(string videoFile, MediaInfo info, string outputDirectory)
+        private async static Task<IEnumerable<IndexEntry>> GetIndexEntriesAsync(string videoFile, MediaInfo info)
         {
             var indexEntries = new List<IndexEntry>();
             TimeSpan totalDuration = info.GetDuration();
             for (var index = TimeSpan.FromSeconds(0); index < totalDuration; index += PLAYBACK_DURATION) {
-                IEnumerable<IndexEntry> indexEntry = await GetIndexEntriesAtIndexAsync(videoFile, index, outputDirectory, info.GetFramerate(), totalDuration);
+                IEnumerable<IndexEntry> indexEntry = await GetIndexEntriesAtIndexAsync(videoFile, index, info.GetFramerate(), totalDuration);
                 indexEntries.AddRange(indexEntry);
             }
             
@@ -66,11 +66,11 @@ namespace Indexer
         private async static Task<IEnumerable<IndexEntry>> GetIndexEntriesAtIndexAsync(
             string videoFile,
             TimeSpan index,
-            string outputDirectory,
             FPS framerate,
             TimeSpan totalDuration
         )
         {
+            string outputDirectory = Path.GetRandomFileName();
             var ffmpegProcessSettings = new FFMPEGProcessSettings(
                 videoFile,
                 outputDirectory,
@@ -101,10 +101,19 @@ namespace Indexer
                             }
                         ));
                 }
+
+                try
+                {
+                    Directory.Delete(outputDirectory, true);
+                } 
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine(string.Format("Could not clean up images: {0}", e.Message));
+                }
                 return indexEntries;
             }
         }
-        
+
         private static int CalculateFramesToOutputFromFramerate(TimeSpan index, FPS framerate, TimeSpan totalDuration)
         {
             int numeratorMultiplier = index + PLAYBACK_DURATION < totalDuration

@@ -129,25 +129,16 @@ namespace Indexer.Media
         private FPS CalculateFramerate()
         {
             Track videoTrack = _videoTrack.Value;
-            if (videoTrack == null)
+            string rawFramerate = videoTrack?.Framerate;
+
+            int? startParenths = rawFramerate?.IndexOf('(');
+            int? endParenths = rawFramerate?.IndexOf(')');
+            if (startParenths == null || endParenths == null || startParenths == -1 || endParenths == -1)
             {
                 return new FPS();
             }
             
-            string rawFramerate = videoTrack.Framerate;
-            if (rawFramerate == null)
-            {
-                return new FPS();
-            }
-            
-            int startParenths = rawFramerate.IndexOf('(');
-            int endParenths = rawFramerate.IndexOf(')');
-            if (startParenths == -1 || endParenths == -1)
-            {
-                return new FPS();
-            }
-            
-            string fpsSubstring = rawFramerate.Substring(startParenths + 1, endParenths - startParenths - 1);
+            string fpsSubstring = rawFramerate.Substring(startParenths.Value + 1, endParenths.Value - startParenths.Value - 1);
             string[] splitOnSlash = fpsSubstring.Split('/');
             if (splitOnSlash.Length != 2)
             {

@@ -31,7 +31,7 @@ namespace Indexer
     internal static class Indexer
     {
         #region private static fields
-        private const int PLAYBACK_DURATION = 15;
+        private static readonly TimeSpan PLAYBACK_DURATION = TimeSpan.FromSeconds(30);
         #endregion
         
         #region public methods
@@ -54,8 +54,9 @@ namespace Indexer
         private async static Task<IEnumerable<IndexEntry>> GetIndexEntriesAsync(string videoFile, MediaInfo info, string outputDirectory)
         {
             var indexEntries = new List<IndexEntry>();
-            for (var index = TimeSpan.FromSeconds(0); index < info.GetDuration(); index += TimeSpan.FromSeconds(PLAYBACK_DURATION)) {
-                IEnumerable<IndexEntry> indexEntry = await GetIndexEntriesAtIndexAsync(videoFile, index, outputDirectory, info.GetFramerate());
+            TimeSpan totalDuration = info.GetDuration();
+            for (var index = TimeSpan.FromSeconds(0); index < totalDuration; index += PLAYBACK_DURATION) {
+                IEnumerable<IndexEntry> indexEntry = await GetIndexEntriesAtIndexAsync(videoFile, index, outputDirectory, info.GetFramerate(), totalDuration);
                 indexEntries.AddRange(indexEntry);
             }
             
@@ -66,14 +67,15 @@ namespace Indexer
             string videoFile,
             TimeSpan index,
             string outputDirectory,
-            FPS framerate
+            FPS framerate,
+            TimeSpan totalDuration
         )
         {
             var ffmpegProcessSettings = new FFMPEGProcessSettings(
                 videoFile,
                 outputDirectory,
                 index,
-                CalculateFramesToOutputFromFramerate(framerate),
+                CalculateFramesToOutputFromFramerate(index, framerate, totalDuration),
                 framerate
             );
             
@@ -103,9 +105,13 @@ namespace Indexer
             }
         }
         
-        private static int CalculateFramesToOutputFromFramerate(FPS framerate)
+        private static int CalculateFramesToOutputFromFramerate(TimeSpan index, FPS framerate, TimeSpan totalDuration)
         {
-            return (framerate.Numerator * PLAYBACK_DURATION) / framerate.Denominator;
+            int numeratorMultiplier = index + PLAYBACK_DURATION < totalDuration
+                ? PLAYBACK_DURATION.Seconds
+                : (totalDuration - index).Seconds;
+
+            return (framerate.Numerator * numeratorMultiplier) / framerate.Denominator;
         }
         #endregion
     }

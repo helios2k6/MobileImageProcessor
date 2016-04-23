@@ -98,12 +98,7 @@ namespace CommonImageModel
                 throw new Exception("FFMPEG did not execute properly");
             }
         }
-        
-        public Task ExecuteAsync()
-        {
-            return Task.Factory.StartNew(Execute);
-        }
-        
+
         /// <summary>
         /// Calculate what the timespan string should be when it is embedded in a file name
         /// </summary>

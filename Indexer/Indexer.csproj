@@ -63,6 +63,7 @@
     <Compile Include="Media\Track.cs" />
     <Compile Include="Media\MediaInfo.cs" />
     <Compile Include="Media\MediaInfoProcess.cs" />
+    <Compile Include="NumericUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

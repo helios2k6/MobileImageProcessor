@@ -40,10 +40,16 @@ namespace Indexer
         public string VideoFile { get; set; }
 
         /// <summary>
-        /// The timestamp of the frame
+        /// The start time of the time-window that this frame occurs in
         /// </summary>
-        [JsonProperty(PropertyName = "FrameTimeStamp", Required = Required.Always)]
-        public TimeSpan FrameTimeStamp { get; set; }
+        [JsonProperty(PropertyName = "StartTime", Required = Required.Always)]
+        public TimeSpan StartTime { get; set; }
+
+        /// <summary>
+        /// The end time of the time-window that this frame occurs in
+        /// </summary>
+        [JsonProperty(PropertyName = "EndTime", Required = Required.Always)]
+        public TimeSpan EndTime { get; set; }
 
         /// <summary>
         /// The frame's hash (fingerprint)
@@ -64,49 +70,49 @@ namespace Indexer
         public override string ToString()
         {
             return string.Format(
-                "{0} at {1} with fingerprint {2}",
+                "{0} between [{1}, {2}] with fingerprint {3}",
                 VideoFile,
-                FrameTimeStamp,
+                StartTime,
+                EndTime,
                 FrameHash
             );
         }
 
         public override bool Equals(object other)
         {
-            if (other == null || GetType() != other.GetType())
-            {
-                return false;
-            }
-
             return Equals(other as IndexEntry);
         }
 
         public override int GetHashCode()
         {
             return VideoFile.GetHashCode() ^
-                FrameTimeStamp.GetHashCode() ^
+                StartTime.GetHashCode() ^
                 FrameHash.GetHashCode();
         }
 
         public bool Equals(IndexEntry other)
         {
-            if (other == null || GetType() != other.GetType())
+            if (EqualsPreamble(other) == false)
             {
                 return false;
             }
 
-            if (this == other)
-            {
-                return true;
-            }
-
             return string.Equals(VideoFile, other.VideoFile, StringComparison.Ordinal) &&
-                Equals(FrameTimeStamp, other.FrameTimeStamp) &&
+                Equals(StartTime, other.StartTime) &&
+                Equals(EndTime, other.EndTime) &&
                 Equals(FrameHash, other.FrameHash);
         }
         #endregion
 
         #region private methods
+        private bool EqualsPreamble(object other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            if (GetType() != other.GetType()) return false;
+
+            return true;
+        }
         #endregion
     }
 }

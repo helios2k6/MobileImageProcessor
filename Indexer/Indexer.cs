@@ -22,8 +22,10 @@
 using CommonImageModel;
 using Indexer.Media;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Indexer
@@ -31,14 +33,14 @@ namespace Indexer
     internal static class Indexer
     {
         #region private static fields
-        private static readonly TimeSpan PLAYBACK_DURATION = TimeSpan.FromSeconds(15);
+        private static readonly TimeSpan PlaybackDuration = TimeSpan.FromSeconds(30);
         #endregion
-        
+
         #region public methods
         public async static Task<IEnumerable<IndexEntry>> IndexVideoAsync(string videoFile)
         {
             MediaInfo info = await GetMediaInfoAsync(videoFile);
-            return await GetIndexEntriesAsync(videoFile, info);
+            return GetIndexEntries(videoFile, info);
         }
         #endregion
 
@@ -51,21 +53,27 @@ namespace Indexer
             });
         }
 
-        private async static Task<IEnumerable<IndexEntry>> GetIndexEntriesAsync(string videoFile, MediaInfo info)
+        private static IEnumerable<IndexEntry> GetIndexEntries(string videoFile, MediaInfo info)
         {
-            var indexEntries = new List<IndexEntry>();
+            var finalIndexEntries = new ConcurrentBag<IndexEntry>();
             TimeSpan totalDuration = info.GetDuration();
-            for (var index = TimeSpan.FromSeconds(0); index < totalDuration; index += PLAYBACK_DURATION) {
-                IEnumerable<IndexEntry> indexEntry = await GetIndexEntriesAtIndexAsync(videoFile, index, info.GetFramerate(), totalDuration);
-                indexEntries.AddRange(indexEntry);
-            }
-            
-            return indexEntries;
+
+            return from startTime in GenerateStartTimeSpans(totalDuration).AsParallel()
+                   from indexEntriesForPhoto in GetIndexEntriesAtIndex(videoFile, startTime, info.GetFramerate(), totalDuration)
+                   select indexEntriesForPhoto;
         }
-        
-        private async static Task<IEnumerable<IndexEntry>> GetIndexEntriesAtIndexAsync(
+
+        private static IEnumerable<TimeSpan> GenerateStartTimeSpans(TimeSpan totalDuration)
+        {
+            for (var startTime = TimeSpan.FromSeconds(0); startTime < totalDuration; startTime += PlaybackDuration)
+            {
+                yield return startTime;
+            }
+        }
+
+        private static IEnumerable<IndexEntry> GetIndexEntriesAtIndex(
             string videoFile,
-            TimeSpan index,
+            TimeSpan startTime,
             FPS framerate,
             TimeSpan totalDuration
         )
@@ -74,21 +82,21 @@ namespace Indexer
             var ffmpegProcessSettings = new FFMPEGProcessSettings(
                 videoFile,
                 outputDirectory,
-                index,
-                CalculateFramesToOutputFromFramerate(index, framerate, totalDuration),
+                startTime,
+                CalculateFramesToOutputFromFramerate(startTime, framerate, totalDuration),
                 framerate
             );
-            
+
             if (Directory.Exists(outputDirectory) == false)
             {
                 Directory.CreateDirectory(outputDirectory);
             }
-            
-            using(var ffmpegProcess = new FFMPEGProcess(ffmpegProcessSettings))
+
+            using (var ffmpegProcess = new FFMPEGProcess(ffmpegProcessSettings))
             {
-                await ffmpegProcess.ExecuteAsync();
+                ffmpegProcess.Execute();
                 var indexEntries = new List<IndexEntry>();
-                foreach (string picturefile in Directory.EnumerateFiles(outputDirectory, "*.png", SearchOption.AllDirectories)) 
+                foreach (string picturefile in Directory.EnumerateFiles(outputDirectory, "*.png", SearchOption.AllDirectories))
                 {
                     ImageFingerPrinter
                         .TryCalculateFingerPrint(picturefile)
@@ -96,7 +104,8 @@ namespace Indexer
                             new IndexEntry
                             {
                                 VideoFile = videoFile,
-                                FrameTimeStamp = index,
+                                StartTime = startTime,
+                                EndTime = startTime + PlaybackDuration,
                                 FrameHash = fingerPrint,
                             }
                         ));
@@ -105,7 +114,7 @@ namespace Indexer
                 try
                 {
                     Directory.Delete(outputDirectory, true);
-                } 
+                }
                 catch (Exception e)
                 {
                     Console.Error.WriteLine(string.Format("Could not clean up images: {0}", e.Message));
@@ -116,8 +125,8 @@ namespace Indexer
 
         private static int CalculateFramesToOutputFromFramerate(TimeSpan index, FPS framerate, TimeSpan totalDuration)
         {
-            int numeratorMultiplier = index + PLAYBACK_DURATION < totalDuration
-                ? PLAYBACK_DURATION.Seconds
+            int numeratorMultiplier = index + PlaybackDuration < totalDuration
+                ? PlaybackDuration.Seconds
                 : (totalDuration - index).Seconds;
 
             return (framerate.Numerator * numeratorMultiplier) / framerate.Denominator;

@@ -20,6 +20,7 @@
  */
 
 using CommonImageModel;
+using Functional.Maybe;
 using System;
 using System.Linq;
 using YAXLib;
@@ -34,8 +35,8 @@ namespace Indexer.Media
         private static readonly string GENERAL_TRACK = "General";
         private static readonly string VIDEO_TRACK = "Video";
 
-        private readonly Lazy<Track> _generalTrack;
-        private readonly Lazy<Track> _videoTrack;
+        private readonly Lazy<Maybe<Track>> _generalTrack;
+        private readonly Lazy<Maybe<Track>> _videoTrack;
         private readonly Lazy<TimeSpan> _duration;
         private readonly Lazy<FPS> _framerate;
         #endregion
@@ -43,8 +44,8 @@ namespace Indexer.Media
         #region ctor
         public MediaInfo()
         {
-            _generalTrack = new Lazy<Track>(CalculateGeneralTrack);
-            _videoTrack = new Lazy<Track>(CalculateVideoTrack);
+            _generalTrack = new Lazy<Maybe<Track>>(CalculateGeneralTrack);
+            _videoTrack = new Lazy<Maybe<Track>>(CalculateVideoTrack);
             _duration = new Lazy<TimeSpan>(CalculateDuration);
             _framerate = new Lazy<FPS>(CalculateFramerate);
         }
@@ -62,7 +63,7 @@ namespace Indexer.Media
         /// <returns>The file name or string.Empty if it cannot be determined</returns>
         public string GetFileName()
         {
-            return _generalTrack.Value?.CompleteName ?? string.Empty;
+            return _generalTrack.Value.SelectOrElse(t => t.CompleteName, () => string.Empty);
         }
 
         /// <summary>
@@ -76,7 +77,7 @@ namespace Indexer.Media
         {
             return _duration.Value;
         }
-        
+
         /// <summary>
         /// Get the framerate of the video track
         /// </summary>
@@ -84,7 +85,7 @@ namespace Indexer.Media
         {
             return _framerate.Value;
         }
-        
+
         public bool Equals(MediaInfo other)
         {
             if (EqualsPreamble(other) == false)
@@ -109,49 +110,49 @@ namespace Indexer.Media
         #region private methods
         private TimeSpan CalculateDuration()
         {
-            return _generalTrack.Value?.GetDurationAsTimeSpan() ?? TimeSpan.FromSeconds(0);
+            return _generalTrack.Value.SelectOrElse(t => t.GetDurationAsTimeSpan(), () => TimeSpan.FromSeconds(0));
         }
-        
-        private Track CalculateGeneralTrack()
+
+        private Maybe<Track> CalculateGeneralTrack()
         {
             return (from track in File.Tracks
                     where string.Equals(track.Type, GENERAL_TRACK, StringComparison.OrdinalIgnoreCase)
-                    select track).SingleOrDefault();
+                    select track).SingleOrDefault().ToMaybe();
         }
-        
-        private Track CalculateVideoTrack()
+
+        private Maybe<Track> CalculateVideoTrack()
         {
             return (from track in File.Tracks
                     where string.Equals(track.Type, VIDEO_TRACK, StringComparison.OrdinalIgnoreCase)
-                    select track).SingleOrDefault();
+                    select track).SingleOrDefault().ToMaybe();
         }
-        
+
         private FPS CalculateFramerate()
         {
-            Track videoTrack = _videoTrack.Value;
-            string rawFramerate = videoTrack?.Framerate;
+            Maybe<string> rawTrackTextMaybe = from track in _videoTrack.Value
+                                              select track.Framerate;
 
-            int? startParenths = rawFramerate?.IndexOf('(');
-            int? endParenths = rawFramerate?.IndexOf(')');
-            if (startParenths == null || endParenths == null || startParenths == -1 || endParenths == -1)
-            {
-                return new FPS();
-            }
-            
-            string fpsSubstring = rawFramerate.Substring(startParenths.Value + 1, endParenths.Value - startParenths.Value - 1);
-            string[] splitOnSlash = fpsSubstring.Split('/');
-            if (splitOnSlash.Length != 2)
-            {
-                return new FPS();
-            }
-            
-            int numerator = 0, denominator = 0;
-            if (int.TryParse(splitOnSlash[0], out numerator) && int.TryParse(splitOnSlash[1], out denominator))
-            {
-                return new FPS(numerator, denominator);
-            }
-            
-            return new FPS();
+            Maybe<FPS> fpsFromParenthesis = from framerateText in rawTrackTextMaybe
+                                            let startParenths = framerateText.IndexOf("(")
+                                            let endParenths = framerateText.IndexOf(")")
+                                            where startParenths != -1 && endParenths != -1
+                                            let fpsSubstring = framerateText.Substring(startParenths + 1, endParenths - startParenths - 1)
+                                            let splitOnSlash = fpsSubstring.Split('/')
+                                            where splitOnSlash.Length == 2
+                                            let numerator = NumericUtils.TryParseInt(splitOnSlash[0])
+                                            let denominator = NumericUtils.TryParseInt(splitOnSlash[1])
+                                            where numerator != null && denominator != null
+                                            select new FPS(numerator.Value, denominator.Value);
+
+            Maybe<FPS> fpsFromDirectParse = from framerateText in rawTrackTextMaybe
+                                            let indexOfFpsMarker = framerateText.IndexOf("fps")
+                                            where indexOfFpsMarker != -1
+                                            let fpsAsDecimal = framerateText.Substring(0, indexOfFpsMarker - 2)
+                                            let fpsAsDouble = NumericUtils.TryParseDouble(fpsAsDecimal)
+                                            where fpsAsDouble != null
+                                            select NumericUtils.ConvertDoubleToFPS(fpsAsDouble.Value);
+
+            return fpsFromParenthesis.Or(fpsFromDirectParse).OrElse(new FPS());
         }
 
         private bool EqualsPreamble(object other)

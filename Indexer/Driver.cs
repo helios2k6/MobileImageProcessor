@@ -67,7 +67,7 @@ namespace Indexer
                         Console.Error.WriteLine(string.Format("{0} Result(s) Found:", queryResults.Count()));
                         foreach (IndexEntry entry in queryResults)
                         {
-                            Console.Error.WriteLine(string.Format("{0} @ {1}", entry.VideoFile, entry.FrameTimeStamp));
+                            Console.Error.WriteLine(string.Format("{0} @ {1}", entry.VideoFile, entry.StartTime));
                         }
                     }
                     else

@@ -22,7 +22,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace CommonImageModel
 {
@@ -113,22 +112,52 @@ namespace CommonImageModel
         #region private methods
         private string GetArguments()
         {
-            var rootFileName = Path.GetFileNameWithoutExtension(_settings.TargetMediaFile);
-            var outputPath = string.Format(
-                "AUTOGEN_({0})_TIME_({1})_SNAPSHOT_(%02d).png",
-                rootFileName,
-                FormatTimeSpanFileName(_settings.StartTime)
-            );
-
             return string.Format(
-                "-ss {0} -i \"{1}\" -vframes {2} -vf fps={3}/{4} \"{5}\"",
+                "-ss {0} -i \"{1}\" -vframes {2} {3} -vf fps={4}/{5} \"{6}\"",
                 _settings.StartTime,
                 _settings.TargetMediaFile,
                 _settings.FramesToOutput,
+                GetOutputVideoCodecArgument(),
                 _settings.Framerate.Numerator,
                 _settings.Framerate.Denominator,
-                Path.Combine(_settings.OutputDirectory, outputPath)
+                Path.Combine(_settings.OutputDirectory, GetOutputArgument())
             );
+        }
+        
+        private string GetOutputVideoCodecArgument()
+        {
+            switch (_settings.OutputFormat)
+            {
+                case FFMPEGOutputFormat.PNG:
+                    return "-codec:v png";
+                case FFMPEGOutputFormat.Y4M:
+                    return "-f yuv4mpegpipe -pix_fmt yuv420p";
+                default:
+                    throw new Exception("Unknown output format");
+            }
+        }
+        
+        private string GetOutputArgument()
+        {
+            string rootFileName = Path.GetFileNameWithoutExtension(_settings.TargetMediaFile);
+            string formattedTimeSpan = FormatTimeSpanFileName(_settings.StartTime);
+            switch (_settings.OutputFormat)
+            {
+                case FFMPEGOutputFormat.PNG:
+                    return string.Format(
+                        "AUTOGEN_({0})_TIME_({1})_SNAPSHOT_(%02d).png",
+                        rootFileName,
+                        formattedTimeSpan
+                    );
+                case FFMPEGOutputFormat.Y4M:
+                    return string.Format(
+                        "AUTOGEN_({0})_TIME_({1})_RAW_DUMP.y4m",
+                        rootFileName,
+                        formattedTimeSpan
+                    );
+                default:
+                    throw new Exception("Unknown output format");
+            }
         }
         #endregion
     }

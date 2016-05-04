@@ -47,6 +47,7 @@
     <Compile Include="CommonFunctions.cs" />
     <Compile Include="CommonLinqExtensions.cs" />
     <Compile Include="CommonMaybeExtensions.cs" />
+    <Compile Include="FFMPEGOutputFormat.cs" />
     <Compile Include="FFMPEGProcess.cs" />
     <Compile Include="FFMPEGProcessSettings.cs" />
     <Compile Include="FPS.cs" />

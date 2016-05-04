@@ -22,7 +22,6 @@
 using CommonImageModel;
 using Indexer.Media;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -55,9 +54,7 @@ namespace Indexer
 
         private static IEnumerable<IndexEntry> GetIndexEntries(string videoFile, MediaInfo info)
         {
-            var finalIndexEntries = new ConcurrentBag<IndexEntry>();
             TimeSpan totalDuration = info.GetDuration();
-
             return from startTime in GenerateStartTimeSpans(totalDuration).AsParallel()
                    from indexEntriesForPhoto in GetIndexEntriesAtIndex(videoFile, startTime, info.GetFramerate(), totalDuration)
                    select indexEntriesForPhoto;
@@ -79,12 +76,14 @@ namespace Indexer
         )
         {
             string outputDirectory = Path.GetRandomFileName();
+            FPS halfFramerate = new FPS(framerate.Numerator, framerate.Denominator * 2);
             var ffmpegProcessSettings = new FFMPEGProcessSettings(
                 videoFile,
                 outputDirectory,
                 startTime,
-                CalculateFramesToOutputFromFramerate(startTime, framerate, totalDuration),
-                framerate
+                CalculateFramesToOutputFromFramerate(startTime, halfFramerate, totalDuration),
+                framerate,
+                FFMPEGOutputFormat.Y4M
             );
 
             if (Directory.Exists(outputDirectory) == false)
@@ -98,6 +97,9 @@ namespace Indexer
                 var indexEntries = new List<IndexEntry>();
                 foreach (string picturefile in Directory.EnumerateFiles(outputDirectory, "*.png", SearchOption.AllDirectories))
                 {
+                    
+                    // TODO: Decode raw Y4M format
+                    /*
                     ImageFingerPrinter
                         .TryCalculateFingerPrint(picturefile)
                         .Apply(fingerPrint => indexEntries.Add(
@@ -108,7 +110,7 @@ namespace Indexer
                                 EndTime = startTime + PlaybackDuration,
                                 FrameHash = fingerPrint,
                             }
-                        ));
+                        ));*/
                 }
 
                 try

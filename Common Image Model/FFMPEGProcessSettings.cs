@@ -52,7 +52,12 @@ namespace CommonImageModel
         /// <summary>
         /// The frame rate to playback the video
         /// </summary>
-        public FPS Framerate { get; set; }
+        public FPS Framerate { get; }
+        
+        /// <summary>
+        /// The output format to use for the FFMPEG Process
+        /// </summary>
+        public FFMPEGOutputFormat OutputFormat { get; }
         #endregion
 
         #region ctor
@@ -70,7 +75,8 @@ namespace CommonImageModel
             string outputDirectory,
             TimeSpan startTime,
             int framesToOutput,
-            FPS framerate
+            FPS framerate,
+            FFMPEGOutputFormat outputFormat
         )
         {
             TargetMediaFile = targetMediaFile;
@@ -78,6 +84,7 @@ namespace CommonImageModel
             StartTime = startTime;
             FramesToOutput = framesToOutput;
             Framerate = framerate;
+            OutputFormat = outputFormat;
         }
 
         /// <summary>
@@ -89,7 +96,7 @@ namespace CommonImageModel
         public FFMPEGProcessSettings(
             string targetMediaFile,
             TimeSpan startTime
-        ) : this(targetMediaFile, string.Empty, startTime, 8, new FPS(4, 1))
+        ) : this(targetMediaFile, string.Empty, startTime, 8, new FPS(4, 1), FFMPEGOutputFormat.PNG)
         {
         }
         #endregion
@@ -106,7 +113,8 @@ namespace CommonImageModel
                 OutputDirectory.GetHashCode() ^
                 StartTime.GetHashCode() ^
                 FramesToOutput.GetHashCode() ^
-                Framerate.GetHashCode();
+                Framerate.GetHashCode() ^
+                OutputFormat.GetHashCode();
         }
 
         public bool Equals(FFMPEGProcessSettings other)
@@ -120,7 +128,8 @@ namespace CommonImageModel
                 Equals(OutputDirectory, other.OutputDirectory) &&
                 Equals(StartTime, other.StartTime) &&
                 Equals(FramesToOutput, other.FramesToOutput) &&
-                Equals(Framerate, other.Framerate);
+                Equals(Framerate, other.Framerate) &&
+                Equals(OutputFormat, other.OutputFormat);
         }
         #endregion
 

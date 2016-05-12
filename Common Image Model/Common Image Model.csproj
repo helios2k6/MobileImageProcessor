@@ -63,6 +63,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SSIMCalculator.cs" />
     <Compile Include="TimingToken.cs" />
+    <Compile Include="Y4M\Y4MFile.cs" />
+    <Compile Include="Y4M\Y4MFileHeader.cs" />
+    <Compile Include="Y4M\Y4MFrame.cs" />
+    <Compile Include="Y4M\Y4MDecoder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

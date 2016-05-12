@@ -94,25 +94,11 @@ namespace Indexer
             using (var ffmpegProcess = new FFMPEGProcess(ffmpegProcessSettings))
             {
                 ffmpegProcess.Execute();
-                var indexEntries = new List<IndexEntry>();
-                foreach (string picturefile in Directory.EnumerateFiles(outputDirectory, "*.png", SearchOption.AllDirectories))
-                {
-                    
-                    // TODO: Decode raw Y4M format
-                    /*
-                    ImageFingerPrinter
-                        .TryCalculateFingerPrint(picturefile)
-                        .Apply(fingerPrint => indexEntries.Add(
-                            new IndexEntry
-                            {
-                                VideoFile = videoFile,
-                                StartTime = startTime,
-                                EndTime = startTime + PlaybackDuration,
-                                FrameHash = fingerPrint,
-                            }
-                        ));*/
-                }
-
+                /*
+                 * 1. Decode Y4M file
+                 * 2. Index frames
+                 * 3. Return indexed frames
+                 */
                 try
                 {
                     Directory.Delete(outputDirectory, true);
@@ -121,7 +107,8 @@ namespace Indexer
                 {
                     Console.Error.WriteLine(string.Format("Could not clean up images: {0}", e.Message));
                 }
-                return indexEntries;
+
+                throw new NotImplementedException();
             }
         }
 

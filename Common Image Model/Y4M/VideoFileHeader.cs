@@ -20,6 +20,8 @@
  */
 
 using Functional.Maybe;
+using System;
+using System.Collections.Generic;
 
 namespace CommonImageModel.Y4M
 {
@@ -27,7 +29,7 @@ namespace CommonImageModel.Y4M
     /// Represents the Y4M file header and includes all of the information that is 
     /// associated with the Y4M file
     /// </summary>
-    public sealed class Y4MFileHeader
+    public sealed class VideoFileHeader
     {
         /// <summary>
         /// The width of the video
@@ -47,6 +49,19 @@ namespace CommonImageModel.Y4M
         /// <summary>
         /// The pixel aspect ratio of the video, if it's available
         /// </summary>
-        public Maybe<Y4MPixelAspectRatio> PixelAspectRatio { get; }
+        public Maybe<PixelAspectRatio> PixelAspectRatio { get; }
+        
+        /// <summary>
+        /// Represents the colorspace this video uses
+        /// </summary>
+        public Maybe<ColorSpace> ColorSpace { get; }
+        
+        /// <summary>
+        /// Construct a new Y4M file header form the raw bytes
+        /// </summary>
+        public VideoFileHeader(IEnumerable<byte> rawBytes)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

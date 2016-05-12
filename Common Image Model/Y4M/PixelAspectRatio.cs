@@ -1,4 +1,4 @@
-﻿/* 
+/* 
  * Copyright (c) 2015 Andrew Johnson
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -21,7 +21,30 @@
 
 namespace CommonImageModel.Y4M
 {
-    public sealed class Y4MFrame
+    /// <summary>
+    /// Specifies the pixel aspect ratio of the video
+    /// </summary>
+    public enum PixelAspectRatio
     {
+        /// <summary>
+        /// Unknown pixel aspect ratio
+        /// </summary>
+        Unknown,
+        /// <summary>
+        /// 1:1 aspect ratio
+        /// </summary>
+        Square,
+        /// <summary>
+        /// 4:3 aspect ratio
+        /// </summary>
+        NTSC_SVCD,
+        /// <summary>
+        /// 4:5 aspect ratio
+        /// </summary>
+        NTSC_DVD_Narrow_Screen,
+        /// <summary>
+        /// 32:27 aspect ratio
+        /// </summary>
+        NTSU_DVD_Wide_Screen,
     }
 }

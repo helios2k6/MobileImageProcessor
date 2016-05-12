@@ -1,4 +1,4 @@
-﻿/* 
+/* 
  * Copyright (c) 2015 Andrew Johnson
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -19,31 +19,37 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace CommonImageModel.Y4M
 {
     /// <summary>
-    /// Represents a decoded Y4M File
+    /// Splits the raw byte stream of a Y4M file
     /// </summary>
-    public sealed class Y4MFile
+    public sealed class StreamSplitter
     {
-        #region private fields
-        #endregion
-
-        #region public properties
-        public Y4MFileHeader Header { get; }
+        private readonly char[] FileSignature = new[] {'Y', 'U', 'V', '4', 'M', 'P', 'E', 'G', '2', ' '};
         
-        public IEnumerable<Y4MFrame> Frames { get; }
-        #endregion
-
-        #region ctor
-        #endregion
-
-        #region public methods
-        #endregion
-
-        #region private methods
-        #endregion
+        public IEnumerable<byte> VideoHeaderStream { get; }
+        
+        public IEnumerable<IEnumerable<byte>> FrameByteStreams { get; }
+        
+        private StreamSplitter(IEnumerable<byte> videoHeaderStream, IEnumerable<IEnumerable<byte>> frameByteStreams)
+        {
+            VideoHeaderStream = videoHeaderStream;
+            FrameByteStreams = frameByteStreams;
+        }
+        
+        public static StreamSplitter GenerateByteStreamFromFile(string pathToFile)
+        {
+            using (var fileStream = new FileStream(pathToFile, FileMode.Open, FileAccess.Read))
+            using (var binaryReader = new BinaryReader(fileStream))
+            {
+                
+            }
+            throw new NotImplementedException();
+        }
     }
 }

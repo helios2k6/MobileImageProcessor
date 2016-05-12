@@ -21,9 +21,34 @@
 
 namespace CommonImageModel.Y4M
 {
-    
-    public enum Y4MColorSpace
+    /// <summary>
+    /// Represents the different colorspaces that the video is encoded in
+    /// </summary>
+    public enum ColorSpace
     {
-        
+        /// <summary>
+        /// 4:2:0 with biaxially-displaced chroma planes
+        /// </summary>
+        Four_Two_Zero_JPEG,
+
+        /// <summary>
+        /// 4:2:0 with vertically-displaced chroma planes
+        /// </summary>
+        Four_Two_Zero_PALDV,
+
+        /// <summary>
+        /// 4:2:0 with coincident chroma planes
+        /// </summary>
+        Four_Two_Zero,
+
+        /// <summary>
+        /// 4:2:2
+        /// </summary>
+        Four_Two_Two,
+
+        /// <summary>
+        /// 4:4:4
+        /// </summary>
+        Four_Four_Four,
     }
 }

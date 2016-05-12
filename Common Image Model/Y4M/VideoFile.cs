@@ -1,4 +1,4 @@
-/* 
+﻿/* 
  * Copyright (c) 2015 Andrew Johnson
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -19,32 +19,31 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System.Collections.Generic;
+
 namespace CommonImageModel.Y4M
 {
     /// <summary>
-    /// Specifies the pixel aspect ratio of the video
+    /// Represents a Y4M Video File
     /// </summary>
-    public enum Y4MPixelAspectRatio
+    public sealed class VideoFile
     {
-        /// <summary>
-        /// Unknown pixel aspect ratio
-        /// </summary>
-        Unknown,
-        /// <summary>
-        /// 1:1 aspect ratio
-        /// </summary>
-        Square,
-        /// <summary>
-        /// 4:3 aspect ratio
-        /// </summary>
-        NTSC_SVCD,
-        /// <summary>
-        /// 4:5 aspect ratio
-        /// </summary>
-        NTSC_DVD_Narrow_Screen,
-        /// <summary>
-        /// 32:27 aspect ratio
-        /// </summary>
-        NTSU_DVD_Wide_Screen,
+        #region private fields
+        #endregion
+
+        #region public properties
+        public VideoFileHeader Header { get; }
+        
+        public IEnumerable<VideoFrame> Frames { get; }
+        #endregion
+
+        #region ctor
+        #endregion
+
+        #region public methods
+        #endregion
+
+        #region private methods
+        #endregion
     }
 }

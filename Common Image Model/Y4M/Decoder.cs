@@ -26,24 +26,24 @@ namespace CommonImageModel.Y4M
     /// <summary>
     /// Decodes a file saved in the Y4M Format
     /// </summary>
-    public sealed class Y4MDecoder
+    public sealed class Decoder
     {
         #region private fields
-        private readonly Lazy<Y4MFile> _decodedFile;
+        private readonly Lazy<VideoFile> _videoFile;
         #endregion
 
         #region public properties
         /// <summary>
         /// Gets the path to the Y4M file 
         /// </summary>
-        public string File { get; }
+        public string FilePath { get; }
 
         /// <summary>
         /// Gets the decoded Y4M file
         /// </summary>
-        public Y4MFile Y4MFile
+        public VideoFile VideoFile
         {
-            get { return _decodedFile.Value; }
+            get { return _videoFile.Value; }
         }
         #endregion
 
@@ -51,16 +51,16 @@ namespace CommonImageModel.Y4M
         /// <summary>
         /// Construct a new Y4MDecoder object
         /// </summary>
-        /// <param name="file">The path to the Y4M File</param>
-        public Y4MDecoder(string file)
+        /// <param name="filePath">The path to the Y4M File</param>
+        public Decoder(string filePath)
         {
-            File = file;
-            _decodedFile = new Lazy<Y4MFile>(() => DecodeFile(File));
+            FilePath = filePath;
+            _videoFile = new Lazy<VideoFile>(() => DecodeVideoFile(FilePath));
         }
         #endregion
 
         #region private methods
-        private static Y4MFile DecodeFile(string filePath)
+        private static VideoFile DecodeVideoFile(string filePath)
         {
             return null;
         }

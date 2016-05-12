@@ -63,12 +63,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SSIMCalculator.cs" />
     <Compile Include="TimingToken.cs" />
-    <Compile Include="Y4M\Y4MColorSpace.cs" />
-    <Compile Include="Y4M\Y4MFile.cs" />
-    <Compile Include="Y4M\Y4MFileHeader.cs" />
-    <Compile Include="Y4M\Y4MFrame.cs" />
-    <Compile Include="Y4M\Y4MDecoder.cs" />
-    <Compile Include="Y4M\Y4MPixelAspectRatio.cs" />
+    <Compile Include="Y4M\ColorSpace.cs" />
+    <Compile Include="Y4M\Decoder.cs" />
+    <Compile Include="Y4M\PixelAspectRatio.cs" />
+    <Compile Include="Y4M\VideoFile.cs" />
+    <Compile Include="Y4M\VideoFileHeader.cs" />
+    <Compile Include="Y4M\VideoFrame.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

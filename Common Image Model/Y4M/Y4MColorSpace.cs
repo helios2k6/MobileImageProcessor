@@ -1,4 +1,4 @@
-﻿/* 
+/* 
  * Copyright (c) 2015 Andrew Johnson
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -19,34 +19,11 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Functional.Maybe;
-
 namespace CommonImageModel.Y4M
 {
-    /// <summary>
-    /// Represents the Y4M file header and includes all of the information that is 
-    /// associated with the Y4M file
-    /// </summary>
-    public sealed class Y4MFileHeader
+    
+    public enum Y4MColorSpace
     {
-        /// <summary>
-        /// The width of the video
-        /// </summary>
-        public int Width { get; }
         
-        /// <summary>
-        /// The height of the video
-        /// </summary> 
-        public int Height { get; }
-        
-        /// <summary>
-        /// The framerate of the video
-        /// </summary>
-        public FPS Framerate { get; }
-        
-        /// <summary>
-        /// The pixel aspect ratio of the video, if it's available
-        /// </summary>
-        public Maybe<Y4MPixelAspectRatio> PixelAspectRatio { get; }
     }
 }

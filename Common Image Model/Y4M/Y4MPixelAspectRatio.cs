@@ -1,4 +1,4 @@
-﻿/* 
+/* 
  * Copyright (c) 2015 Andrew Johnson
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of 
@@ -19,34 +19,32 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Functional.Maybe;
-
 namespace CommonImageModel.Y4M
 {
     /// <summary>
-    /// Represents the Y4M file header and includes all of the information that is 
-    /// associated with the Y4M file
+    /// Specifies the pixel aspect ratio of the video
     /// </summary>
-    public sealed class Y4MFileHeader
+    public enum Y4MPixelAspectRatio
     {
         /// <summary>
-        /// The width of the video
+        /// Unknown pixel aspect ratio
         /// </summary>
-        public int Width { get; }
-        
+        Unknown,
         /// <summary>
-        /// The height of the video
-        /// </summary> 
-        public int Height { get; }
-        
-        /// <summary>
-        /// The framerate of the video
+        /// 1:1 aspect ratio
         /// </summary>
-        public FPS Framerate { get; }
-        
+        Square,
         /// <summary>
-        /// The pixel aspect ratio of the video, if it's available
+        /// 4:3 aspect ratio
         /// </summary>
-        public Maybe<Y4MPixelAspectRatio> PixelAspectRatio { get; }
+        NTSC_SVCD,
+        /// <summary>
+        /// 4:5 aspect ratio
+        /// </summary>
+        NTSC_DVD_Narrow_Screen,
+        /// <summary>
+        /// 32:27 aspect ratio
+        /// </summary>
+        NTSU_DVD_Wide_Screen,
     }
 }

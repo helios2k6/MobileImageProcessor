@@ -32,6 +32,7 @@ namespace CommonImageModel
         PNG,
         /// <summary>
         /// Specifies the raw video Y4M output
+        /// </summary>
         Y4M,
     }
 }

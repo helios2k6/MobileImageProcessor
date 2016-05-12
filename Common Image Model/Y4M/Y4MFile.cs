@@ -19,6 +19,8 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System.Collections.Generic;
+
 namespace CommonImageModel.Y4M
 {
     /// <summary>
@@ -30,6 +32,9 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region public properties
+        public Y4MFileHeader Header { get; }
+        
+        public IEnumerable<Y4MFrame> Frames { get; }
         #endregion
 
         #region ctor

@@ -20,8 +20,7 @@
  */
 
 using Functional.Maybe;
-using System;
-using System.Collections.Generic;
+using System.IO;
 
 namespace CommonImageModel.Y4M
 {
@@ -82,13 +81,27 @@ namespace CommonImageModel.Y4M
         /// <summary>
         /// Construct a new Y4M file header form the raw bytes
         /// </summary>
-        public Header(IEnumerable<byte> rawBytes)
+        private Header(Header.Type headerType, int width, int height, FPS framerate, Maybe<PixelAspectRatio> pixelAspectRatio, Maybe<ColorSpace> colorSpace)
         {
-            throw new NotImplementedException();
+            HeaderType = headerType;
+            Width = width;
+            Height = height;
+            Framerate = framerate;
+            PixelAspectRatio = pixelAspectRatio;
+            ColorSpace = colorSpace;
         }
         #endregion
 
         #region public methods
+        public static Maybe<Header> TryParseFileHeader(Stream rawStream)
+        {
+            return Maybe<Header>.Nothing;
+        }
+        
+        public static Maybe<Header> TryParseFrameHeader(Stream rawStream)
+        {
+            return Maybe<Header>.Nothing;
+        }
         #endregion
 
         #region private methods

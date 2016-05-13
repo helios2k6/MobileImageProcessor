@@ -19,7 +19,9 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Functional.Maybe;
 using System.Collections.Generic;
+using System.IO;
 
 namespace CommonImageModel.Y4M
 {
@@ -38,9 +40,18 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region ctor
+        private VideoFile(Header videoFileHeader, IEnumerable<VideoFrame> frames)
+        {
+            VideoFileHeader = videoFileHeader;
+            Frames = frames;
+        }
         #endregion
 
         #region public methods
+        public static Maybe<VideoFile> TryParse(Stream rawBytes)
+        {
+            return Maybe<VideoFile>.Nothing;
+        }
         #endregion
 
         #region private methods

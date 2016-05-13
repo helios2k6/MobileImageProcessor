@@ -19,8 +19,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
-using System.Collections.Generic;
+using Functional.Maybe;
 using System.Drawing;
 using System.IO;
 
@@ -32,40 +31,34 @@ namespace CommonImageModel.Y4M
     public sealed class VideoFrame
     {
         #region private fields
-        private readonly Lazy<IEnumerable<Color>> _frame;
         #endregion
 
         #region public properties
+        /// <summary>
+        /// The header for this frame
+        /// </summary>
         public Header Header { get; }
         
-        public IEnumerable<Color> Frame
-        {
-            get { return _frame.Value; }
-        }
+        /// <summary>
+        /// The color pixels of the frame
+        /// </summary>
+        public Color[][] Frame { get; }
         #endregion
 
         #region ctor
-        public VideoFrame(Stream inputStream, Header fileHeader)
+        private VideoFrame(Stream inputStream, Header fileHeader)
         {
-            Header = GetHeader(fileHeader);
-            _frame = new Lazy<IEnumerable<Color>>(() => GenerateFrame(inputStream));
         }
         #endregion
 
         #region public methods
+        public static Maybe<VideoFrame> TryParse(Stream rawStream, Header fileHeader)
+        {
+            return Maybe<VideoFrame>.Nothing;
+        }
         #endregion
 
         #region private methods
-        private static Header GetHeader(Header fileHeader)
-        {
-            // TODO: Read header
-            return fileHeader;
-        }
-
-        private static IEnumerable<Color> GenerateFrame(Stream inputStream)
-        {
-            throw new NotImplementedException();
-        }
         #endregion
     }
 }

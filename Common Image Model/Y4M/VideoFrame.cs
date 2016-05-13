@@ -21,6 +21,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 
 namespace CommonImageModel.Y4M
 {
@@ -30,20 +32,23 @@ namespace CommonImageModel.Y4M
     public sealed class VideoFrame
     {
         #region private fields
-        private readonly Lazy<IEnumerable<byte>> _bytes;
+        private readonly Lazy<IEnumerable<Color>> _frame;
         #endregion
 
         #region public properties
-        public IEnumerable<byte> Bytes
+        public Header Header { get; }
+        
+        public IEnumerable<Color> Frame
         {
-            get { return _bytes.Value; }
+            get { return _frame.Value; }
         }
         #endregion
 
         #region ctor
-        public VideoFrame(IEnumerable<byte> rawBytes)
+        public VideoFrame(Stream inputStream, Header fileHeader)
         {
-            _bytes = new Lazy<IEnumerable<byte>>(() => GenerateFrame(rawBytes));
+            Header = GetHeader(fileHeader);
+            _frame = new Lazy<IEnumerable<Color>>(() => GenerateFrame(inputStream));
         }
         #endregion
 
@@ -51,7 +56,13 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region private methods
-        private static IEnumerable<byte> GenerateFrame(IEnumerable<byte> rawBytes)
+        private static Header GetHeader(Header fileHeader)
+        {
+            // TODO: Read header
+            return fileHeader;
+        }
+
+        private static IEnumerable<Color> GenerateFrame(Stream inputStream)
         {
             throw new NotImplementedException();
         }

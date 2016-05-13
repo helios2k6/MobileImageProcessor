@@ -29,12 +29,29 @@ namespace CommonImageModel.Y4M
     /// Represents the Y4M file header and includes all of the information that is 
     /// associated with the Y4M file
     /// </summary>
-    public sealed class VideoFileHeader
+    public sealed class Header
     {
-        #region private fields
-        #endregion
+        /// <summary>
+        //// Represents the header type  
+        /// </summary>
+        public enum Type
+        {
+            /// <summary>
+            /// The file level header
+            /// </summary>
+            YUV4MPEG,
+            /// <summary>
+            /// The frame level header
+            /// </summary>
+            FRAME,
+        }
 
         #region public properties
+        /// <summary>
+        /// The type of header this represents
+        /// </summary>
+        public Header.Type HeaderType { get; }
+
         /// <summary>
         /// The width of the video
         /// </summary>
@@ -65,7 +82,7 @@ namespace CommonImageModel.Y4M
         /// <summary>
         /// Construct a new Y4M file header form the raw bytes
         /// </summary>
-        public VideoFileHeader(IEnumerable<byte> rawBytes)
+        public Header(IEnumerable<byte> rawBytes)
         {
             throw new NotImplementedException();
         }

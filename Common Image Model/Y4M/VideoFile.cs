@@ -32,7 +32,7 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region public properties
-        public VideoFileHeader Header { get; }
+        public Header VideoFileHeader { get; }
         
         public IEnumerable<VideoFrame> Frames { get; }
         #endregion

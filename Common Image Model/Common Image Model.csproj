@@ -65,9 +65,9 @@
     <Compile Include="TimingToken.cs" />
     <Compile Include="Y4M\ColorSpace.cs" />
     <Compile Include="Y4M\Decoder.cs" />
+    <Compile Include="Y4M\Header.cs" />
     <Compile Include="Y4M\PixelAspectRatio.cs" />
     <Compile Include="Y4M\VideoFile.cs" />
-    <Compile Include="Y4M\VideoFileHeader.cs" />
     <Compile Include="Y4M\VideoFrame.cs" />
   </ItemGroup>
   <ItemGroup>

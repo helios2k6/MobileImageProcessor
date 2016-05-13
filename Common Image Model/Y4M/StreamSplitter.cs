@@ -30,26 +30,38 @@ namespace CommonImageModel.Y4M
     /// </summary>
     public sealed class StreamSplitter
     {
-        private readonly char[] FileSignature = new[] {'Y', 'U', 'V', '4', 'M', 'P', 'E', 'G', '2', ' '};
-        
+        #region private fields
+        // Note: The space at the end is INTENTIONAL!
+        private const string FileSignature = "YUV4MPEG2 ";
+        #endregion
+
+        #region public properties
         public IEnumerable<byte> VideoHeaderStream { get; }
-        
+
         public IEnumerable<IEnumerable<byte>> FrameByteStreams { get; }
-        
+        #endregion
+
+        #region ctor
         private StreamSplitter(IEnumerable<byte> videoHeaderStream, IEnumerable<IEnumerable<byte>> frameByteStreams)
         {
             VideoHeaderStream = videoHeaderStream;
             FrameByteStreams = frameByteStreams;
         }
-        
+        #endregion
+
+        #region public methods
         public static StreamSplitter GenerateByteStreamFromFile(string pathToFile)
         {
             using (var fileStream = new FileStream(pathToFile, FileMode.Open, FileAccess.Read))
             using (var binaryReader = new BinaryReader(fileStream))
             {
-                
+
             }
             throw new NotImplementedException();
         }
+        #endregion
+
+        #region private methods
+        #endregion
     }
 }

@@ -31,31 +31,37 @@ namespace CommonImageModel.Y4M
     /// </summary>
     public sealed class VideoFileHeader
     {
+        #region private fields
+        #endregion
+
+        #region public properties
         /// <summary>
         /// The width of the video
         /// </summary>
         public int Width { get; }
-        
+
         /// <summary>
         /// The height of the video
         /// </summary> 
         public int Height { get; }
-        
+
         /// <summary>
         /// The framerate of the video
         /// </summary>
         public FPS Framerate { get; }
-        
+
         /// <summary>
         /// The pixel aspect ratio of the video, if it's available
         /// </summary>
         public Maybe<PixelAspectRatio> PixelAspectRatio { get; }
-        
+
         /// <summary>
         /// Represents the colorspace this video uses
         /// </summary>
         public Maybe<ColorSpace> ColorSpace { get; }
-        
+        #endregion
+
+        #region ctor
         /// <summary>
         /// Construct a new Y4M file header form the raw bytes
         /// </summary>
@@ -63,5 +69,12 @@ namespace CommonImageModel.Y4M
         {
             throw new NotImplementedException();
         }
+        #endregion
+
+        #region public methods
+        #endregion
+
+        #region private methods
+        #endregion
     }
 }

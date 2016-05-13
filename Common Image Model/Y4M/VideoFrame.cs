@@ -29,21 +29,32 @@ namespace CommonImageModel.Y4M
     /// </summary>
     public sealed class VideoFrame
     {
+        #region private fields
         private readonly Lazy<IEnumerable<byte>> _bytes;
-        
+        #endregion
+
+        #region public properties
+        public IEnumerable<byte> Bytes
+        {
+            get { return _bytes.Value; }
+        }
+        #endregion
+
+        #region ctor
         public VideoFrame(IEnumerable<byte> rawBytes)
         {
             _bytes = new Lazy<IEnumerable<byte>>(() => GenerateFrame(rawBytes));
         }
-        
-        public IEnumerable<byte> Bytes 
-        { 
-            get { return _bytes.Value; }
-        }
-        
+        #endregion
+
+        #region public methods
+        #endregion
+
+        #region private methods
         private static IEnumerable<byte> GenerateFrame(IEnumerable<byte> rawBytes)
         {
             throw new NotImplementedException();
         }
+        #endregion
     }
 }

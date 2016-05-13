@@ -20,7 +20,9 @@
  */
 
 using Functional.Maybe;
+using System;
 using System.IO;
+using System.Linq;
 
 namespace CommonImageModel.Y4M
 {
@@ -30,6 +32,12 @@ namespace CommonImageModel.Y4M
     /// </summary>
     public sealed class Header
     {
+        #region private fields
+        private const string FileHeaderMagicTag = "YUV4MPEG2";
+        private const string FrameHeaderMagicTag = "FRAME";
+        private readonly string ParameterSeparator = " ";
+        private readonly byte FrameHeaderEndByte = 0x0A;
+        #endregion
         /// <summary>
         //// Represents the header type  
         /// </summary>
@@ -95,16 +103,39 @@ namespace CommonImageModel.Y4M
         #region public methods
         public static Maybe<Header> TryParseFileHeader(Stream rawStream)
         {
+            if (TryReadHeader(rawStream, FileHeaderMagicTag) == false)
+            {
+                return Maybe<Header>.Nothing;
+            }
+
             return Maybe<Header>.Nothing;
         }
         
         public static Maybe<Header> TryParseFrameHeader(Stream rawStream)
         {
+            // TODO
             return Maybe<Header>.Nothing;
         }
         #endregion
 
         #region private methods
+        private static bool TryReadHeader(Stream rawStream, string headerMagicTag)
+        {
+            var buffer = new byte[10];
+            int readBytes = rawStream.Read(buffer, 0, headerMagicTag.Length);
+            
+            if (readBytes == headerMagicTag.Length)
+            {
+                var readHeader = new String(buffer.Select(Convert.ToChar).ToArray());
+                if (string.Equals(headerMagicTag, readHeader, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+            // Reset header and return false if the header doesn't match
+            rawStream.Position = rawStream.Position - readBytes;
+            return false;
+        }
         #endregion
     }
 }

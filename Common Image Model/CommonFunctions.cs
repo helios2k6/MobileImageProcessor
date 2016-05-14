@@ -93,8 +93,8 @@ namespace CommonImageModel
         /// <summary>
         /// Load the Image as a LockBitImage instead of as a regular image
         /// </summary>
-        /// <param name="imagePath"></param>
-        /// <returns></returns>
+        /// <param name="imagePath">The path to the image file</param>
+        /// <returns>A LockBitImage if this was successful or None if not</returns>
         public static Maybe<LockBitImage> TryLoadImageAsLockBit(string imagePath)
         {
             return from image in TryLoadImage(imagePath)

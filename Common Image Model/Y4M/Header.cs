@@ -57,7 +57,7 @@ namespace CommonImageModel.Y4M
         /// <summary>
         /// The type of header this represents
         /// </summary>
-        public Header.Type HeaderType { get; }
+        public Type HeaderType { get; }
 
         /// <summary>
         /// The width of the video
@@ -89,7 +89,14 @@ namespace CommonImageModel.Y4M
         /// <summary>
         /// Construct a new Y4M file header form the raw bytes
         /// </summary>
-        private Header(Header.Type headerType, int width, int height, FPS framerate, Maybe<PixelAspectRatio> pixelAspectRatio, Maybe<ColorSpace> colorSpace)
+        private Header(
+            Type headerType,
+            int width,
+            int height,
+            FPS framerate,
+            Maybe<PixelAspectRatio> pixelAspectRatio,
+            Maybe<ColorSpace> colorSpace
+        )
         {
             HeaderType = headerType;
             Width = width;
@@ -110,7 +117,7 @@ namespace CommonImageModel.Y4M
 
             return Maybe<Header>.Nothing;
         }
-        
+
         public static Maybe<Header> TryParseFrameHeader(Stream rawStream)
         {
             // TODO
@@ -123,10 +130,10 @@ namespace CommonImageModel.Y4M
         {
             var buffer = new byte[10];
             int readBytes = rawStream.Read(buffer, 0, headerMagicTag.Length);
-            
+
             if (readBytes == headerMagicTag.Length)
             {
-                var readHeader = new String(buffer.Select(Convert.ToChar).ToArray());
+                var readHeader = new string(buffer.Select(Convert.ToChar).ToArray());
                 if (string.Equals(headerMagicTag, readHeader, StringComparison.Ordinal))
                 {
                     return true;

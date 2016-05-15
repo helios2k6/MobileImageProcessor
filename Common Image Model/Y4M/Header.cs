@@ -21,6 +21,8 @@
 
 using Functional.Maybe;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -33,10 +35,20 @@ namespace CommonImageModel.Y4M
     public sealed class Header
     {
         #region private fields
-        private const string FileHeaderMagicTag = "YUV4MPEG2";
-        private const string FrameHeaderMagicTag = "FRAME";
-        private readonly string ParameterSeparator = " ";
-        private readonly byte FrameHeaderEndByte = 0x0A;
+        private static readonly string FileHeaderMagicTag = "YUV4MPEG2";
+        private static readonly string FrameHeaderMagicTag = "FRAME";
+        private static readonly string ParameterSeparator = " ";
+        private static readonly byte FrameHeaderEndByte = 0x0A;
+        private static readonly ICollection<string> ParameterSet = new HashSet<string>
+        {
+            "X",
+            "W",
+            "H",
+            "F",
+            "I",
+            "A",
+            "C",
+        };
         #endregion
         /// <summary>
         //// Represents the header type  
@@ -110,7 +122,7 @@ namespace CommonImageModel.Y4M
         #region public methods
         public static Maybe<Header> TryParseFileHeader(Stream rawStream)
         {
-            if (TryReadHeader(rawStream, FileHeaderMagicTag) == false)
+            if (TryReadHeaderMagicTag(rawStream, FileHeaderMagicTag) == false)
             {
                 return Maybe<Header>.Nothing;
             }
@@ -120,13 +132,17 @@ namespace CommonImageModel.Y4M
 
         public static Maybe<Header> TryParseFrameHeader(Stream rawStream)
         {
-            // TODO
+            if (TryReadHeaderMagicTag(rawStream, FrameHeaderMagicTag) == false)
+            {
+                return Maybe<Header>.Nothing;
+            }
+
             return Maybe<Header>.Nothing;
         }
         #endregion
 
         #region private methods
-        private static bool TryReadHeader(Stream rawStream, string headerMagicTag)
+        private static bool TryReadHeaderMagicTag(Stream rawStream, string headerMagicTag)
         {
             var buffer = new byte[10];
             int readBytes = rawStream.Read(buffer, 0, headerMagicTag.Length);
@@ -142,6 +158,17 @@ namespace CommonImageModel.Y4M
             // Reset header and return false if the header doesn't match
             rawStream.Position = rawStream.Position - readBytes;
             return false;
+        }
+
+        /// <summary>
+        /// Attempts to parse the parameters of the stream to form a header. If the stream is malformed, this
+        /// returns None
+        /// </summary>
+        /// <param name="rawStream">The raw stream of bytes to parse</param>
+        /// <returns>An optional Header</returns>
+        private static Maybe<Header> TryReadHeaderParameters(Stream rawStream)
+        {
+            return Maybe<Header>.Nothing;
         }
         #endregion
     }

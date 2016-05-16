@@ -71,12 +71,12 @@ namespace Indexer
         private static IEnumerable<IndexEntry> GetIndexEntriesAtIndex(
             string videoFile,
             TimeSpan startTime,
-            FPS framerate,
+            Ratio framerate,
             TimeSpan totalDuration
         )
         {
             string outputDirectory = Path.GetRandomFileName();
-            FPS halfFramerate = new FPS(framerate.Numerator, framerate.Denominator * 2);
+            Ratio halfFramerate = new Ratio(framerate.Numerator, framerate.Denominator * 2);
             var ffmpegProcessSettings = new FFMPEGProcessSettings(
                 videoFile,
                 outputDirectory,
@@ -112,7 +112,7 @@ namespace Indexer
             }
         }
 
-        private static int CalculateFramesToOutputFromFramerate(TimeSpan index, FPS framerate, TimeSpan totalDuration)
+        private static int CalculateFramesToOutputFromFramerate(TimeSpan index, Ratio framerate, TimeSpan totalDuration)
         {
             int numeratorMultiplier = index + PlaybackDuration < totalDuration
                 ? PlaybackDuration.Seconds

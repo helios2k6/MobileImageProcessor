@@ -31,11 +31,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Functional.Maybe, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Functional.Maybe.1.0.7\lib\portable-net40+win+MonoAndroid10+xamarinios10+MonoTouch10\Functional.Maybe.dll</HintPath>
+      <HintPath>..\packages\Functional.Maybe.1.0.8\lib\portable-net40+win+MonoAndroid10+xamarinios10+MonoTouch10\Functional.Maybe.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -50,7 +50,7 @@
     <Compile Include="FFMPEGOutputFormat.cs" />
     <Compile Include="FFMPEGProcess.cs" />
     <Compile Include="FFMPEGProcessSettings.cs" />
-    <Compile Include="FPS.cs" />
+    <Compile Include="Ratio.cs" />
     <Compile Include="ImageFingerPrint.cs" />
     <Compile Include="ImageFingerPrinter.cs" />
     <Compile Include="ImageJob.cs" />
@@ -66,7 +66,7 @@
     <Compile Include="Y4M\ColorSpace.cs" />
     <Compile Include="Y4M\Decoder.cs" />
     <Compile Include="Y4M\Header.cs" />
-    <Compile Include="Y4M\PixelAspectRatio.cs" />
+    <Compile Include="Y4M\Interlacing.cs" />
     <Compile Include="Y4M\VideoFile.cs" />
     <Compile Include="Y4M\VideoFrame.cs" />
   </ItemGroup>

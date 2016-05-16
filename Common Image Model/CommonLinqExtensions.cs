@@ -28,6 +28,23 @@ namespace CommonImageModel
     public static class CommonLinqExtensions
     {
         /// <summary>
+        /// Append an item to the end of an existing IEnumerable{T}
+        /// </summary>
+        /// <typeparam name="T">The type of item</typeparam>
+        /// <param name="this">The IEnumerable to append to</param>
+        /// <param name="item">The item to apend</param>
+        /// <returns>A new IEnumerable{T} with the item appended</returns>
+        public static IEnumerable<T> Append<T>(this IEnumerable<T> @this, T item)
+        {
+            foreach (var i in @this)
+            {
+                yield return i;
+            }
+
+            yield return item;
+        }
+
+        /// <summary>
         /// Select the first IEnumerable{T} if it has elements, else select the second
         /// </summary>
         /// <typeparam name="T">The type inside the IEnumerable</typeparam>

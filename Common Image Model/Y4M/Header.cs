@@ -21,7 +21,6 @@
 
 using Functional.Maybe;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -32,24 +31,33 @@ namespace CommonImageModel.Y4M
     /// Represents the Y4M file header and includes all of the information that is 
     /// associated with the Y4M file
     /// </summary>
-    public sealed class Header
+    public sealed class Header : IEquatable<Header>
     {
         #region private fields
-        private static readonly string FileHeaderMagicTag = "YUV4MPEG2";
-        private static readonly string FrameHeaderMagicTag = "FRAME";
-        private static readonly string ParameterSeparator = " ";
-        private static readonly byte FrameHeaderEndByte = 0x0A;
-        private static readonly ICollection<string> ParameterSet = new HashSet<string>
+        private const string FileHeaderMagicTag = "YUV4MPEG2";
+        private const string FrameHeaderMagicTag = "FRAME";
+        private const string ParameterSeparator = " ";
+        private const byte FrameHeaderEndByte = 0x0A;
+        private const char CommentParameter = 'X';
+        private const char WidthParameter = 'W';
+        private const char HeightParemter = 'H';
+        private const char FrameRateParameter = 'F';
+        private const char InterlaceParameter = 'I';
+        private const char PixelAspectRatioParameter = 'A';
+        private const char ColorSpaceParameter = 'C';
+        private static readonly ICollection<char> ParameterSet = new HashSet<char>
         {
-            "X",
-            "W",
-            "H",
-            "F",
-            "I",
-            "A",
-            "C",
+            CommentParameter,
+            WidthParameter,
+            HeightParemter,
+            FrameRateParameter,
+            InterlaceParameter,
+            PixelAspectRatioParameter,
+            ColorSpaceParameter,
         };
         #endregion
+
+        #region private types
         /// <summary>
         //// Represents the header type  
         /// </summary>
@@ -64,62 +72,102 @@ namespace CommonImageModel.Y4M
             /// </summary>
             FRAME,
         }
+        #endregion
 
         #region public properties
         /// <summary>
         /// The type of header this represents
         /// </summary>
-        public Type HeaderType { get; }
+        public Type HeaderType { get; private set; }
 
         /// <summary>
         /// The width of the video
         /// </summary>
-        public int Width { get; }
+        public int Width { get; private set; }
 
         /// <summary>
         /// The height of the video
         /// </summary> 
-        public int Height { get; }
+        public int Height { get; private set; }
 
         /// <summary>
         /// The framerate of the video
         /// </summary>
-        public FPS Framerate { get; }
+        public Ratio Framerate { get; private set; }
 
         /// <summary>
         /// The pixel aspect ratio of the video, if it's available
         /// </summary>
-        public Maybe<PixelAspectRatio> PixelAspectRatio { get; }
+        public Maybe<Ratio> PixelAspectRatio { get; private set; }
 
         /// <summary>
         /// Represents the colorspace this video uses
         /// </summary>
-        public Maybe<ColorSpace> ColorSpace { get; }
+        public Maybe<ColorSpace> ColorSpace { get; private set; }
+
+        /// <summary>
+        /// The interlacing setting used
+        /// </summary>
+        public Maybe<Interlacing> Interlacing { get; private set; }
+
+        /// <summary>
+        /// The comments that accompanied this header
+        /// </summary>
+        public IEnumerable<string> Comments { get; private set; }
         #endregion
 
         #region ctor
         /// <summary>
-        /// Construct a new Y4M file header form the raw bytes
+        /// Construct a default header
         /// </summary>
-        private Header(
-            Type headerType,
-            int width,
-            int height,
-            FPS framerate,
-            Maybe<PixelAspectRatio> pixelAspectRatio,
-            Maybe<ColorSpace> colorSpace
-        )
+        /// <remarks>
+        /// This is intentionally private to ensure that the header is constructed properly
+        /// </remarks>
+        private Header()
         {
-            HeaderType = headerType;
-            Width = width;
-            Height = height;
-            Framerate = framerate;
-            PixelAspectRatio = pixelAspectRatio;
-            ColorSpace = colorSpace;
+            HeaderType = Type.YUV4MPEG;
+            Width = -1;
+            Height = -1;
+            PixelAspectRatio = Maybe<Ratio>.Nothing;
+            ColorSpace = Maybe<ColorSpace>.Nothing;
+            Framerate = new Ratio();
+            Comments = Enumerable.Empty<string>();
         }
         #endregion
 
         #region public methods
+        public bool Equals(Header other)
+        {
+            if (EqualsPreamble(other) == false)
+            {
+                return false;
+            }
+
+            return Equals(HeaderType, other.HeaderType) &&
+                Equals(Width, other.Width) &&
+                Equals(Height, other.Height) &&
+                Equals(Framerate, other.Framerate) &&
+                Equals(PixelAspectRatio, other.PixelAspectRatio) &&
+                Equals(ColorSpace, other.ColorSpace) &&
+                Enumerable.SequenceEqual(Comments, other.Comments);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Header);
+        }
+
+        public override int GetHashCode()
+        {
+            return HeaderType.GetHashCode() ^
+                Width.GetHashCode() ^
+                Height.GetHashCode() ^
+                Framerate.GetHashCode() ^
+                PixelAspectRatio.GetHashCode() ^
+                ColorSpace.GetHashCode() ^
+                Comments.Aggregate(0, (agg, s) => agg ^ s.GetHashCode(), i => i);
+        }
+
         public static Maybe<Header> TryParseFileHeader(Stream rawStream)
         {
             if (TryReadHeaderMagicTag(rawStream, FileHeaderMagicTag) == false)
@@ -142,6 +190,15 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region private methods
+        private bool EqualsPreamble(object other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            if (GetType() != other.GetType()) return false;
+
+            return true;
+        }
+
         private static bool TryReadHeaderMagicTag(Stream rawStream, string headerMagicTag)
         {
             var buffer = new byte[10];
@@ -168,7 +225,85 @@ namespace CommonImageModel.Y4M
         /// <returns>An optional Header</returns>
         private static Maybe<Header> TryReadHeaderParameters(Stream rawStream)
         {
+            Maybe<IEnumerable<string>> maybeParameters = TryGetParameters(rawStream);
+            if (maybeParameters.IsNothing())
+            {
+                return Maybe<Header>.Nothing;
+            }
+
+            IEnumerable<string> comments = Enumerable.Empty<string>();
+            Maybe<int> width = Maybe<int>.Nothing;
+            Maybe<int> height = Maybe<int>.Nothing;
+            Maybe<Ratio> framerate = Maybe<Ratio>.Nothing;
+            Maybe<Interlacing> interlacing = Maybe<Interlacing>.Nothing;
+
+            foreach (string currentFullParameter in maybeParameters.Value)
+            {
+                char parameter = currentFullParameter.First();
+                string parameterBody = currentFullParameter.Substring(1);
+                switch (parameter)
+                {
+                    case CommentParameter:
+                        {
+                            comments = comments.Append(parameterBody);
+                        }
+                        break;
+                    case WidthParameter:
+                        {
+                            int possibleWidth = -1;
+                            if (int.TryParse(parameterBody, out possibleWidth))
+                            {
+                                width = possibleWidth.ToMaybe();
+                            }
+                        }
+                        break;
+                    case HeightParemter:
+                        {
+                            int possibleHeight = -1;
+                            if (int.TryParse(parameterBody, out possibleHeight))
+                            {
+                                height = possibleHeight.ToMaybe();
+                            }
+                        }
+                        break;
+                    case FrameRateParameter:
+                        {
+                            string[] splitFramerate = parameterBody.Split(new[] { ':' });
+                            if (splitFramerate.Length == 2)
+                            {
+                                int numerator = -1, denominator = -1;
+                                if (int.TryParse(splitFramerate[0], out numerator) && int.TryParse(splitFramerate[1], out denominator))
+                                {
+                                    framerate = new Ratio(numerator, denominator).ToMaybe();
+                                }
+                            }
+                        }
+                        break;
+                    case InterlaceParameter:
+                        {
+                            interlacing = Y4M.Interlacing.TryParseInterlacing(parameterBody);
+                        }
+                        break;
+                    case PixelAspectRatioParameter:
+                        break;
+                    case ColorSpaceParameter:
+                        break;
+                    default:
+                        // Do nothing for invalid parameters
+                        break;
+                }
+            }
             return Maybe<Header>.Nothing;
+        }
+
+        private static Maybe<IEnumerable<string>> TryGetParameters(Stream rawStream)
+        {
+            return Maybe<IEnumerable<string>>.Nothing;
+        }
+
+        private static Maybe<string> TryGetNextParameter(Stream rawStream)
+        {
+            return Maybe<string>.Nothing;
         }
         #endregion
     }

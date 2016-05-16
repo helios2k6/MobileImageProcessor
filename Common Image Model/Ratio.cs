@@ -26,14 +26,14 @@ namespace CommonImageModel
     /// <summary>
     /// Represents the frames per second of a media file as a rational number
     /// </summary>
-    public sealed class FPS : IEquatable<FPS>, IComparable<FPS>
+    public sealed class Ratio : IEquatable<Ratio>, IComparable<Ratio>
     {
         #region ctor
         /// <summary>
         /// Construct a default FPS of 0/1, avoiding the non-determinate form
         /// of 0/0
         /// </summary>
-        public FPS()
+        public Ratio()
         {
             Numerator = 0;
             Denominator = 1;
@@ -42,7 +42,7 @@ namespace CommonImageModel
         /// <summary>
         /// Construct an FPS given the numerator and denominator
         /// </summary>
-        public FPS(int numerator, int denominator)
+        public Ratio(int numerator, int denominator)
         {
             if (numerator < 0 || denominator < 1)
             {
@@ -68,7 +68,7 @@ namespace CommonImageModel
         #region public methods
         public override bool Equals(object other)
         {
-            return Equals(other as FPS);
+            return Equals(other as Ratio);
         }
 
         public override int GetHashCode()
@@ -82,7 +82,7 @@ namespace CommonImageModel
             return string.Format("FPS: {0}/{1}", Numerator, Denominator);
         }
 
-        public bool Equals(FPS other)
+        public bool Equals(Ratio other)
         {
             if (EqualsPreamble(other) == false)
             {
@@ -93,7 +93,7 @@ namespace CommonImageModel
                 Equals(Denominator, other.Denominator);
         }
 
-        public int CompareTo(FPS other)
+        public int CompareTo(Ratio other)
         {
             int ourMultipliedNumerator = Numerator * other.Denominator;
             int otherMultipliedNumerator = other.Numerator * Denominator;

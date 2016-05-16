@@ -52,7 +52,7 @@ namespace CommonImageModel
         /// <summary>
         /// The frame rate to playback the video
         /// </summary>
-        public FPS Framerate { get; }
+        public Ratio Framerate { get; }
         
         /// <summary>
         /// The output format to use for the FFMPEG Process
@@ -75,7 +75,7 @@ namespace CommonImageModel
             string outputDirectory,
             TimeSpan startTime,
             int framesToOutput,
-            FPS framerate,
+            Ratio framerate,
             FFMPEGOutputFormat outputFormat
         )
         {
@@ -96,7 +96,7 @@ namespace CommonImageModel
         public FFMPEGProcessSettings(
             string targetMediaFile,
             TimeSpan startTime
-        ) : this(targetMediaFile, string.Empty, startTime, 8, new FPS(4, 1), FFMPEGOutputFormat.PNG)
+        ) : this(targetMediaFile, string.Empty, startTime, 8, new Ratio(4, 1), FFMPEGOutputFormat.PNG)
         {
         }
         #endregion

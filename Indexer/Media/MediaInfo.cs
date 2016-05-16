@@ -38,7 +38,7 @@ namespace Indexer.Media
         private readonly Lazy<Maybe<Track>> _generalTrack;
         private readonly Lazy<Maybe<Track>> _videoTrack;
         private readonly Lazy<TimeSpan> _duration;
-        private readonly Lazy<FPS> _framerate;
+        private readonly Lazy<Ratio> _framerate;
         #endregion
 
         #region ctor
@@ -47,7 +47,7 @@ namespace Indexer.Media
             _generalTrack = new Lazy<Maybe<Track>>(CalculateGeneralTrack);
             _videoTrack = new Lazy<Maybe<Track>>(CalculateVideoTrack);
             _duration = new Lazy<TimeSpan>(CalculateDuration);
-            _framerate = new Lazy<FPS>(CalculateFramerate);
+            _framerate = new Lazy<Ratio>(CalculateFramerate);
         }
         #endregion
 
@@ -81,7 +81,7 @@ namespace Indexer.Media
         /// <summary>
         /// Get the framerate of the video track
         /// </summary>
-        public FPS GetFramerate()
+        public Ratio GetFramerate()
         {
             return _framerate.Value;
         }
@@ -127,12 +127,12 @@ namespace Indexer.Media
                     select track).SingleOrDefault().ToMaybe();
         }
 
-        private FPS CalculateFramerate()
+        private Ratio CalculateFramerate()
         {
             Maybe<string> rawTrackTextMaybe = from track in _videoTrack.Value
                                               select track.Framerate;
 
-            Maybe<FPS> fpsFromParenthesis = from framerateText in rawTrackTextMaybe
+            Maybe<Ratio> fpsFromParenthesis = from framerateText in rawTrackTextMaybe
                                             let startParenths = framerateText.IndexOf("(")
                                             let endParenths = framerateText.IndexOf(")")
                                             where startParenths != -1 && endParenths != -1
@@ -142,9 +142,9 @@ namespace Indexer.Media
                                             let numerator = NumericUtils.TryParseInt(splitOnSlash[0])
                                             let denominator = NumericUtils.TryParseInt(splitOnSlash[1])
                                             where numerator != null && denominator != null
-                                            select new FPS(numerator.Value, denominator.Value);
+                                            select new Ratio(numerator.Value, denominator.Value);
 
-            Maybe<FPS> fpsFromDirectParse = from framerateText in rawTrackTextMaybe
+            Maybe<Ratio> fpsFromDirectParse = from framerateText in rawTrackTextMaybe
                                             let indexOfFpsMarker = framerateText.IndexOf("fps")
                                             where indexOfFpsMarker != -1
                                             let fpsAsDecimal = framerateText.Substring(0, indexOfFpsMarker - 2)
@@ -152,7 +152,7 @@ namespace Indexer.Media
                                             where fpsAsDouble != null
                                             select NumericUtils.ConvertDoubleToFPS(fpsAsDouble.Value);
 
-            return fpsFromParenthesis.Or(fpsFromDirectParse).OrElse(new FPS());
+            return fpsFromParenthesis.Or(fpsFromDirectParse).OrElse(new Ratio());
         }
 
         private bool EqualsPreamble(object other)

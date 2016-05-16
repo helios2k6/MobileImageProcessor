@@ -28,7 +28,7 @@ namespace Indexer
     {
         private static readonly double Error = 0.0001;
 
-        public static FPS ConvertDoubleToFPS(double value)
+        public static Ratio ConvertDoubleToFPS(double value)
         {
             double localError = Error;
             int sign = Math.Sign(value);
@@ -49,12 +49,12 @@ namespace Indexer
 
             if (value < localError)
             {
-                return new FPS(sign * n, 1);
+                return new Ratio(sign * n, 1);
             }
 
             if (1 - localError < value)
             {
-                return new FPS(sign * (n + 1), 1);
+                return new Ratio(sign * (n + 1), 1);
             }
 
             // The lower fraction is 0/1
@@ -86,7 +86,7 @@ namespace Indexer
                 else
                 {
                     // Middle is our best fraction
-                    return new FPS((n * middle_d + middle_n) * sign, middle_d);
+                    return new Ratio((n * middle_d + middle_n) * sign, middle_d);
                 }
             }
         }

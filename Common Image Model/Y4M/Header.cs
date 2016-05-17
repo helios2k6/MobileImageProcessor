@@ -36,8 +36,8 @@ namespace CommonImageModel.Y4M
         #region private fields
         private const string FileHeaderMagicTag = "YUV4MPEG2";
         private const string FrameHeaderMagicTag = "FRAME";
-        private const string ParameterSeparator = " ";
-        private const byte FrameHeaderEndByte = 0x0A;
+        private const byte ParameterSeparator = 0x20; // The ASCII code for space (" ") 
+        private const byte HeaderEndByte = 0x0A;
         private const char CommentParameter = 'X';
         private const char WidthParameter = 'W';
         private const char HeightParemter = 'H';
@@ -225,11 +225,7 @@ namespace CommonImageModel.Y4M
         /// <returns>An optional Header</returns>
         private static Maybe<Header> TryReadHeaderParameters(Stream rawStream)
         {
-            Maybe<IEnumerable<string>> maybeParameters = TryGetParameters(rawStream);
-            if (maybeParameters.IsNothing())
-            {
-                return Maybe<Header>.Nothing;
-            }
+            IEnumerable<string> parameters = TryGetParameters(rawStream);
 
             IEnumerable<string> comments = Enumerable.Empty<string>();
             Maybe<int> width = Maybe<int>.Nothing;
@@ -237,8 +233,8 @@ namespace CommonImageModel.Y4M
             Maybe<Ratio> framerate = Maybe<Ratio>.Nothing;
             Maybe<Ratio> pixelAspectRatio = Maybe<Ratio>.Nothing;
             Maybe<Interlacing> interlacing = Maybe<Interlacing>.Nothing;
-
-            foreach (string currentFullParameter in maybeParameters.Value)
+            Maybe<ColorSpace> colorSpace = Maybe<ColorSpace>.Nothing;
+            foreach (string currentFullParameter in parameters)
             {
                 char parameter = currentFullParameter.First();
                 string parameterBody = currentFullParameter.Substring(1);
@@ -283,6 +279,9 @@ namespace CommonImageModel.Y4M
                         }
                         break;
                     case ColorSpaceParameter:
+                        {
+                            colorSpace = Y4M.ColorSpace.TryParse(parameterBody);
+                        }
                         break;
                     default:
                         // Do nothing for invalid parameters
@@ -292,14 +291,39 @@ namespace CommonImageModel.Y4M
             return Maybe<Header>.Nothing;
         }
 
-        private static Maybe<IEnumerable<string>> TryGetParameters(Stream rawStream)
+        private static IEnumerable<string> TryGetParameters(Stream rawStream)
         {
-            return Maybe<IEnumerable<string>>.Nothing;
-        }
-
-        private static Maybe<string> TryGetNextParameter(Stream rawStream)
-        {
-            return Maybe<string>.Nothing;
+            long initialPosition = rawStream.Position;
+            int currentByte = rawStream.ReadByte();
+            bool currentlyReadingParameter = false;
+            bool isFirstParameterSeparator = true;
+            var byteBuffer = new List<int>(32);
+            while (currentByte != HeaderEndByte || currentByte == -1) // If we're at the end of the header or the stream, don't iterate
+            {
+                if (currentlyReadingParameter)
+                {
+                    byteBuffer.Add(currentByte);
+                }
+                else
+                {
+                    if (currentByte == ParameterSeparator)
+                    {
+                        // Prevent us from emitting an empty string as a parameter
+                        if (isFirstParameterSeparator)
+                        {
+                            isFirstParameterSeparator = false;
+                            continue;
+                        }
+                        // Yield the current set of bytes as a string
+                        yield return new string(byteBuffer.Select(Convert.ToChar).ToArray());
+                        
+                        // Clear the buffer
+                        byteBuffer.Clear();
+                    }
+                }
+                
+                currentByte = rawStream.ReadByte();
+            }
         }
         #endregion
     }

@@ -19,36 +19,73 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Functional.Maybe;
+using System;
+
 namespace CommonImageModel.Y4M
 {
     /// <summary>
     /// Represents the different colorspaces that the video is encoded in
     /// </summary>
-    public enum ColorSpace
+    public sealed class ColorSpace : IEquatable<ColorSpace>
     {
+        #region public fields
+        public static readonly ColorSpace FourTwoZeroJpeg = new ColorSpace("4:2:0 with biaxially-displaced chroma planes", 0, "420jpeg");
+        public static readonly ColorSpace FourTwoZeroPaldv = new ColorSpace("4:2:0 with vertically-displaced chroma places", 1, "420paldv");
+        public static readonly ColorSpace  
+        #endregion
+
+        #region public properties
         /// <summary>
-        /// 4:2:0 with biaxially-displaced chroma planes
+        /// The parameter argument used when parsing
         /// </summary>
-        Four_Two_Zero_JPEG,
+        public string ParameterArgument { get; }
 
         /// <summary>
-        /// 4:2:0 with vertically-displaced chroma planes
+        /// The name of interlacing method
         /// </summary>
-        Four_Two_Zero_PALDV,
+        public string Name { get; }
 
         /// <summary>
-        /// 4:2:0 with coincident chroma planes
+        /// The canonical value given to this interlacing method
         /// </summary>
-        Four_Two_Zero,
+        public int Value { get; }
+        #endregion
 
-        /// <summary>
-        /// 4:2:2
-        /// </summary>
-        Four_Two_Two,
+        #region ctor
+        private ColorSpace(string name, int value, string parameterArgument)
+        {
+            Name = name;
+            Value = value;
+            ParameterArgument = parameterArgument;
+        }
+        #endregion
 
-        /// <summary>
-        /// 4:4:4
-        /// </summary>
-        Four_Four_Four,
+        #region public methods
+        public override string ToString()
+        {
+            return Name;
+        }
+
+        public bool Equals(ColorSpace other)
+        {
+            return ReferenceEquals(this, other);
+        }
+
+        public override bool Equals(object other)
+        {
+            return Equals(other as ColorSpace);
+        }
+
+        public override int GetHashCode()
+        {
+            return Value;
+        }
+
+        public static Maybe<ColorSpace> TryParse(string parameter)
+        {
+            return Maybe<ColorSpace>.Nothing;
+        }
+        #endregion
     }
 }

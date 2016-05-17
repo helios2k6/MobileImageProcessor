@@ -19,6 +19,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Functional.Maybe;
 using System;
 
 namespace CommonImageModel
@@ -99,6 +100,25 @@ namespace CommonImageModel
             int otherMultipliedNumerator = other.Numerator * Denominator;
 
             return ourMultipliedNumerator.CompareTo(otherMultipliedNumerator);
+        }
+        
+        /// <summary>
+        /// Attempts to parse a ratio represented as a string with a colon separating
+        /// the two integers.
+        /// </summary>
+        public static Maybe<Ratio> TryParse(string ratioAsString)
+        {
+            string[] splitsOnColon = ratioAsString.Split(new[] { ':' });
+            if (splitsOnColon.Length == 2)
+            {
+                int numerator = -1, denominator = -1;
+                if (int.TryParse(splitsOnColon[0], out numerator) && int.TryParse(splitsOnColon[1], out denominator)) 
+                {
+                    return new Ratio(numerator, denominator).ToMaybe();
+                }
+            }
+            
+            return Maybe<Ratio>.Nothing;
         }
         #endregion
 

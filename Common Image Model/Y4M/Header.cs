@@ -235,6 +235,7 @@ namespace CommonImageModel.Y4M
             Maybe<int> width = Maybe<int>.Nothing;
             Maybe<int> height = Maybe<int>.Nothing;
             Maybe<Ratio> framerate = Maybe<Ratio>.Nothing;
+            Maybe<Ratio> pixelAspectRatio = Maybe<Ratio>.Nothing;
             Maybe<Interlacing> interlacing = Maybe<Interlacing>.Nothing;
 
             foreach (string currentFullParameter in maybeParameters.Value)
@@ -268,15 +269,7 @@ namespace CommonImageModel.Y4M
                         break;
                     case FrameRateParameter:
                         {
-                            string[] splitFramerate = parameterBody.Split(new[] { ':' });
-                            if (splitFramerate.Length == 2)
-                            {
-                                int numerator = -1, denominator = -1;
-                                if (int.TryParse(splitFramerate[0], out numerator) && int.TryParse(splitFramerate[1], out denominator))
-                                {
-                                    framerate = new Ratio(numerator, denominator).ToMaybe();
-                                }
-                            }
+                            framerate = Ratio.TryParse(parameterBody);
                         }
                         break;
                     case InterlaceParameter:
@@ -285,6 +278,9 @@ namespace CommonImageModel.Y4M
                         }
                         break;
                     case PixelAspectRatioParameter:
+                        {
+                            pixelAspectRatio = Ratio.TryParse(parameterBody);
+                        }
                         break;
                     case ColorSpaceParameter:
                         break;

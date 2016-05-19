@@ -29,7 +29,24 @@ namespace CommonImageModel
     /// </summary>
     public sealed class Ratio : IEquatable<Ratio>, IComparable<Ratio>
     {
+        #region public static fields
+        /// <summary>
+        /// A sentient value that can be used to compare against 
+        /// </summary>
+        public static readonly Ratio NullRatio = new Ratio("Null Ratio");
+        #endregion
+
         #region ctor
+        /// <summary>
+        /// A private constructor for the NullRatio, which needs to be an invalid ratio
+        /// </summary>
+        /// <param name="_">Dummy parameter to distinguish it from the other constructors</param>
+        private Ratio(string _)
+        {
+            Numerator = int.MinValue;
+            Denominator = int.MinValue;
+        }
+
         /// <summary>
         /// Construct a default FPS of 0/1, avoiding the non-determinate form
         /// of 0/0
@@ -49,6 +66,7 @@ namespace CommonImageModel
             {
                 throw new ArgumentException("Numerator must be greater than or equal to 0 and denominator must be strictly greater than 0");
             }
+
             Numerator = numerator;
             Denominator = denominator;
         }
@@ -101,7 +119,7 @@ namespace CommonImageModel
 
             return ourMultipliedNumerator.CompareTo(otherMultipliedNumerator);
         }
-        
+
         /// <summary>
         /// Attempts to parse a ratio represented as a string with a colon separating
         /// the two integers.
@@ -112,12 +130,12 @@ namespace CommonImageModel
             if (splitsOnColon.Length == 2)
             {
                 int numerator = -1, denominator = -1;
-                if (int.TryParse(splitsOnColon[0], out numerator) && int.TryParse(splitsOnColon[1], out denominator)) 
+                if (int.TryParse(splitsOnColon[0], out numerator) && int.TryParse(splitsOnColon[1], out denominator))
                 {
                     return new Ratio(numerator, denominator).ToMaybe();
                 }
             }
-            
+
             return Maybe<Ratio>.Nothing;
         }
         #endregion

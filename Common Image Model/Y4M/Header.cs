@@ -22,7 +22,6 @@
 using Functional.Maybe;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace CommonImageModel.Y4M
@@ -31,55 +30,9 @@ namespace CommonImageModel.Y4M
     /// Represents the Y4M file header and includes all of the information that is 
     /// associated with the Y4M file
     /// </summary>
-    public sealed class Header : IEquatable<Header>
+    public abstract class Header : IEquatable<Header>
     {
-        #region private fields
-        private const string FileHeaderMagicTag = "YUV4MPEG2";
-        private const string FrameHeaderMagicTag = "FRAME";
-        private const byte ParameterSeparator = 0x20; // The ASCII code for space (" ") 
-        private const byte HeaderEndByte = 0x0A;
-        private const char CommentParameter = 'X';
-        private const char WidthParameter = 'W';
-        private const char HeightParemter = 'H';
-        private const char FrameRateParameter = 'F';
-        private const char InterlaceParameter = 'I';
-        private const char PixelAspectRatioParameter = 'A';
-        private const char ColorSpaceParameter = 'C';
-        private static readonly ICollection<char> ParameterSet = new HashSet<char>
-        {
-            CommentParameter,
-            WidthParameter,
-            HeightParemter,
-            FrameRateParameter,
-            InterlaceParameter,
-            PixelAspectRatioParameter,
-            ColorSpaceParameter,
-        };
-        #endregion
-
-        #region private types
-        /// <summary>
-        //// Represents the header type  
-        /// </summary>
-        public enum Type
-        {
-            /// <summary>
-            /// The file level header
-            /// </summary>
-            YUV4MPEG,
-            /// <summary>
-            /// The frame level header
-            /// </summary>
-            FRAME,
-        }
-        #endregion
-
         #region public properties
-        /// <summary>
-        /// The type of header this represents
-        /// </summary>
-        public Type HeaderType { get; private set; }
-
         /// <summary>
         /// The width of the video
         /// </summary>
@@ -117,21 +70,23 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region ctor
-        /// <summary>
-        /// Construct a default header
-        /// </summary>
-        /// <remarks>
-        /// This is intentionally private to ensure that the header is constructed properly
-        /// </remarks>
-        private Header()
+        protected Header(
+            int width,
+            int height,
+            Ratio framerate,
+            Maybe<Ratio> pixelAspectRatio,
+            Maybe<ColorSpace> colorSpace,
+            Maybe<Interlacing> interlacing,
+            IEnumerable<string> comments
+        )
         {
-            HeaderType = Type.YUV4MPEG;
-            Width = -1;
-            Height = -1;
-            PixelAspectRatio = Maybe<Ratio>.Nothing;
-            ColorSpace = Maybe<ColorSpace>.Nothing;
-            Framerate = new Ratio();
-            Comments = Enumerable.Empty<string>();
+            Width = width;
+            Height = height;
+            Framerate = framerate;
+            PixelAspectRatio = pixelAspectRatio;
+            ColorSpace = colorSpace;
+            Interlacing = interlacing;
+            Comments = comments;
         }
         #endregion
 
@@ -143,8 +98,7 @@ namespace CommonImageModel.Y4M
                 return false;
             }
 
-            return Equals(HeaderType, other.HeaderType) &&
-                Equals(Width, other.Width) &&
+            return Equals(Width, other.Width) &&
                 Equals(Height, other.Height) &&
                 Equals(Framerate, other.Framerate) &&
                 Equals(PixelAspectRatio, other.PixelAspectRatio) &&
@@ -159,33 +113,12 @@ namespace CommonImageModel.Y4M
 
         public override int GetHashCode()
         {
-            return HeaderType.GetHashCode() ^
-                Width.GetHashCode() ^
+            return Width.GetHashCode() ^
                 Height.GetHashCode() ^
                 Framerate.GetHashCode() ^
                 PixelAspectRatio.GetHashCode() ^
                 ColorSpace.GetHashCode() ^
                 Comments.Aggregate(0, (agg, s) => agg ^ s.GetHashCode(), i => i);
-        }
-
-        public static Maybe<Header> TryParseFileHeader(Stream rawStream)
-        {
-            if (TryReadHeaderMagicTag(rawStream, FileHeaderMagicTag) == false)
-            {
-                return Maybe<Header>.Nothing;
-            }
-
-            return Maybe<Header>.Nothing;
-        }
-
-        public static Maybe<Header> TryParseFrameHeader(Stream rawStream)
-        {
-            if (TryReadHeaderMagicTag(rawStream, FrameHeaderMagicTag) == false)
-            {
-                return Maybe<Header>.Nothing;
-            }
-
-            return Maybe<Header>.Nothing;
         }
         #endregion
 
@@ -197,133 +130,6 @@ namespace CommonImageModel.Y4M
             if (GetType() != other.GetType()) return false;
 
             return true;
-        }
-
-        private static bool TryReadHeaderMagicTag(Stream rawStream, string headerMagicTag)
-        {
-            var buffer = new byte[10];
-            int readBytes = rawStream.Read(buffer, 0, headerMagicTag.Length);
-
-            if (readBytes == headerMagicTag.Length)
-            {
-                var readHeader = new string(buffer.Select(Convert.ToChar).ToArray());
-                if (string.Equals(headerMagicTag, readHeader, StringComparison.Ordinal))
-                {
-                    return true;
-                }
-            }
-            // Reset header and return false if the header doesn't match
-            rawStream.Position = rawStream.Position - readBytes;
-            return false;
-        }
-
-        /// <summary>
-        /// Attempts to parse the parameters of the stream to form a header. If the stream is malformed, this
-        /// returns None
-        /// </summary>
-        /// <param name="rawStream">The raw stream of bytes to parse</param>
-        /// <returns>An optional Header</returns>
-        private static Maybe<Header> TryReadHeaderParameters(Stream rawStream)
-        {
-            IEnumerable<string> parameters = TryGetParameters(rawStream);
-
-            IEnumerable<string> comments = Enumerable.Empty<string>();
-            Maybe<int> width = Maybe<int>.Nothing;
-            Maybe<int> height = Maybe<int>.Nothing;
-            Maybe<Ratio> framerate = Maybe<Ratio>.Nothing;
-            Maybe<Ratio> pixelAspectRatio = Maybe<Ratio>.Nothing;
-            Maybe<Interlacing> interlacing = Maybe<Interlacing>.Nothing;
-            Maybe<ColorSpace> colorSpace = Maybe<ColorSpace>.Nothing;
-            foreach (string currentFullParameter in parameters)
-            {
-                char parameter = currentFullParameter.First();
-                string parameterBody = currentFullParameter.Substring(1);
-                switch (parameter)
-                {
-                    case CommentParameter:
-                        {
-                            comments = comments.Append(parameterBody);
-                        }
-                        break;
-                    case WidthParameter:
-                        {
-                            int possibleWidth = -1;
-                            if (int.TryParse(parameterBody, out possibleWidth))
-                            {
-                                width = possibleWidth.ToMaybe();
-                            }
-                        }
-                        break;
-                    case HeightParemter:
-                        {
-                            int possibleHeight = -1;
-                            if (int.TryParse(parameterBody, out possibleHeight))
-                            {
-                                height = possibleHeight.ToMaybe();
-                            }
-                        }
-                        break;
-                    case FrameRateParameter:
-                        {
-                            framerate = Ratio.TryParse(parameterBody);
-                        }
-                        break;
-                    case InterlaceParameter:
-                        {
-                            interlacing = Y4M.Interlacing.TryParseInterlacing(parameterBody);
-                        }
-                        break;
-                    case PixelAspectRatioParameter:
-                        {
-                            pixelAspectRatio = Ratio.TryParse(parameterBody);
-                        }
-                        break;
-                    case ColorSpaceParameter:
-                        {
-                            colorSpace = Y4M.ColorSpace.TryParse(parameterBody);
-                        }
-                        break;
-                    default:
-                        // Do nothing for invalid parameters
-                        break;
-                }
-            }
-            return Maybe<Header>.Nothing;
-        }
-
-        private static IEnumerable<string> TryGetParameters(Stream rawStream)
-        {
-            long initialPosition = rawStream.Position;
-            int currentByte = rawStream.ReadByte();
-            bool currentlyReadingParameter = false;
-            bool isFirstParameterSeparator = true;
-            var byteBuffer = new List<int>(32);
-            while (currentByte != HeaderEndByte || currentByte == -1) // If we're at the end of the header or the stream, don't iterate
-            {
-                if (currentlyReadingParameter)
-                {
-                    byteBuffer.Add(currentByte);
-                }
-                else
-                {
-                    if (currentByte == ParameterSeparator)
-                    {
-                        // Prevent us from emitting an empty string as a parameter
-                        if (isFirstParameterSeparator)
-                        {
-                            isFirstParameterSeparator = false;
-                            continue;
-                        }
-                        // Yield the current set of bytes as a string
-                        yield return new string(byteBuffer.Select(Convert.ToChar).ToArray());
-                        
-                        // Clear the buffer
-                        byteBuffer.Clear();
-                    }
-                }
-                
-                currentByte = rawStream.ReadByte();
-            }
         }
         #endregion
     }

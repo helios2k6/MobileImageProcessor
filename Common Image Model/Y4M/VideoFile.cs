@@ -19,9 +19,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Functional.Maybe;
 using System.Collections.Generic;
-using System.IO;
 
 namespace CommonImageModel.Y4M
 {
@@ -30,31 +28,29 @@ namespace CommonImageModel.Y4M
     /// </summary>
     public sealed class VideoFile
     {
-        #region private fields
-        #endregion
-
         #region public properties
+        /// <summary>
+        /// The file header
+        /// </summary>
         public FileHeader Header { get; }
 
+        /// <summary>
+        /// The video frames
+        /// </summary>
         public IEnumerable<VideoFrame> Frames { get; }
         #endregion
 
         #region ctor
-        private VideoFile(FileHeader header, IEnumerable<VideoFrame> frames)
+        /// <summary>
+        /// Construct a new VideoFile
+        /// </summary>
+        /// <param name="header">The file level header</param>
+        /// <param name="frames">The video frames</param>
+        public VideoFile(FileHeader header, IEnumerable<VideoFrame> frames)
         {
             Header = header;
             Frames = frames;
         }
-        #endregion
-
-        #region public methods
-        public static Maybe<VideoFile> TryParse(Stream rawBytes)
-        {
-            return Maybe<VideoFile>.Nothing;
-        }
-        #endregion
-
-        #region private methods
         #endregion
     }
 }

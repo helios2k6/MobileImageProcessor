@@ -19,51 +19,26 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
-
 namespace CommonImageModel.Y4M
 {
     /// <summary>
-    /// Decodes a file saved in the Y4M Format
+    /// Parses the frame from a bitstream
     /// </summary>
-    public sealed class Decoder
+    public sealed class FrameParser
     {
         #region private fields
-        private readonly Lazy<VideoFile> _videoFile;
         #endregion
 
         #region public properties
-        /// <summary>
-        /// Gets the path to the Y4M file 
-        /// </summary>
-        public string FilePath { get; }
-
-        /// <summary>
-        /// Gets the decoded Y4M file
-        /// </summary>
-        public VideoFile VideoFile
-        {
-            get { return _videoFile.Value; }
-        }
         #endregion
 
         #region ctor
-        /// <summary>
-        /// Construct a new Y4MDecoder object
-        /// </summary>
-        /// <param name="filePath">The path to the Y4M File</param>
-        public Decoder(string filePath)
-        {
-            FilePath = filePath;
-            _videoFile = new Lazy<VideoFile>(() => DecodeVideoFile(FilePath));
-        }
+        #endregion
+
+        #region public methods
         #endregion
 
         #region private methods
-        private static VideoFile DecodeVideoFile(string filePath)
-        {
-            return null;
-        }
         #endregion
     }
 }

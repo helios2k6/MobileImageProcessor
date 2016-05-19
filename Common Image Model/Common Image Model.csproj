@@ -65,15 +65,16 @@
     <Compile Include="TimingToken.cs" />
     <Compile Include="Y4M\FileHeader.cs" />
     <Compile Include="Y4M\ColorSpace.cs" />
-    <Compile Include="Y4M\Decoder.cs" />
     <Compile Include="Y4M\FileHeaderParser.cs" />
     <Compile Include="Y4M\FrameHeader.cs" />
     <Compile Include="Y4M\FrameHeaderParser.cs" />
+    <Compile Include="Y4M\FrameParser.cs" />
     <Compile Include="Y4M\Header.cs" />
     <Compile Include="Y4M\HeaderParser.cs" />
     <Compile Include="Y4M\Interlacing.cs" />
     <Compile Include="Y4M\RewindGuard.cs" />
     <Compile Include="Y4M\VideoFile.cs" />
+    <Compile Include="Y4M\VideoFileParser.cs" />
     <Compile Include="Y4M\VideoFrame.cs" />
   </ItemGroup>
   <ItemGroup>

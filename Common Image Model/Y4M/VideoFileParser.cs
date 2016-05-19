@@ -19,37 +19,38 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System.Drawing;
+using Functional.Maybe;
 
 namespace CommonImageModel.Y4M
 {
     /// <summary>
-    /// Represents a single frame of video
+    /// Parses a video file from a bitstream
     /// </summary>
-    public sealed class VideoFrame
+    public sealed class VideoFileParser
     {
-        #region public properties
-        /// <summary>
-        /// The header for this frame
-        /// </summary>
-        public FrameHeader Header { get; }
-
-        /// <summary>
-        /// The color pixels of the frame
-        /// </summary>
-        public Color[][] Frame { get; }
+        #region private fields
+        private readonly string _videoFilePath;
         #endregion
 
         #region ctor
         /// <summary>
-        /// Construct a new VideoFrame
+        /// Construct a video file parser from the given file path
         /// </summary>
-        /// <param name="header">The frame header</param>
-        /// <param name="frame">The actual color matrix</param>
-        public VideoFrame(FrameHeader header, Color[][] frame)
+        /// <param name="videoFilePath">The path to the video file</param>
+        public VideoFileParser(string videoFilePath)
         {
-            Header = header;
-            Frame = frame;
+            _videoFilePath = videoFilePath;
+        }
+        #endregion
+
+        #region public methods
+        /// <summary>
+        /// Attempts to parse a video file
+        /// </summary>
+        /// <returns>A newly parsed video file or None</returns>
+        public Maybe<VideoFile> TryParseVideoFile()
+        {
+            return Maybe<VideoFile>.Nothing;
         }
         #endregion
     }

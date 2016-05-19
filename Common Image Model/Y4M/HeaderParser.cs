@@ -27,6 +27,9 @@ using System.Linq;
 
 namespace CommonImageModel.Y4M
 {
+    /// <summary>
+    /// Base class for all header parsers; specifically the header and frame parsers
+    /// </summary>
     public abstract class HeaderParser
     {
         #region private fields
@@ -69,7 +72,7 @@ namespace CommonImageModel.Y4M
                 }
 
                 Maybe<Header> candidateHeader = TryReadHeaderParameters(rawStream);
-                if (candidateHeader.IsSomething() && IsHeaderValid(candidateHeader.Value))
+                if (candidateHeader.IsSomething())
                 {
                     rewindGuard.DoNotRewind();
                     return candidateHeader;
@@ -104,8 +107,6 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region private methods
-
-
         private bool TryReadHeaderMagicTag(Stream rawStream, string headerMagicTag)
         {
             var buffer = new byte[10];
@@ -201,16 +202,8 @@ namespace CommonImageModel.Y4M
             return TryConstructHeader(width, height, framerate, pixelAspectRatio, interlacing, colorSpace, comments);
         }
 
-        private bool IsHeaderValid(Header header)
-        {
-            return header.Height != -1 &&
-                header.Width != -1 &&
-                Equals(header.Framerate, Ratio.NullRatio) == false;
-        }
-
         private Maybe<IEnumerable<string>> TryGetParameters(Stream rawStream)
         {
-            long initialPosition = rawStream.Position;
             int currentByte = rawStream.ReadByte();
             bool currentlyReadingParameter = false;
             bool isFirstParameterSeparator = true;
@@ -241,9 +234,6 @@ namespace CommonImageModel.Y4M
                     }
                     else
                     {
-                        // We aren't currently reading any parameters and we read something that wasn't
-                        // the parameter separator. Rewind the stream and send back nothing
-                        rawStream.Position = initialPosition;
                         return Maybe<IEnumerable<string>>.Nothing;
                     }
                 }

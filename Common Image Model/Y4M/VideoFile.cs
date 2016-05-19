@@ -34,15 +34,15 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region public properties
-        public Header VideoFileHeader { get; }
-        
+        public FileHeader Header { get; }
+
         public IEnumerable<VideoFrame> Frames { get; }
         #endregion
 
         #region ctor
-        private VideoFile(Header videoFileHeader, IEnumerable<VideoFrame> frames)
+        private VideoFile(FileHeader header, IEnumerable<VideoFrame> frames)
         {
-            VideoFileHeader = videoFileHeader;
+            Header = header;
             Frames = frames;
         }
         #endregion

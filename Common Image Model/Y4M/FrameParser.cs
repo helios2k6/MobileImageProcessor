@@ -19,6 +19,10 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Functional.Maybe;
+using System;
+using System.IO;
+
 namespace CommonImageModel.Y4M
 {
     /// <summary>
@@ -27,18 +31,84 @@ namespace CommonImageModel.Y4M
     public sealed class FrameParser
     {
         #region private fields
+        private static readonly byte EndFrameByteMark = 0x0A;
+        private readonly Header _header;
         #endregion
 
-        #region public properties
+        #region private properties
+        private ColorSpace DetectedColorSpace
+        {
+            get
+            {
+                return _header.ColorSpace.HasValue
+                    ? _header.ColorSpace.Value
+                    : ColorSpace.FourTwoZero;
+            }
+        }
         #endregion
 
         #region ctor
+        public FrameParser(Header header)
+        {
+            _header = header;
+        }
         #endregion
 
         #region public methods
+        public Maybe<VideoFrame> TryParseVideoFrame(Stream rawStream)
+        {
+            using (var rewindGuard = new RewindGuard(rawStream))
+            {
+
+            }
+
+            return Maybe<VideoFrame>.Nothing;
+        }
         #endregion
 
         #region private methods
+        private Maybe<byte[]> ReadLumaPlane(Stream rawStream)
+        {
+            var lumaPlaneBuffer = new byte[_header.Width * _header.Height];
+            int readBytes = rawStream.Read(lumaPlaneBuffer, 0, _header.Width * _header.Height);
+            if (readBytes != _header.Width * _header.Height)
+            {
+                return Maybe<byte[]>.Nothing;
+            }
+
+            return lumaPlaneBuffer.ToMaybe();
+        }
+
+        private Maybe<byte[]> ReadChromaPlane(Stream rawStream)
+        {
+            if (Equals(DetectedColorSpace, ColorSpace.FourFourFour))
+            {
+                // 4:4:4
+                return ReadPlane(rawStream, _header.Width * _header.Height);
+            }
+            else if (Equals(DetectedColorSpace, ColorSpace.FourTwoTwo))
+            {
+                // 4:2:2
+                return ReadPlane(rawStream, (_header.Width * _header.Height) / 2);
+            }
+            else
+            {
+                // 4:2:0
+                return ReadPlane(rawStream, (_header.Width * _header.Height) / 6);
+            }
+        }
+
+        private static Maybe<byte[]> ReadPlane(Stream rawStream, int length)
+        {
+            var planeBuffer = new byte[length];
+            int readBytes = rawStream.Read(planeBuffer, 0, length);
+            if (readBytes != length)
+            {
+                return Maybe<byte[]>.Nothing;
+            }
+
+            return planeBuffer.ToMaybe();
+        }
         #endregion
     }
 }

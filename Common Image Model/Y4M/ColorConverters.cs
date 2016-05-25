@@ -20,51 +20,45 @@
  */
 
 using Functional.Maybe;
-using System.IO;
+using System.Drawing;
 
 namespace CommonImageModel.Y4M
 {
     /// <summary>
-    /// Parses a video file from a bitstream
+    /// A utility class for converting colors from different color planes
     /// </summary>
-    public sealed class VideoFileParser
+    public static class ColorConverters
     {
         #region private fields
-        private readonly string _videoFilePath;
-        #endregion
-
-        #region ctor
-        /// <summary>
-        /// Construct a video file parser from the given file path
-        /// </summary>
-        /// <param name="videoFilePath">The path to the video file</param>
-        public VideoFileParser(string videoFilePath)
-        {
-            _videoFilePath = videoFilePath;
-        }
         #endregion
 
         #region public methods
         /// <summary>
-        /// Attempts to parse a video file
+        /// Try to convert from YCbCr to RGB colors
         /// </summary>
-        /// <returns>A newly parsed video file or None</returns>
-        public Maybe<VideoFile> TryParseVideoFile()
+        /// <param name="colorSpace">The colorspace of the luma and chroma</param>
+        /// <param name="luma">The luma plane</param>
+        /// <param name="blueDifferential">The blue differential (Cb) plane</param>
+        /// <param name="redDifferential">The red differential (Cr) plane</param>
+        /// <param name="width">The width of the frame</param>
+        /// <param name="height">The height of the frame</param>
+        /// <returns>An RGB plane if this function succeeds. None otherwise</returns>
+        public static Maybe<Color[][]> TryConvertToRGB(
+            ColorSpace colorSpace,
+            byte[] luma,
+            byte[] blueDifferential,
+            byte[] redDifferential,
+            int width,
+            int height
+        )
         {
-            using (var stream = new FileStream(_videoFilePath, FileMode.Open, FileAccess.Read))
-            {
-                // First read file header
-                Maybe<Header> fileHeader = FileHeaderParser.Instance.TryParseHeader(stream);
-                if (fileHeader.IsNothing())
-                {
-                    return Maybe<VideoFile>.Nothing;
-                }
-
-
-            }
-
-            return Maybe<VideoFile>.Nothing;
+            // TODO: Finish this
+            return Maybe<Color[][]>.Nothing;
         }
+        #endregion
+
+        #region private methods
+
         #endregion
     }
 }

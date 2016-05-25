@@ -21,6 +21,7 @@
 
 using Functional.Maybe;
 using System;
+using System.Collections.Generic;
 
 namespace CommonImageModel.Y4M
 {
@@ -29,6 +30,17 @@ namespace CommonImageModel.Y4M
     /// </summary>
     public sealed class ColorSpace : IEquatable<ColorSpace>
     {
+        #region private fields
+        private static readonly IEnumerable<ColorSpace> ColorSpaces = new HashSet<ColorSpace>
+        {
+            FourTwoZeroJpeg,
+            FourTwoZeroPaldv,
+            FourTwoZeroMpeg2,
+            FourTwoZero,
+            FourTwoTwo,
+            FourFourFour,
+        };
+        #endregion
         #region public fields
         /// <summary>
         /// 4:2:0 with biaxially-displaced chroma planes
@@ -38,6 +50,10 @@ namespace CommonImageModel.Y4M
         /// 4:2:0 with vertically-displaced chroma planes
         /// </summary>
         public static readonly ColorSpace FourTwoZeroPaldv = new ColorSpace("4:2:0 with vertically-displaced chroma places", 1, "420paldv");
+        /// <summary>
+        /// 4:2:0 with vertically-displaced chroma planes (just like PAL-DV)
+        /// </summary>
+        public static readonly ColorSpace FourTwoZeroMpeg2 = new ColorSpace("4:2:0 with vertically-displaced chroma places", 1, "420mpeg2");
         /// <summary>
         /// 4:2:0 with coincident chroma planes
         /// </summary>
@@ -98,32 +114,20 @@ namespace CommonImageModel.Y4M
         {
             return Value;
         }
-        
+
         /// <summary>
         /// Attempt to parse the colorspace parameter from the raw string
         /// </summary>
         public static Maybe<ColorSpace> TryParse(string parameter)
         {
-            if (string.Equals(parameter, FourTwoZeroJpeg.ParameterArgument, StringComparison.OrdinalIgnoreCase))
+            foreach (ColorSpace candidateColorSpace in ColorSpaces)
             {
-                return FourTwoZeroJpeg.ToMaybe();
+                if (string.Equals(candidateColorSpace.ParameterArgument, parameter, StringComparison.OrdinalIgnoreCase))
+                {
+                    return candidateColorSpace.ToMaybe();
+                }
             }
-            else if (string.Equals(parameter, FourTwoZeroPaldv.ParameterArgument, StringComparison.OrdinalIgnoreCase))
-            {
-                return FourTwoZeroPaldv.ToMaybe();
-            }
-            else if (string.Equals(parameter, FourTwoZero.ParameterArgument, StringComparison.OrdinalIgnoreCase))
-            {
-                return FourTwoZero.ToMaybe();
-            }
-            else if (string.Equals(parameter, FourTwoTwo.ParameterArgument, StringComparison.OrdinalIgnoreCase))
-            {
-                return FourTwoTwo.ToMaybe();
-            }
-            else if (string.Equals(parameter, FourFourFour.ParameterArgument, StringComparison.OrdinalIgnoreCase))
-            {
-                return FourFourFour.ToMaybe();
-            }
+
             return Maybe<ColorSpace>.Nothing;
         }
         #endregion

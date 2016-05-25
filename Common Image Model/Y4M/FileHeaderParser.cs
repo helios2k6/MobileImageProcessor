@@ -21,6 +21,7 @@
 
 using System.Collections.Generic;
 using Functional.Maybe;
+using System;
 
 namespace CommonImageModel.Y4M
 {
@@ -29,6 +30,26 @@ namespace CommonImageModel.Y4M
     /// </summary>
     public sealed class FileHeaderParser : HeaderParser
     {
+        #region private static fields
+        private static Lazy<FileHeaderParser> SingletonInstance = new Lazy<FileHeaderParser>(() => new FileHeaderParser());
+        #endregion
+
+        #region ctor
+        private FileHeaderParser()
+        {
+        }
+        #endregion
+
+        #region public static properties
+        /// <summary>
+        /// Get the singleton instance of this class
+        /// </summary>
+        public static FileHeaderParser Instance
+        {
+            get { return SingletonInstance.Value; }
+        }
+        #endregion
+
         #region protected methods
         protected override string HeaderMagicTag
         {

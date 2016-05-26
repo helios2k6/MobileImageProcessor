@@ -39,33 +39,63 @@ namespace CommonImageModel.Y4M
             FourTwoZero,
             FourTwoTwo,
             FourFourFour,
+            FourTwoZeroPTen,
+            FourTwoZeroPTwelve,
+            FourTwoTwoPTen,
+            FourTwoTwoPTwelve,
+            FourFourFourPTen,
+            FourFourFourPTwelve,
         };
         #endregion
         #region public fields
         /// <summary>
         /// 4:2:0 with biaxially-displaced chroma planes
         /// </summary>
-        public static readonly ColorSpace FourTwoZeroJpeg = new ColorSpace("4:2:0 with biaxially-displaced chroma planes", 0, "420jpeg");
+        public static readonly ColorSpace FourTwoZeroJpeg = new ColorSpace("4:2:0 with biaxially-displaced chroma planes", 0, "420jpeg", 8);
         /// <summary>
         /// 4:2:0 with vertically-displaced chroma planes
         /// </summary>
-        public static readonly ColorSpace FourTwoZeroPaldv = new ColorSpace("4:2:0 with vertically-displaced chroma places", 1, "420paldv");
+        public static readonly ColorSpace FourTwoZeroPaldv = new ColorSpace("4:2:0 with vertically-displaced chroma places", 1, "420paldv", 8);
         /// <summary>
         /// 4:2:0 with vertically-displaced chroma planes (just like PAL-DV)
         /// </summary>
-        public static readonly ColorSpace FourTwoZeroMpeg2 = new ColorSpace("4:2:0 with vertically-displaced chroma places", 1, "420mpeg2");
+        public static readonly ColorSpace FourTwoZeroMpeg2 = new ColorSpace("4:2:0 with vertically-displaced chroma places", 1, "420mpeg2", 8);
         /// <summary>
-        /// 4:2:0 with coincident chroma planes
+        /// 4:2:0 with coincident chroma planes. This is basically the same as 420jpeg
         /// </summary>
-        public static readonly ColorSpace FourTwoZero = new ColorSpace("4:2:0 with coincident chroma planes", 2, "420");
+        public static readonly ColorSpace FourTwoZero = new ColorSpace("4:2:0 with coincident chroma planes", 2, "420", 8);
         /// <summary>
         /// 4:2:2 colorspace 
         /// </summary>
-        public static readonly ColorSpace FourTwoTwo = new ColorSpace("4:2:2", 3, "422");
+        public static readonly ColorSpace FourTwoTwo = new ColorSpace("4:2:2", 3, "422", 8);
         /// <summary>
         /// 4:4:4 colorspace
         /// </summary>
-        public static readonly ColorSpace FourFourFour = new ColorSpace("4:4:4", 4, "444");
+        public static readonly ColorSpace FourFourFour = new ColorSpace("4:4:4", 4, "444", 8);
+        /// <summary>
+        /// 4:2:0 colorspace with 10-bit pixels
+        /// </summary>
+        public static readonly ColorSpace FourTwoZeroPTen = new ColorSpace("4:2:0 with 10-bit pixels", 5, "420p10", 10);
+        /// <summary>
+        /// 4:2:0 colorspace with 12-bit pixels
+        /// </summary>
+        public static readonly ColorSpace FourTwoZeroPTwelve = new ColorSpace("4:2:0 with 12-bit pixels", 5, "420p12", 12);
+        /// <summary>
+        /// 4:2:2 colorspace with 10-bit pixels
+        /// </summary>
+        public static readonly ColorSpace FourTwoTwoPTen = new ColorSpace("4:2:0 with 10-bit pixels", 5, "422p10", 10);
+        /// <summary>
+        /// 4:2:2 colorspace with 12-bit pixels
+        /// </summary>
+        public static readonly ColorSpace FourTwoTwoPTwelve = new ColorSpace("4:2:0 with 12-bit pixels", 5, "422p12", 12);
+        /// <summary>
+        /// 4:4:4 colorspace with 10-bit pixels
+        /// </summary>
+        public static readonly ColorSpace FourFourFourPTen = new ColorSpace("4:2:0 with 10-bit pixels", 5, "444p10", 10);
+        /// <summary>
+        /// 4:4:4 colorspace with 12-bit pixels
+        /// </summary>
+        public static readonly ColorSpace FourFourFourPTwelve = new ColorSpace("4:2:0 with 12-bit pixels", 5, "444p12", 12);
         #endregion
 
         #region public properties
@@ -83,14 +113,17 @@ namespace CommonImageModel.Y4M
         /// The canonical value given to this interlacing method
         /// </summary>
         public int Value { get; }
+
+        public int BitDepth { get; }
         #endregion
 
         #region ctor
-        private ColorSpace(string name, int value, string parameterArgument)
+        private ColorSpace(string name, int value, string parameterArgument, int bitDepth)
         {
             Name = name;
             Value = value;
             ParameterArgument = parameterArgument;
+            BitDepth = bitDepth;
         }
         #endregion
 

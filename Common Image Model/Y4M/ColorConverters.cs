@@ -21,6 +21,7 @@
 
 using Functional.Maybe;
 using System.Drawing;
+using System;
 
 namespace CommonImageModel.Y4M
 {
@@ -58,7 +59,17 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region private methods
-
+        /// <summary>
+        /// The Clamp Integer macro copied from https://git.xiph.org/?p=users/giles/libvpx-giles.git;a=blob;f=y4minput.c#l143
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        private static int ClampInteger(int a, int b, int c)
+        {
+            return Math.Max(a, Math.Min(b, c));
+        }
         #endregion
     }
 }

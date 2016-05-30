@@ -114,6 +114,9 @@ namespace CommonImageModel.Y4M
         /// </summary>
         public int Value { get; }
 
+        /// <summary>
+        /// The number of bits used to describe one channel of a pixel
+        /// </summary>
         public int BitDepth { get; }
         #endregion
 

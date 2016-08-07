@@ -20,7 +20,6 @@
  */
 
 using Functional.Maybe;
-using System;
 using System.IO;
 
 namespace CommonImageModel.Y4M
@@ -59,7 +58,7 @@ namespace CommonImageModel.Y4M
         {
             using (var rewindGuard = new RewindGuard(rawStream))
             {
-
+                // TODO: Fill this in
             }
 
             return Maybe<VideoFrame>.Nothing;
@@ -81,6 +80,7 @@ namespace CommonImageModel.Y4M
 
         private Maybe<byte[]> ReadChromaPlane(Stream rawStream)
         {
+            // TODO: Account for 10bit pixels
             if (Equals(DetectedColorSpace, ColorSpace.FourFourFour))
             {
                 // 4:4:4
@@ -91,11 +91,13 @@ namespace CommonImageModel.Y4M
                 // 4:2:2
                 return ReadPlane(rawStream, (_header.Width * _header.Height) / 2);
             }
-            else
+            else if (Equals(DetectedColorSpace, ColorSpace.FourFourFour))
             {
                 // 4:2:0
                 return ReadPlane(rawStream, (_header.Width * _header.Height) / 6);
             }
+
+            return Maybe<byte[]>.Nothing;
         }
 
         private static Maybe<byte[]> ReadPlane(Stream rawStream, int length)

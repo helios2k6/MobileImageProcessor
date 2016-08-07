@@ -44,6 +44,11 @@ namespace CommonImageModel.Y4M
         /// <param name="width">The width of the frame</param>
         /// <param name="height">The height of the frame</param>
         /// <returns>An RGB plane if this function succeeds. None otherwise</returns>
+        /// <remarks>
+        /// FFMPEG outputs 420mpeg2 (where the chroma samples are aligned horizontally, but 
+        /// shifted a half-pixel down).
+        /// https://msdn.microsoft.com/en-us/library/windows/desktop/dd206750(v=vs.85).aspx
+        /// </remarks>
         public static Maybe<Color[][]> TryConvertToRGB(
             ColorSpace colorSpace,
             byte[] luma,
@@ -59,6 +64,39 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region private methods
+        private static Maybe<Color[][]> ConvertYCbCr444ToRGB888(
+            byte[] luma,
+            byte[] blueDifferential,
+            byte[] redDifferential,
+            int width,
+            int height
+        )
+        {
+            return Maybe<Color[][]>.Nothing;
+        }
+
+        private static Maybe<Color[][]> ConvertYCbCr422ToYCbCr444(
+            byte[] luma,
+            byte[] blueDifferential,
+            byte[] redDifferential,
+            int width,
+            int height
+        )
+        {
+            return Maybe<Color[][]>.Nothing;
+        }
+
+        private static Maybe<Color[][]> ConvertYCbCr420ToYCbCr422(
+            byte[] luma,
+            byte[] blueDifferential,
+            byte[] redDifferential,
+            int width,
+            int height
+        )
+        {
+            return Maybe<Color[][]>.Nothing;
+        }
+
         #endregion
     }
 }

@@ -66,47 +66,55 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region private methods
-        private Maybe<byte[]> ReadLumaPlane(Stream rawStream)
+        private Maybe<byte[][]> ReadLumaPlane(Stream rawStream)
         {
-            var lumaPlaneBuffer = new byte[_header.Width * _header.Height];
-            int readBytes = rawStream.Read(lumaPlaneBuffer, 0, _header.Width * _header.Height);
-            if (readBytes != _header.Width * _header.Height)
+            var lumaPlaneBuffer = new byte[_header.Width][];
+            for (int row = 0; row < _header.Height; row++)
             {
-                return Maybe<byte[]>.Nothing;
-            }
+                lumaPlaneBuffer[row] = new byte[_header.Width];
+                int readBytes = rawStream.Read(lumaPlaneBuffer[row], 0, _header.Width);
+                if (readBytes != _header.Width * _header.Height)
+                {
+                    return Maybe<byte[][]>.Nothing;
+                }
 
+            }
             return lumaPlaneBuffer.ToMaybe();
         }
 
-        private Maybe<byte[]> ReadChromaPlane(Stream rawStream)
+        private Maybe<byte[][]> ReadChromaPlane(Stream rawStream)
         {
             // TODO: Account for 10bit pixels
             if (Equals(DetectedColorSpace, ColorSpace.FourFourFour))
             {
                 // 4:4:4
-                return ReadPlane(rawStream, _header.Width * _header.Height);
+                return ReadPlane(rawStream, _header.Width, _header.Height);
             }
             else if (Equals(DetectedColorSpace, ColorSpace.FourTwoTwo))
             {
                 // 4:2:2
-                return ReadPlane(rawStream, (_header.Width * _header.Height) / 2);
+                return ReadPlane(rawStream, _header.Width / 2, _header.Height);
             }
             else if (Equals(DetectedColorSpace, ColorSpace.FourFourFour))
             {
                 // 4:2:0
-                return ReadPlane(rawStream, (_header.Width * _header.Height) / 6);
+                return ReadPlane(rawStream, _header.Width / 2, _header.Height / 2);
             }
 
-            return Maybe<byte[]>.Nothing;
+            return Maybe<byte[][]>.Nothing;
         }
 
-        private static Maybe<byte[]> ReadPlane(Stream rawStream, int length)
+        private static Maybe<byte[][]> ReadPlane(Stream rawStream, int width, int height)
         {
-            var planeBuffer = new byte[length];
-            int readBytes = rawStream.Read(planeBuffer, 0, length);
-            if (readBytes != length)
+            var planeBuffer = new byte[width][];
+            for (int row = 0; row < height; row++)
             {
-                return Maybe<byte[]>.Nothing;
+                planeBuffer[row] = new byte[width];
+                int readBytes = rawStream.Read(planeBuffer[row], 0, width);
+                if (readBytes != width)
+                {
+                    return Maybe<byte[][]>.Nothing;
+                }
             }
 
             return planeBuffer.ToMaybe();

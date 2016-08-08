@@ -20,8 +20,11 @@
  */
 
 using Functional.Maybe;
-using System.Drawing;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 
 namespace CommonImageModel.Y4M
 {
@@ -30,9 +33,6 @@ namespace CommonImageModel.Y4M
     /// </summary>
     public static class ColorConverters
     {
-        #region private fields
-        #endregion
-
         #region public methods
         /// <summary>
         /// Try to convert from YCbCr to RGB colors
@@ -49,25 +49,32 @@ namespace CommonImageModel.Y4M
         /// shifted a half-pixel down).
         /// https://msdn.microsoft.com/en-us/library/windows/desktop/dd206750(v=vs.85).aspx
         /// </remarks>
-        public static Maybe<Color[][]> TryConvertToRGB(
+        public static Maybe<Color[][]> TryConvertYCbCr420ToRGB(
             ColorSpace colorSpace,
-            byte[] luma,
-            byte[] blueDifferential,
-            byte[] redDifferential,
+            byte[][] luma,
+            byte[][] blueDifferential,
+            byte[][] redDifferential,
             int width,
             int height
         )
         {
-            // TODO: Finish this
-            return Maybe<Color[][]>.Nothing;
+            return from upsampledBlueDifferential in TryUpsamplePlane(blueDifferential, width, height)
+                   from upsampledRedDifferential in TryUpsamplePlane(redDifferential, width, height)
+                   select TryConvertYCbCr444ToRGB(
+                       luma,
+                       upsampledBlueDifferential,
+                       upsampledRedDifferential,
+                       width,
+                       height
+                   );
         }
         #endregion
 
         #region private methods
-        private static Maybe<Color[][]> ConvertYCbCr444ToRGB888(
-            byte[] luma,
-            byte[] blueDifferential,
-            byte[] redDifferential,
+        private static Maybe<Color[][]> TryConvertYCbCr444ToRGB(
+            byte[][] luma,
+            byte[][] upsampledBlueDifferential,
+            byte[][] upsampledRedDifferential,
             int width,
             int height
         )
@@ -75,28 +82,104 @@ namespace CommonImageModel.Y4M
             return Maybe<Color[][]>.Nothing;
         }
 
-        private static Maybe<Color[][]> ConvertYCbCr422ToYCbCr444(
-            byte[] luma,
-            byte[] blueDifferential,
-            byte[] redDifferential,
+        /// <summary>
+        /// Upsample a stream of bytes, interpreted as a chroma plane, using the 
+        /// Centripetal Catmull-Rom spline method (cubic convolution interpolation). 
+        /// This function will attempt to upsample, both, the horizontal and vertical
+        /// </summary>
+        /// <param name="frame">The bytes that represent the chroma plane</param>
+        /// <returns>
+        /// A new byte array that has been upsampled successfully, or none if the upsampling
+        /// failed for any reason.
+        /// </returns>
+        private static Maybe<byte[][]> TryUpsamplePlane(
+            byte[][] chromaPlane,
             int width,
             int height
         )
         {
-            return Maybe<Color[][]>.Nothing;
+            return from verticalUpsample in TryUpsample420To422(chromaPlane, width, height)
+                   select TryUpsample422To444(verticalUpsample, width, height);
         }
 
-        private static Maybe<Color[][]> ConvertYCbCr420ToYCbCr422(
-            byte[] luma,
-            byte[] blueDifferential,
-            byte[] redDifferential,
+        private static Maybe<byte[][]> TryUpsample420To422(
+            byte[][] chromaPlane,
             int width,
             int height
         )
         {
-            return Maybe<Color[][]>.Nothing;
+            try
+            {
+                // UPSCALE THE VERTICAL LINES FIRST
+            }
+            catch (Exception)
+            {
+                return Maybe<byte[][]>.Nothing;
+            }
+            return Maybe<byte[][]>.Nothing;
         }
 
+        private static byte GetUpsampledByte(
+            IEnumerable<byte> chromaLine,
+            int chromaPlaneIndex
+        )
+        {
+            // Check to see if we're at the top edge
+            if (chromaPlaneIndex == 0)
+            {
+                return Clamp((byte)((9 * (chromaLine.ElementAt(0) + chromaLine.ElementAt(1)) - (chromaLine.ElementAt(0) + chromaLine.ElementAt(2)) + 8) >> 4));
+            }
+            // Check to see if we're at the bottom edge
+            else if (chromaPlaneIndex == chromaLine.Count() - 1)
+            {
+                return Clamp((byte)((9 * (chromaLine.ElementAt(chromaPlaneIndex) + chromaLine.ElementAt(chromaPlaneIndex)) - (chromaLine.ElementAt(chromaPlaneIndex - 1) + chromaLine.ElementAt(chromaPlaneIndex)) + 8) >> 4));
+            }
+            // We're somewhere in the middle, which is generalizable
+            return Clamp((byte)((9 * (chromaLine.ElementAt(chromaPlaneIndex) + chromaLine.ElementAt(chromaPlaneIndex + 1)) - (chromaLine.ElementAt(chromaPlaneIndex - 1) + chromaLine.ElementAt(chromaPlaneIndex + 2)) + 8) >> 4));
+        }
+
+        private static Maybe<byte[][]> TryUpsample422To444(
+            byte[][] upscaledVerticalChromaFrame,
+            int width,
+            int height
+        )
+        {
+            try
+            {
+            }
+            catch (Exception)
+            {
+                return Maybe<byte[][]>.Nothing;
+            }
+            return Maybe<byte[][]>.Nothing;
+        }
+
+        private static IEnumerable<T> Transpose<T>(T[][] jaggedArray)
+        {
+            IEnumerable<IEnumerator> enumerators = jaggedArray.Select(x => x.GetEnumerator());
+            bool canMoveNext = enumerators.All(x => x.MoveNext());
+            while (canMoveNext)
+            {
+                foreach (IEnumerator enumerator in enumerators)
+                {
+                    yield return (T)enumerator.Current;
+                }
+
+                canMoveNext = enumerators.All(x => x.MoveNext());
+            }
+        }
+
+        /// <summary>
+        /// Specific clamp function for limiting these values to the range of 1 byte
+        /// </summary>
+        /// <param name="val"></param>
+        /// <returns></returns>
+        private static byte Clamp(byte val)
+        {
+            if (val.CompareTo(0) < 0) return 0;
+            else if (val.CompareTo(255) > 0) return 255;
+            else return val;
+        }
         #endregion
     }
 }

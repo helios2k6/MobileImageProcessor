@@ -20,7 +20,9 @@
  */
 
 using Functional.Maybe;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace CommonImageModel.Y4M
 {
@@ -60,7 +62,23 @@ namespace CommonImageModel.Y4M
                     return Maybe<VideoFile>.Nothing;
                 }
 
+                // Second read the frames
+                Maybe<VideoFrame> parsedVideoFrame = Maybe<VideoFrame>.Nothing;
+                var videoFrames = new List<VideoFrame>();
+                do
+                {
+                    var videoFrameParser = new VideoFrameParser(fileHeader.Value);
+                    parsedVideoFrame = videoFrameParser.TryParseVideoFrame(stream);
+                    if (parsedVideoFrame.IsSomething())
+                    {
+                        videoFrames.Add(parsedVideoFrame.Value);
+                    }
+                } while (parsedVideoFrame.IsSomething());
 
+                if (videoFrames.Any())
+                {
+                    return new VideoFile(fileHeader.Value, videoFrames).ToMaybe();
+                }
             }
 
             return Maybe<VideoFile>.Nothing;

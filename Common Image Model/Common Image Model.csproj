@@ -69,7 +69,7 @@
     <Compile Include="Y4M\FileHeaderParser.cs" />
     <Compile Include="Y4M\FrameHeader.cs" />
     <Compile Include="Y4M\FrameHeaderParser.cs" />
-    <Compile Include="Y4M\FrameParser.cs" />
+    <Compile Include="Y4M\VideoFrameParser.cs" />
     <Compile Include="Y4M\Header.cs" />
     <Compile Include="Y4M\HeaderParser.cs" />
     <Compile Include="Y4M\Interlacing.cs" />

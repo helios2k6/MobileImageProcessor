@@ -31,7 +31,7 @@ namespace CommonImageModel.Y4M
     public sealed class FrameHeaderParser : HeaderParser
     {
         #region private fields
-        private readonly FileHeader _fileLevelHeader;
+        private readonly Header _fileLevelHeader;
         #endregion
 
         #region ctor
@@ -40,7 +40,7 @@ namespace CommonImageModel.Y4M
         /// the top-level "FRAME" deliminator
         /// </summary>
         /// <param name="fileLevelHeader"></param>
-        public FrameHeaderParser(FileHeader fileLevelHeader)
+        public FrameHeaderParser(Header fileLevelHeader)
         {
             _fileLevelHeader = fileLevelHeader;
         }

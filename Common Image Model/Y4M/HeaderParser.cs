@@ -109,7 +109,7 @@ namespace CommonImageModel.Y4M
         #region private methods
         private bool TryReadHeaderMagicTag(Stream rawStream, string headerMagicTag)
         {
-            var buffer = new byte[10];
+            var buffer = new byte[headerMagicTag.Length];
             int readBytes = rawStream.Read(buffer, 0, headerMagicTag.Length);
             if (readBytes == headerMagicTag.Length)
             {
@@ -211,7 +211,7 @@ namespace CommonImageModel.Y4M
             var parameterList = new List<string>();
             while (currentByte != HeaderEndByte || currentByte == -1) // If we're at the end of the header or the stream, don't iterate
             {
-                if (currentlyReadingParameter)
+                if (currentlyReadingParameter && currentByte != ParameterSeparator)
                 {
                     byteBuffer.Add(currentByte);
                 }
@@ -223,6 +223,8 @@ namespace CommonImageModel.Y4M
                         if (isFirstParameterSeparator)
                         {
                             isFirstParameterSeparator = false;
+                            currentlyReadingParameter = true;
+                            currentByte = rawStream.ReadByte();
                             continue;
                         }
 

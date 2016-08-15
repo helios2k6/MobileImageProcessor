@@ -32,7 +32,7 @@ namespace CommonImageModel.Y4M
         /// <summary>
         /// The header for this frame
         /// </summary>
-        public FrameHeader Header { get; }
+        public Header Header { get; }
 
         /// <summary>
         /// The color pixels of the frame
@@ -46,7 +46,7 @@ namespace CommonImageModel.Y4M
         /// </summary>
         /// <param name="header">The frame header</param>
         /// <param name="frame">The actual color matrix</param>
-        public VideoFrame(FrameHeader header, Color[][] frame)
+        public VideoFrame(Header header, Color[][] frame)
         {
             Header = header;
             Frame = frame;

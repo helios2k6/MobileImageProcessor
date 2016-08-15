@@ -32,7 +32,7 @@ namespace CommonImageModel.Y4M
         /// <summary>
         /// The file header
         /// </summary>
-        public FileHeader Header { get; }
+        public Header Header { get; }
 
         /// <summary>
         /// The video frames
@@ -46,7 +46,7 @@ namespace CommonImageModel.Y4M
         /// </summary>
         /// <param name="header">The file level header</param>
         /// <param name="frames">The video frames</param>
-        public VideoFile(FileHeader header, IEnumerable<VideoFrame> frames)
+        public VideoFile(Header header, IEnumerable<VideoFrame> frames)
         {
             Header = header;
             Frames = frames;

@@ -27,10 +27,9 @@ namespace CommonImageModel.Y4M
     /// <summary>
     /// Parses the frame from a bitstream
     /// </summary>
-    public sealed class FrameParser
+    public sealed class VideoFrameParser
     {
         #region private fields
-        private static readonly byte EndFrameByteMark = 0x0A;
         private readonly Header _header;
         #endregion
 
@@ -47,7 +46,7 @@ namespace CommonImageModel.Y4M
         #endregion
 
         #region ctor
-        public FrameParser(Header header)
+        public VideoFrameParser(Header header)
         {
             _header = header;
         }
@@ -58,15 +57,41 @@ namespace CommonImageModel.Y4M
         {
             using (var rewindGuard = new RewindGuard(rawStream))
             {
-                // TODO: Fill this in
-            }
+                var frameHeaderParser = new FrameHeaderParser(_header);
+                Maybe<Header> frameHeaderMaybe = frameHeaderParser.TryParseHeader(rawStream); // We don't do anything with the frame, so who cares?
+                if (frameHeaderMaybe.IsNothing())
+                {
+                    // We have to at least succeed
+                    return Maybe<VideoFrame>.Nothing;
+                }
 
-            return Maybe<VideoFrame>.Nothing;
+                Maybe<VideoFrame> videoFrame = from lumaPlane in TryReadLumaPlane(rawStream)
+                                               from blueDiff in TryReadChromaPlane(rawStream)
+                                               from redDiff in TryReadChromaPlane(rawStream)
+                                               from frameHeader in frameHeaderMaybe
+                                               from colorSpace in frameHeader.ColorSpace
+                                               from colorMatrix in ColorConverters.TryConvertToRGB(
+                                                   colorSpace,
+                                                   lumaPlane,
+                                                   blueDiff,
+                                                   redDiff,
+                                                   _header.Width,
+                                                   _header.Height
+                                               )
+                                               select new VideoFrame(frameHeader, colorMatrix);
+
+                if (videoFrame.IsSomething())
+                {
+                    rewindGuard.DoNotRewind();
+                }
+
+                return videoFrame;
+            }
         }
         #endregion
 
         #region private methods
-        private Maybe<byte[][]> ReadLumaPlane(Stream rawStream)
+        private Maybe<byte[][]> TryReadLumaPlane(Stream rawStream)
         {
             var lumaPlaneBuffer = new byte[_header.Width][];
             for (int row = 0; row < _header.Height; row++)
@@ -82,7 +107,7 @@ namespace CommonImageModel.Y4M
             return lumaPlaneBuffer.ToMaybe();
         }
 
-        private Maybe<byte[][]> ReadChromaPlane(Stream rawStream)
+        private Maybe<byte[][]> TryReadChromaPlane(Stream rawStream)
         {
             // TODO: Account for 10bit pixels
             if (Equals(DetectedColorSpace, ColorSpace.FourFourFour))
@@ -106,7 +131,7 @@ namespace CommonImageModel.Y4M
 
         private static Maybe<byte[][]> ReadPlane(Stream rawStream, int width, int height)
         {
-            var planeBuffer = new byte[width][];
+            var planeBuffer = new byte[height][];
             for (int row = 0; row < height; row++)
             {
                 planeBuffer[row] = new byte[width];

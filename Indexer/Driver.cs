@@ -25,6 +25,7 @@ using Functional.Maybe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CommonImageModel.Y4M;
 
 namespace Indexer
 {
@@ -52,15 +53,20 @@ namespace Indexer
     {
         public static void Main(string[] args)
         {
+            if (true)
+            {
+                var videoFileParser = new VideoFileParser(@"D:\TEST_BAY\raw_output.y4m");
+                Maybe<VideoFile> videoFile = videoFileParser.TryParseVideoFile();
+            }
             Parser.Default.ParseArguments<SearchCommandVerb, IndexCommandVerb>(args)
                 .WithParsed<SearchCommandVerb>(search =>
                 {
                     var database = new IndexDatabase(search.IndexFile);
-                    Maybe<IEnumerable<IndexEntry>> queryResultMaybe = 
+                    Maybe<IEnumerable<IndexEntry>> queryResultMaybe =
                         from fingerPrint in ImageFingerPrinter.TryCalculateFingerPrint(search.PictureFile)
                         from queryResult in database.TryFindEntries(fingerPrint)
                         select queryResult;
-                    
+
                     if (queryResultMaybe.HasValue)
                     {
                         IEnumerable<IndexEntry> queryResults = queryResultMaybe.Value.ToList();

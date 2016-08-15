@@ -21,7 +21,6 @@
 
 using Functional.Maybe;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -33,11 +32,27 @@ namespace CommonImageModel.Y4M
     /// </summary>
     public static class ColorConverters
     {
+        #region private classes
+        private sealed class YCrCbFrames
+        {
+            public byte[][] Luma { get; set; }
+
+            public byte[][] Cb { get; set; }
+
+            public byte[][] Cr { get; set; }
+
+            public ColorSpace ColorSpace { get; set; }
+
+            public int Width { get; set; }
+
+            public int Height { get; set; }
+        }
+        #endregion
         #region public methods
         /// <summary>
         /// Try to convert from YCbCr to RGB colors
         /// </summary>
-        /// <param name="colorSpace">The colorspace of the luma and chroma</param>
+        /// <param name="sourceColorspace">The colorspace of the luma and chroma</param>
         /// <param name="luma">The luma plane</param>
         /// <param name="blueDifferential">The blue differential (Cb) plane</param>
         /// <param name="redDifferential">The red differential (Cr) plane</param>
@@ -49,8 +64,8 @@ namespace CommonImageModel.Y4M
         /// shifted a half-pixel down).
         /// https://msdn.microsoft.com/en-us/library/windows/desktop/dd206750(v=vs.85).aspx
         /// </remarks>
-        public static Maybe<Color[][]> TryConvertYCbCr420ToRGB(
-            ColorSpace colorSpace,
+        public static Maybe<Color[][]> TryConvertToRGB(
+            ColorSpace sourceColorspace,
             byte[][] luma,
             byte[][] blueDifferential,
             byte[][] redDifferential,
@@ -58,19 +73,40 @@ namespace CommonImageModel.Y4M
             int height
         )
         {
-            return from upsampledBlueDifferential in TryUpsamplePlane(blueDifferential, width, height)
-                   from upsampledRedDifferential in TryUpsamplePlane(redDifferential, width, height)
-                   select TryConvertYCbCr444ToRGB(
-                       luma,
-                       upsampledBlueDifferential,
-                       upsampledRedDifferential,
-                       width,
-                       height
-                   );
+            if (Equals(sourceColorspace, ColorSpace.FourFourFour))
+            {
+                return TryConvertYCbCr444ToRGB(luma, blueDifferential, redDifferential, width, height);
+            }
+
+            if (Equals(sourceColorspace, ColorSpace.FourTwoTwo))
+            {
+
+            }
+
+            if (Equals(sourceColorspace, ColorSpace.FourTwoZero))
+            {
+
+            }
         }
         #endregion
 
         #region private methods
+        private static bool TryConvert422To444(
+            YCrCbFrames inFrames,
+            YCrCbFrames outFullResolutionFrames
+        )
+        {
+
+        }
+
+        private static bool TryConvert420To422(
+            YCrCbFrames subsampledFrames,
+            YCrCbFrames outFullResolutionFrames
+        )
+        {
+
+        }
+
         private static Maybe<Color[][]> TryConvertYCbCr444ToRGB(
             byte[][] luma,
             byte[][] upsampledBlueDifferential,
@@ -79,49 +115,105 @@ namespace CommonImageModel.Y4M
             int height
         )
         {
-            return Maybe<Color[][]>.Nothing;
-        }
-
-        /// <summary>
-        /// Upsample a stream of bytes, interpreted as a chroma plane, using the 
-        /// Centripetal Catmull-Rom spline method (cubic convolution interpolation). 
-        /// This function will attempt to upsample, both, the horizontal and vertical
-        /// </summary>
-        /// <param name="frame">The bytes that represent the chroma plane</param>
-        /// <returns>
-        /// A new byte array that has been upsampled successfully, or none if the upsampling
-        /// failed for any reason.
-        /// </returns>
-        private static Maybe<byte[][]> TryUpsamplePlane(
-            byte[][] chromaPlane,
-            int width,
-            int height
-        )
-        {
-            return from verticalUpsample in TryUpsample420To422(chromaPlane, width, height)
-                   select TryUpsample422To444(verticalUpsample, width, height);
-        }
-
-        private static Maybe<byte[][]> TryUpsample420To422(
-            byte[][] chromaPlane,
-            int width,
-            int height
-        )
-        {
             try
             {
-                // UPSCALE THE VERTICAL LINES FIRST
+                Color[][] frame = new Color[height][];
+                for (int row = 0; row < height; row++)
+                {
+                    frame[row] = new Color[width];
+                    for (int col = 0; col < width; col++)
+                    {
+                        byte currentLuma = luma[row][col];
+                        byte currentCb = upsampledBlueDifferential[row][col];
+                        byte currentCr = upsampledRedDifferential[row][col];
+                        frame[row][col] = ConvertYUVToRGB(currentLuma, currentCb, currentCr);
+                    }
+                }
+
+                if (frame.Length != height || frame[0].Length != width)
+                {
+                    return Maybe<Color[][]>.Nothing;
+                }
+
+                return frame.ToMaybe();
             }
             catch (Exception)
             {
-                return Maybe<byte[][]>.Nothing;
             }
-            return Maybe<byte[][]>.Nothing;
+
+            return Maybe<Color[][]>.Nothing;
+        }
+
+        private static Color ConvertYUVToRGB(byte luma, byte blueDifferential, byte redDifferential)
+        {
+            int c = luma - 16;
+            int d = blueDifferential - 128;
+            int e = redDifferential - 128;
+
+            int red = Clamp((298 * c + 409 * e + 128) >> 8);
+            int green = Clamp((298 * c - 100 * d - 208 * e + 128) >> 8);
+            int blue = Clamp((298 * c + 516 * d + 128) >> 8);
+
+            return Color.FromArgb(red, green, blue);
+        }
+
+        private static void UpsampleVerticalResolution(
+            byte[][] inChromaPlane,
+            byte[][] outChromaPlane
+        )
+        {
+            for (int col = 0; col < inChromaPlane[0].Length; col++)
+            {
+                IEnumerable<byte> upsampledColumn = GetUpsampledLine(GetColumn(inChromaPlane, col), inChromaPlane.Length);
+                SetColumn(outChromaPlane, col, upsampledColumn);
+            }
+        }
+
+        private static void UpsampleHorizontalResolution(
+            byte[][] inChromaPlane,
+            byte[][] outChromaPlane
+        )
+        {
+            for (int row = 0; row < inChromaPlane.Length; row++)
+            {
+                outChromaPlane[row] = GetUpsampledLine(inChromaPlane[row], inChromaPlane[row].Length).ToArray();
+            }
+        }
+
+        private static void SetColumn(byte[][] expandedChromaPlane, int columnIndex, IEnumerable<byte> columnToSet)
+        {
+            int currentYPosition = 0;
+            foreach (byte columnValue in columnToSet)
+            {
+                expandedChromaPlane[currentYPosition][columnIndex] = columnValue;
+                currentYPosition++;
+            }
+        }
+
+        private static IEnumerable<byte> GetColumn(byte[][] chromaPlane, int columnIndex)
+        {
+            for (int y = 0; y < chromaPlane.Length; y++)
+            {
+                yield return chromaPlane[y][columnIndex];
+            }
+        }
+
+        private static IEnumerable<byte> GetUpsampledLine(IEnumerable<byte> chromaLine, int lengthOfChromaLine)
+        {
+            int currentIndex = 0;
+            foreach (byte sample in chromaLine)
+            {
+                yield return sample;
+                yield return GetUpsampledByte(chromaLine, currentIndex, lengthOfChromaLine);
+
+                currentIndex++;
+            }
         }
 
         private static byte GetUpsampledByte(
             IEnumerable<byte> chromaLine,
-            int chromaPlaneIndex
+            int chromaPlaneIndex,
+            int lengthOfChromaLine
         )
         {
             // Check to see if we're at the top edge
@@ -130,43 +222,12 @@ namespace CommonImageModel.Y4M
                 return Clamp((byte)((9 * (chromaLine.ElementAt(0) + chromaLine.ElementAt(1)) - (chromaLine.ElementAt(0) + chromaLine.ElementAt(2)) + 8) >> 4));
             }
             // Check to see if we're at the bottom edge
-            else if (chromaPlaneIndex == chromaLine.Count() - 1)
+            else if (chromaPlaneIndex == lengthOfChromaLine - 1)
             {
                 return Clamp((byte)((9 * (chromaLine.ElementAt(chromaPlaneIndex) + chromaLine.ElementAt(chromaPlaneIndex)) - (chromaLine.ElementAt(chromaPlaneIndex - 1) + chromaLine.ElementAt(chromaPlaneIndex)) + 8) >> 4));
             }
             // We're somewhere in the middle, which is generalizable
             return Clamp((byte)((9 * (chromaLine.ElementAt(chromaPlaneIndex) + chromaLine.ElementAt(chromaPlaneIndex + 1)) - (chromaLine.ElementAt(chromaPlaneIndex - 1) + chromaLine.ElementAt(chromaPlaneIndex + 2)) + 8) >> 4));
-        }
-
-        private static Maybe<byte[][]> TryUpsample422To444(
-            byte[][] upscaledVerticalChromaFrame,
-            int width,
-            int height
-        )
-        {
-            try
-            {
-            }
-            catch (Exception)
-            {
-                return Maybe<byte[][]>.Nothing;
-            }
-            return Maybe<byte[][]>.Nothing;
-        }
-
-        private static IEnumerable<T> Transpose<T>(T[][] jaggedArray)
-        {
-            IEnumerable<IEnumerator> enumerators = jaggedArray.Select(x => x.GetEnumerator());
-            bool canMoveNext = enumerators.All(x => x.MoveNext());
-            while (canMoveNext)
-            {
-                foreach (IEnumerator enumerator in enumerators)
-                {
-                    yield return (T)enumerator.Current;
-                }
-
-                canMoveNext = enumerators.All(x => x.MoveNext());
-            }
         }
 
         /// <summary>
@@ -175,6 +236,18 @@ namespace CommonImageModel.Y4M
         /// <param name="val"></param>
         /// <returns></returns>
         private static byte Clamp(byte val)
+        {
+            if (val.CompareTo(0) < 0) return 0;
+            else if (val.CompareTo(255) > 0) return 255;
+            else return val;
+        }
+
+        /// <summary>
+        /// Specific clamp function for limiting these values to the range of 1 byte
+        /// </summary>
+        /// <param name="val"></param>
+        /// <returns></returns>
+        private static int Clamp(int val)
         {
             if (val.CompareTo(0) < 0) return 0;
             else if (val.CompareTo(255) > 0) return 255;

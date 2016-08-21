@@ -22,6 +22,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Drawing;
+using System.Runtime.Serialization;
 
 namespace CommonImageModel
 {
@@ -30,31 +31,14 @@ namespace CommonImageModel
     /// </summary>
     [Serializable]
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class Macroblock : IEquatable<Macroblock>
+    public sealed class Macroblock : IEquatable<Macroblock>, ISerializable
     {
+        #region private fields
         private readonly Lazy<int> _hashCode;
         private readonly Lazy<Color> _averageColor;
+        #endregion
 
-        /// <summary>
-        /// Constructs a new Macroblock 
-        /// </summary>
-        public Macroblock()
-        {
-            _hashCode = new Lazy<int>(CalculateHashCode);
-            _averageColor = new Lazy<Color>(CalculateAverageColor);
-        }
-
-        /// <summary>
-        /// Constructs a new Macroblock with the provided two dimensional color grid as 
-        /// the Macroblock
-        /// </summary>
-        /// <param name="colorGrid"></param>
-        public Macroblock(Color[,] colorGrid)
-            : this()
-        {
-            ColorGrid = colorGrid;
-        }
-
+        #region public properties
         /// <summary>
         /// The width of the Macroblock
         /// </summary>
@@ -76,6 +60,41 @@ namespace CommonImageModel
         /// </summary>
         [JsonProperty(PropertyName = "ColorGrid", Required = Required.Always)]
         public Color[,] ColorGrid { get; set; }
+        #endregion
+
+        #region ctor
+        /// <summary>
+        /// Constructs a new Macroblock 
+        /// </summary>
+        public Macroblock()
+        {
+            _hashCode = new Lazy<int>(CalculateHashCode);
+            _averageColor = new Lazy<Color>(CalculateAverageColor);
+        }
+
+        /// <summary>
+        /// Constructs a new Macroblock with the provided two dimensional color grid as 
+        /// the Macroblock
+        /// </summary>
+        /// <param name="colorGrid"></param>
+        public Macroblock(Color[,] colorGrid)
+            : this()
+        {
+            ColorGrid = colorGrid;
+        }
+
+        public Macroblock(SerializationInfo info, StreamingContext context)
+            : this()
+        {
+            ColorGrid = (Color[,])info.GetValue("ColorGrid", typeof(Color[,]));
+        }
+        #endregion
+
+        #region public methods
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("ColorGrid", ColorGrid);
+        }
 
         public bool Equals(Macroblock other)
         {
@@ -139,7 +158,9 @@ namespace CommonImageModel
 
             return AreColorsCloseEnough(_averageColor.Value, other._averageColor.Value);
         }
+        #endregion
 
+        #region private methods
         private static bool CompareGrids(Color[,] a, Color[,] b)
         {
             int width = a.GetLength(0);
@@ -201,5 +222,6 @@ namespace CommonImageModel
 
             return Color.FromArgb(averageRed, averageGreen, averageBlue);
         }
+        #endregion
     }
 }

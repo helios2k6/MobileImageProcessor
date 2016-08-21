@@ -21,6 +21,7 @@
 
 using Newtonsoft.Json;
 using System;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace CommonImageModel
@@ -30,8 +31,38 @@ namespace CommonImageModel
     /// </summary>
     [Serializable]
     [JsonObject(MemberSerialization.OptIn)]
-    public sealed class ImageFingerPrint : IEquatable<ImageFingerPrint>
+    public sealed class ImageFingerPrint : IEquatable<ImageFingerPrint>, ISerializable
     {
+        #region public properties
+        [JsonProperty(PropertyName = "TopLeft", Required = Required.Always)]
+        public Macroblock TopLeft { get; set; }
+
+        [JsonProperty(PropertyName = "TopRight", Required = Required.Always)]
+        public Macroblock TopRight { get; set; }
+
+        [JsonProperty(PropertyName = "Center", Required = Required.Always)]
+        public Macroblock Center { get; set; }
+
+        [JsonProperty(PropertyName = "BottomLeft", Required = Required.Always)]
+        public Macroblock BottomLeft { get; set; }
+
+        [JsonProperty(PropertyName = "BottomRight", Required = Required.Always)]
+        public Macroblock BottomRight { get; set; }
+
+        [JsonProperty(PropertyName = "FocusSquareTopLeft", Required = Required.Always)]
+        public Macroblock FocusSquareTopLeft { get; set; }
+
+        [JsonProperty(PropertyName = "FocusSquareTopRight", Required = Required.Always)]
+        public Macroblock FocusSquareTopRight { get; set; }
+
+        [JsonProperty(PropertyName = "FocusSquareBottomLeft", Required = Required.Always)]
+        public Macroblock FocusSquareBottomLeft { get; set; }
+
+        [JsonProperty(PropertyName = "FocusSquareBottomRight", Required = Required.Always)]
+        public Macroblock FocusSquareBottomRight { get; set; }
+        #endregion
+
+        #region ctor
         /// <summary>
         /// Create a new Fingerprint based on the provided Macroblocks
         /// </summary>
@@ -66,33 +97,21 @@ namespace CommonImageModel
         {
         }
 
-        [JsonProperty(PropertyName = "TopLeft", Required = Required.Always)]
-        public Macroblock TopLeft { get; set; }
+        public ImageFingerPrint(SerializationInfo info, StreamingContext context)
+        {
+            TopLeft = (Macroblock)info.GetValue("TopLeft", GetType());
+            TopRight = (Macroblock)info.GetValue("TopRight", GetType());
+            Center = (Macroblock)info.GetValue("Center", GetType());
+            BottomLeft = (Macroblock)info.GetValue("BottomLeft", GetType());
+            BottomRight = (Macroblock)info.GetValue("BottomRight", GetType());
+            FocusSquareTopLeft = (Macroblock)info.GetValue("FocusSquareTopLeft", GetType());
+            FocusSquareTopRight = (Macroblock)info.GetValue("FocusSquareTopRight", GetType());
+            FocusSquareBottomLeft = (Macroblock)info.GetValue("FocusSquareBottomLeft", GetType());
+            FocusSquareBottomRight = (Macroblock)info.GetValue("FocusSquareBottomRight", GetType());
+        }
+        #endregion
 
-        [JsonProperty(PropertyName = "TopRight", Required = Required.Always)]
-        public Macroblock TopRight { get; set; }
-
-        [JsonProperty(PropertyName = "Center", Required = Required.Always)]
-        public Macroblock Center { get; set; }
-
-        [JsonProperty(PropertyName = "BottomLeft", Required = Required.Always)]
-        public Macroblock BottomLeft { get; set; }
-
-        [JsonProperty(PropertyName = "BottomRight", Required = Required.Always)]
-        public Macroblock BottomRight { get; set; }
-
-        [JsonProperty(PropertyName = "FocusSquareTopLeft", Required = Required.Always)]
-        public Macroblock FocusSquareTopLeft { get; set; }
-
-        [JsonProperty(PropertyName = "FocusSquareTopRight", Required = Required.Always)]
-        public Macroblock FocusSquareTopRight { get; set; }
-
-        [JsonProperty(PropertyName = "FocusSquareBottomLeft", Required = Required.Always)]
-        public Macroblock FocusSquareBottomLeft { get; set; }
-
-        [JsonProperty(PropertyName = "FocusSquareBottomRight", Required = Required.Always)]
-        public Macroblock FocusSquareBottomRight { get; set; }
-
+        #region public methods
         public override string ToString()
         {
             var stringBuilder = new StringBuilder();
@@ -169,5 +188,19 @@ namespace CommonImageModel
                 FocusSquareBottomLeft.IsSimilarTo(other.FocusSquareBottomLeft) &&
                 FocusSquareBottomRight.IsSimilarTo(other.FocusSquareBottomRight);
         }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("TopLeft", TopLeft);
+            info.AddValue("TopRight", TopRight);
+            info.AddValue("Center", Center);
+            info.AddValue("BottomLeft", BottomLeft);
+            info.AddValue("BottomRight", BottomRight);
+            info.AddValue("FocusSquareTopLeft", FocusSquareTopLeft);
+            info.AddValue("FocusSquareTopRight", FocusSquareTopRight);
+            info.AddValue("FocusSquareBottomLeft", FocusSquareBottomLeft);
+            info.AddValue("FocusSquareBottomRight", FocusSquareBottomRight);
+        }
+        #endregion
     }
 }

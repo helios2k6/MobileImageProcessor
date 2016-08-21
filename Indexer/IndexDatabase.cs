@@ -27,6 +27,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Indexer
 {
@@ -36,37 +37,52 @@ namespace Indexer
     /// </summary>
     internal sealed class IndexDatabase
     {
+        #region public enum
+        public enum SerializationMethod
+        {
+            JSON,
+            BINARY,
+        }
+        #endregion
+
+        #region private fields
         private readonly string _pathToIndexFile;
         private readonly ConcurrentQueue<IndexEntry> _queuedIndexEntriesForAddition;
+        private readonly SerializationMethod _serializationMethod;
 
         private IndexEntries _indexEntries;
         private Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>> _hashToEntriesMap;
+        #endregion
+
+        #region ctor
+        /// <summary>
+        /// Initialize an IndexDatabase with the path to the index file,
+        /// whether it exists or not
+        /// </summary>
+        /// <param name="pathToIndexFile">The path to the index file</param>
+        /// <param name="method">The serialization method to use</param>
+        /// <remarks>
+        /// If the file exists, this object will attempt to deserialize it. If it does
+        /// not exist, a new file will be created
+        /// </remarks>
+        public IndexDatabase(string pathToIndexFile, SerializationMethod method)
+            : this()
+        {
+            _pathToIndexFile = pathToIndexFile;
+            _indexEntries = DeserializeIndexDatabase(pathToIndexFile, method);
+            _serializationMethod = method;
+        }
 
         private IndexDatabase()
         {
             _hashToEntriesMap =
                 new Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>>(IndexAllEntries);
             _queuedIndexEntriesForAddition = new ConcurrentQueue<IndexEntry>();
+            _serializationMethod = SerializationMethod.JSON;
         }
+        #endregion
 
-        /// <summary>
-        /// Initialize an IndexDatabase with the path to the index file,
-        /// whether it exists or not
-        /// </summary>
-        /// <param name="pathToIndexFile">The path to the index file</param>
-        /// <remarks>
-        /// If the file exists, this object will attempt to deserialize it. If it does
-        /// not exist, a new file will be created
-        /// </remarks>
-        public IndexDatabase(string pathToIndexFile)
-            : this()
-        {
-            _pathToIndexFile = pathToIndexFile;
-            _indexEntries = File.Exists(_pathToIndexFile)
-                ? JsonConvert.DeserializeObject<IndexEntries>(File.ReadAllText(_pathToIndexFile))
-                : new IndexEntries();
-        }
-
+        #region public methods
         /// <summary>
         /// Attempts to find the set of entries that match the given fingerprint
         /// </summary>
@@ -99,17 +115,42 @@ namespace Indexer
                 Entries = _queuedIndexEntriesForAddition.ToArray(),
             };
 
-            var serializedEntriesFile = JsonConvert.SerializeObject(updatedIndexEntriesObject);
-
-            // Rename old file first
-            if (TrySerializeNewEntries(_pathToIndexFile, serializedEntriesFile) == false)
+            if (_serializationMethod == SerializationMethod.JSON)
             {
-                throw new InvalidOperationException("Unable to serialize index file");
+                SerializeNewEntriesJson(_pathToIndexFile, JsonConvert.SerializeObject(updatedIndexEntriesObject));
+            }
+            else
+            {
+                SerializeNewEntriesBinary(_pathToIndexFile, updatedIndexEntriesObject);
             }
 
             _indexEntries = updatedIndexEntriesObject;
             ClearQueuedEntries();
             _hashToEntriesMap = new Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>>(IndexAllEntries);
+        }
+        #endregion
+
+        #region private methods
+        private static IndexEntries DeserializeIndexDatabase(string pathToIndexFile, SerializationMethod method)
+        {
+            if (File.Exists(pathToIndexFile) == false)
+            {
+                return new IndexEntries();
+            }
+
+            switch (method)
+            {
+                case SerializationMethod.BINARY:
+                    using (var stream = new FileStream(pathToIndexFile, FileMode.Open, FileAccess.Read, FileShare.None))
+                    {
+                        var formatter = new BinaryFormatter();
+                        return (IndexEntries)formatter.Deserialize(stream);
+                    }
+                case SerializationMethod.JSON:
+                    return JsonConvert.DeserializeObject<IndexEntries>(File.ReadAllText(pathToIndexFile));
+            }
+
+            throw new InvalidOperationException("Did not find appropriate deserialization method");
         }
 
         private void ClearQueuedEntries()
@@ -121,7 +162,7 @@ namespace Indexer
             }
         }
 
-        private static bool TrySerializeNewEntries(string pathToIndexFile, string jsonBlob)
+        private static void SerializeNewEntries(string pathToIndexFile, Action writeToFileAction)
         {
             string movedOriginalFilePath = null;
             try
@@ -141,15 +182,13 @@ namespace Indexer
                 }
 
                 // Attempt to write the new file to 
-                File.WriteAllText(pathToIndexFile, jsonBlob);
+                writeToFileAction.Invoke();
 
                 // Attempt to delete original index file
                 if (File.Exists(movedOriginalFilePath))
                 {
                     File.Delete(movedOriginalFilePath);
                 }
-
-                return true;
             }
             catch (Exception e)
             {
@@ -160,9 +199,27 @@ namespace Indexer
                 {
                     File.Move(movedOriginalFilePath, pathToIndexFile);
                 }
-            }
 
-            return false;
+                throw e;
+            }
+        }
+
+        private static void SerializeNewEntriesBinary(string pathToIndexFile, IndexEntries entries)
+        {
+            SerializeNewEntries(pathToIndexFile, () =>
+            {
+                using (var stream = new FileStream(pathToIndexFile, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    var formatter = new BinaryFormatter();
+                    formatter.Serialize(stream, entries);
+                    stream.Close();
+                }
+            });
+        }
+
+        private static void SerializeNewEntriesJson(string pathToIndexFile, string jsonBlob)
+        {
+            SerializeNewEntries(pathToIndexFile, () => File.WriteAllText(pathToIndexFile, jsonBlob));
         }
 
         private IDictionary<ImageFingerPrint, ICollection<IndexEntry>> IndexAllEntries()
@@ -182,5 +239,6 @@ namespace Indexer
 
             return indexMap;
         }
+        #endregion
     }
 }

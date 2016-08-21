@@ -22,6 +22,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace Indexer
 {
@@ -30,18 +31,28 @@ namespace Indexer
     /// </summary>
     [Serializable]
     [JsonObject(MemberSerialization.OptIn)]
-    internal sealed class IndexEntries : IEquatable<IndexEntries>
+    internal sealed class IndexEntries : IEquatable<IndexEntries>, ISerializable
     {
         public IndexEntries()
         {
             Entries = new IndexEntry[0];
         }
-        
+
+        public IndexEntries(SerializationInfo info, StreamingContext context)
+        {
+            Entries = (IndexEntry[])info.GetValue("Entries", typeof(IndexEntry[]));
+        }
+
         /// <summary>
         /// The array of entries in this index file
         /// </summary>
         [JsonProperty(PropertyName = "Entries", Required = Required.Always)]
         public IndexEntry[] Entries { get; set; }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("Entries", Entries);
+        }
 
         public override bool Equals(object obj)
         {

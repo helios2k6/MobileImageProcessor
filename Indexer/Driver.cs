@@ -24,7 +24,7 @@ using CommonImageModel;
 using Functional.Maybe;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using static Indexer.IndexDatabase;
 
 namespace Indexer
 {
@@ -36,6 +36,9 @@ namespace Indexer
 
         [Option('v', "video-file", Required = true, HelpText = "The video to index")]
         public string VideoFile { get; set; }
+
+        [Option('s', "serialization-method", Required = false, HelpText = "The serialization method for the index file")]
+        public string SerializationMethod { get; set; }
     }
 
     [Verb("search", HelpText = "Search for a specific video and time index of when a frame occurs")]
@@ -46,6 +49,9 @@ namespace Indexer
 
         [Option('p', "picture-file", Required = true, HelpText = "The path to the picture you want to search for")]
         public string PictureFile { get; set; }
+
+        [Option('s', "serialization-method", Required = false, HelpText = "The serialization method for the index file")]
+        public string SerializationMethod { get; set; }
     }
 
     internal static class Driver
@@ -55,10 +61,12 @@ namespace Indexer
             Parser.Default.ParseArguments<SearchCommandVerb, IndexCommandVerb>(args)
                 .WithParsed<SearchCommandVerb>(search =>
                 {
+                    var serializationMethod = SerializationMethod.JSON;
+                    Enum.TryParse(search.SerializationMethod, out serializationMethod);
                     Maybe<ImageFingerPrint> fingerPrintMaybe = ImageFingerPrinter.TryCalculateFingerPrint(search.PictureFile);
                     if (fingerPrintMaybe.IsSomething())
                     {
-                        var database = new IndexDatabase(search.IndexFile);
+                        var database = new IndexDatabase(search.IndexFile, serializationMethod);
                         IEnumerable<IndexEntry> queryResults = database.TryFindEntries(fingerPrintMaybe.Value);
                         foreach (IndexEntry entry in queryResults)
                         {
@@ -68,8 +76,10 @@ namespace Indexer
                 })
                 .WithParsed<IndexCommandVerb>(index =>
                 {
-                    var database = new IndexDatabase(index.IndexFile);
-                    Indexer.IndexVideoAsync(index.VideoFile, database).Wait();
+                    var serializationMethod = SerializationMethod.JSON;
+                    Enum.TryParse(index.SerializationMethod, out serializationMethod);
+                    var database = new IndexDatabase(index.IndexFile, serializationMethod);
+                    Indexer.IndexVideo(index.VideoFile, database);
                     database.Flush();
                 })
                 .WithNotParsed(errors =>

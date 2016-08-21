@@ -22,6 +22,7 @@
 using CommonImageModel;
 using Newtonsoft.Json;
 using System;
+using System.Runtime.Serialization;
 
 namespace Indexer
 {
@@ -30,7 +31,7 @@ namespace Indexer
     /// </summary>
     [Serializable]
     [JsonObject(MemberSerialization.OptIn)]
-    internal sealed class IndexEntry : IEquatable<IndexEntry>
+    internal sealed class IndexEntry : IEquatable<IndexEntry>, ISerializable
     {
         #region public properties
         /// <summary>
@@ -64,9 +65,25 @@ namespace Indexer
             VideoFile = string.Empty;
             FrameHash = new ImageFingerPrint();
         }
+
+        public IndexEntry(SerializationInfo info, StreamingContext context)
+        {
+            VideoFile = info.GetString("VideoFile");
+            StartTime = (TimeSpan)info.GetValue("StartTime", typeof(TimeSpan));
+            EndTime = (TimeSpan)info.GetValue("EndTime", typeof(TimeSpan));
+            FrameHash = (ImageFingerPrint)info.GetValue("FrameHash", typeof(ImageFingerPrint));
+        }
         #endregion
 
         #region public methods
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("VideoFile", VideoFile);
+            info.AddValue("StartTime", StartTime);
+            info.AddValue("EndTime", EndTime);
+            info.AddValue("FrameHash", FrameHash);
+        }
+
         public override string ToString()
         {
             return string.Format(

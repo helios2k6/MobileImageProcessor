@@ -35,22 +35,14 @@ namespace Indexer
         #endregion
 
         #region public methods
-        public async static Task IndexVideoAsync(string videoFile, IndexDatabase database)
+        public static void IndexVideo(string videoFile, IndexDatabase database)
         {
-            MediaInfo info = await GetMediaInfoAsync(videoFile);
+            MediaInfo info = new MediaInfoProcess(videoFile).Execute();
             IndexEntries(videoFile, info, database);
         }
         #endregion
 
         #region private methods
-        private static Task<MediaInfo> GetMediaInfoAsync(string videoFile)
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                return (new MediaInfoProcess(videoFile)).Execute();
-            });
-        }
-
         private static void IndexEntries(string videoFile, MediaInfo info, IndexDatabase database)
         {
             TimeSpan totalDuration = info.GetDuration();

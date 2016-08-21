@@ -30,7 +30,7 @@ namespace CommonImageModel
     /// </summary>
     public static class ImageFingerPrinter
     {
-        private const int MACROBLOCK_LENGTH = 4;
+        private const int MACROBLOCK_LENGTH = 16;
 
         /// <summary>
         /// Attempts to calculate the fingerprint of the image by automatically loading the 

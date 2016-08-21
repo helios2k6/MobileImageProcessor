@@ -31,7 +31,7 @@ namespace Indexer
     internal static class Indexer
     {
         #region private static fields
-        private static readonly TimeSpan PlaybackDuration = TimeSpan.FromSeconds(7);
+        private static readonly TimeSpan PlaybackDuration = TimeSpan.FromSeconds(15);
         #endregion
 
         #region public methods
@@ -69,12 +69,12 @@ namespace Indexer
         )
         {
             string outputDirectory = Path.GetRandomFileName();
-            Ratio fullFramerate = new Ratio(framerate.Numerator, framerate.Denominator);
+            Ratio halfFramerate = new Ratio(framerate.Numerator, framerate.Denominator * 2);
             var ffmpegProcessSettings = new FFMPEGProcessSettings(
                 videoFile,
                 outputDirectory,
                 startTime,
-                CalculateFramesToOutputFromFramerate(startTime, fullFramerate, totalDuration),
+                CalculateFramesToOutputFromFramerate(startTime, halfFramerate, totalDuration),
                 framerate,
                 FFMPEGOutputFormat.Y4M
             );

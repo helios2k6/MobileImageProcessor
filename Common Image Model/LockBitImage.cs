@@ -29,7 +29,7 @@ namespace CommonImageModel
     /// <summary>
     /// An Image object that allows you to read from it form multiple threads
     /// </summary>
-    public sealed class LockBitImage : IDisposable
+    public sealed class LockBitImage : IDisposable, IFingerPrintable
     {
         private readonly Image _image;
         private readonly Bitmap _bitmap;
@@ -57,7 +57,7 @@ namespace CommonImageModel
                 _image.PixelFormat
             );
 
-            _bitDepth = Bitmap.GetPixelFormatSize(_image.PixelFormat) / 8;
+            _bitDepth = Image.GetPixelFormatSize(_image.PixelFormat) / 8;
             _buffer = new byte[_bitmapData.Width * _bitmapData.Height * _bitDepth];
             _width = _image.Width;
             _height = _image.Height;

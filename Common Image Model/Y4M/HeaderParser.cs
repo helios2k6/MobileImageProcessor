@@ -72,13 +72,12 @@ namespace CommonImageModel.Y4M
                 }
 
                 Maybe<Header> candidateHeader = TryReadHeaderParameters(rawStream);
-                if (candidateHeader.IsSomething())
+                candidateHeader.Apply(header =>
                 {
                     rewindGuard.DoNotRewind();
-                    return candidateHeader;
-                }
+                });
 
-                return Maybe<Header>.Nothing;
+                return candidateHeader;
             }
         }
         #endregion

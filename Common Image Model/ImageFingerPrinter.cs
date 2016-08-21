@@ -31,7 +31,7 @@ namespace CommonImageModel
     public static class ImageFingerPrinter
     {
         private const int MACROBLOCK_LENGTH = 4;
-        
+
         /// <summary>
         /// Attempts to calculate the fingerprint of the image by automatically loading the 
         /// image specified by pathToImageFile and calculating its fingerprint
@@ -46,13 +46,13 @@ namespace CommonImageModel
                        lockBitImage
                    );
         }
-        
+
         /// <summary>
         /// Calculates the FingerPrint of the LockBitImage
         /// </summary>
         /// <param name="image">The LockBitImage</param>
         /// <returns>A FingerPrint representing this LockBitImage</returns>
-        public static ImageFingerPrint CalculateFingerPrint(LockBitImage image)
+        public static ImageFingerPrint CalculateFingerPrint(IFingerPrintable image)
         {
             var cropWindow = new Size(MACROBLOCK_LENGTH, MACROBLOCK_LENGTH);
 
@@ -80,7 +80,7 @@ namespace CommonImageModel
             );
         }
 
-        private static Macroblock GetMacroblock(LockBitImage image, Rectangle cropArea)
+        private static Macroblock GetMacroblock(IFingerPrintable image, Rectangle cropArea)
         {
             Color[,] colorGrid = new Color[cropArea.Width, cropArea.Height];
             int colorGridY = 0;

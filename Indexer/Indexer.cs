@@ -20,6 +20,8 @@
  */
 
 using CommonImageModel;
+using CommonImageModel.Y4M;
+using Functional.Maybe;
 using Indexer.Media;
 using System;
 using System.Collections.Generic;
@@ -36,10 +38,10 @@ namespace Indexer
         #endregion
 
         #region public methods
-        public async static Task<IEnumerable<IndexEntry>> IndexVideoAsync(string videoFile)
+        public async static Task IndexVideoAsync(string videoFile, IndexDatabase database)
         {
             MediaInfo info = await GetMediaInfoAsync(videoFile);
-            return GetIndexEntries(videoFile, info);
+            IndexEntries(videoFile, info, database);
         }
         #endregion
 
@@ -52,12 +54,13 @@ namespace Indexer
             });
         }
 
-        private static IEnumerable<IndexEntry> GetIndexEntries(string videoFile, MediaInfo info)
+        private static void IndexEntries(string videoFile, MediaInfo info, IndexDatabase database)
         {
             TimeSpan totalDuration = info.GetDuration();
-            return from startTime in GenerateStartTimeSpans(totalDuration).AsParallel()
-                   from indexEntriesForPhoto in GetIndexEntriesAtIndex(videoFile, startTime, info.GetFramerate(), totalDuration)
-                   select indexEntriesForPhoto;
+            foreach (TimeSpan startTime in GenerateStartTimeSpans(totalDuration))
+            {
+                IndexEntriesAtIndex(videoFile, startTime, info.GetFramerate(), totalDuration, database);
+            }
         }
 
         private static IEnumerable<TimeSpan> GenerateStartTimeSpans(TimeSpan totalDuration)
@@ -68,11 +71,12 @@ namespace Indexer
             }
         }
 
-        private static IEnumerable<IndexEntry> GetIndexEntriesAtIndex(
+        private static void IndexEntriesAtIndex(
             string videoFile,
             TimeSpan startTime,
             Ratio framerate,
-            TimeSpan totalDuration
+            TimeSpan totalDuration,
+            IndexDatabase database
         )
         {
             string outputDirectory = Path.GetRandomFileName();
@@ -94,11 +98,7 @@ namespace Indexer
             using (var ffmpegProcess = new FFMPEGProcess(ffmpegProcessSettings))
             {
                 ffmpegProcess.Execute();
-                /*
-                 * 1. Decode Y4M file
-                 * 2. Index frames
-                 * 3. Return indexed frames
-                 */
+                IndexFilesInDirectory(videoFile, outputDirectory, startTime, database);
                 try
                 {
                     Directory.Delete(outputDirectory, true);
@@ -107,8 +107,26 @@ namespace Indexer
                 {
                     Console.Error.WriteLine(string.Format("Could not clean up images: {0}", e.Message));
                 }
+            }
+        }
 
-                throw new NotImplementedException();
+        private static void IndexFilesInDirectory(string originalFileName, string directory, TimeSpan startTime, IndexDatabase database)
+        {
+            foreach (string file in Directory.EnumerateFiles(directory, "*.y4m"))
+            {
+                new VideoFileParser(file).TryParseVideoFile().Apply(videoFile =>
+                {
+                    foreach (VideoFrame frame in videoFile.Frames)
+                    {
+                        database.QueueAddEntry(new IndexEntry
+                        {
+                            VideoFile = originalFileName,
+                            StartTime = startTime,
+                            EndTime = startTime + PlaybackDuration,
+                            FrameHash = ImageFingerPrinter.CalculateFingerPrint(frame),
+                        });
+                    }
+                });
             }
         }
 

@@ -123,7 +123,7 @@ namespace CommonImageModel
                 Path.Combine(_settings.OutputDirectory, GetOutputArgument())
             );
         }
-        
+
         private string GetOutputVideoCodecArgument()
         {
             switch (_settings.OutputFormat)
@@ -131,12 +131,12 @@ namespace CommonImageModel
                 case FFMPEGOutputFormat.PNG:
                     return "-codec:v png";
                 case FFMPEGOutputFormat.Y4M:
-                    return "-f yuv4mpegpipe -pix_fmt yuv420p";
+                    return "-f yuv4mpegpipe -pix_fmt yuv444p";
                 default:
                     throw new Exception("Unknown output format");
             }
         }
-        
+
         private string GetOutputArgument()
         {
             string rootFileName = Path.GetFileNameWithoutExtension(_settings.TargetMediaFile);

@@ -67,12 +67,11 @@ namespace CommonImageModel.Y4M
                 var videoFrames = new List<VideoFrame>();
                 do
                 {
-                    var videoFrameParser = new VideoFrameParser(fileHeader.Value);
-                    parsedVideoFrame = videoFrameParser.TryParseVideoFrame(stream);
-                    if (parsedVideoFrame.IsSomething())
+                    parsedVideoFrame = new VideoFrameParser(fileHeader.Value).TryParseVideoFrame(stream);
+                    parsedVideoFrame.Apply(videoFrame =>
                     {
                         videoFrames.Add(parsedVideoFrame.Value);
-                    }
+                    });
                 } while (parsedVideoFrame.IsSomething());
 
                 if (videoFrames.Any())

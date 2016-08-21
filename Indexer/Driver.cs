@@ -19,14 +19,12 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using CommonImageModel;
 using CommandLine;
+using CommonImageModel;
 using Functional.Maybe;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CommonImageModel.Y4M;
-using System.Drawing;
 
 namespace Indexer
 {
@@ -54,27 +52,6 @@ namespace Indexer
     {
         public static void Main(string[] args)
         {
-            if (true)
-            {
-                var videoFileParser = new VideoFileParser(@"D:\BENCH\raw_output.y4m");
-                Maybe<VideoFile> videoFile = videoFileParser.TryParseVideoFile();
-                if (videoFile.IsSomething())
-                {
-                    VideoFile m = videoFile.Value;
-                    var bitmap = new Bitmap(m.Header.Width, m.Header.Height);
-                    VideoFrame firstFrame = m.Frames.First();
-                    for (int row = 0; row < m.Header.Height; row++)
-                    {
-                        for (int col = 0; col < m.Header.Width; col++)
-                        {
-                            bitmap.SetPixel(col, row, firstFrame.Frame[row][col]);
-                        }
-                    }
-
-                    bitmap.Save(@"D:\BENCH\raw_output_420_to_444.png");
-                    bitmap.Dispose();
-                }
-            }
             Parser.Default.ParseArguments<SearchCommandVerb, IndexCommandVerb>(args)
                 .WithParsed<SearchCommandVerb>(search =>
                 {
@@ -101,12 +78,12 @@ namespace Indexer
                 .WithParsed<IndexCommandVerb>(index =>
                 {
                     var database = new IndexDatabase(index.IndexFile);
-                    IEnumerable<IndexEntry> indexEntries = Indexer.IndexVideoAsync(index.VideoFile).Result;
-                    database.QueueAddEntries(indexEntries);
+                    Indexer.IndexVideoAsync(index.VideoFile, database).Wait();
                     database.Flush();
                 })
                 .WithNotParsed(errors =>
                 {
+                    Console.Error.WriteLine("Could not parse arguments");
                 });
         }
     }

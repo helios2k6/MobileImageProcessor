@@ -50,6 +50,7 @@
     <Compile Include="FFMPEGOutputFormat.cs" />
     <Compile Include="FFMPEGProcess.cs" />
     <Compile Include="FFMPEGProcessSettings.cs" />
+    <Compile Include="IFingerPrintable.cs" />
     <Compile Include="Ratio.cs" />
     <Compile Include="ImageFingerPrint.cs" />
     <Compile Include="ImageFingerPrinter.cs" />

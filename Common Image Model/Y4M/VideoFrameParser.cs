@@ -80,10 +80,10 @@ namespace CommonImageModel.Y4M
                                                )
                                                select new VideoFrame(frameHeader, colorMatrix);
 
-                if (videoFrame.IsSomething())
+                videoFrame.Apply(_ =>
                 {
                     rewindGuard.DoNotRewind();
-                }
+                });
 
                 return videoFrame;
             }

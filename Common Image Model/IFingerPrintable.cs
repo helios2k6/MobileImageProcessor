@@ -19,63 +19,31 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
 using System.Drawing;
 
-namespace CommonImageModel.Y4M
+namespace CommonImageModel
 {
     /// <summary>
-    /// Represents a single frame of video
+    /// An object that can be fingerprinted by the ImageFingerPrinter
     /// </summary>
-    public sealed class VideoFrame : IFingerPrintable
+    public interface IFingerPrintable
     {
-        #region public properties
         /// <summary>
-        /// The header for this frame
+        /// The width of the image
         /// </summary>
-        public Header Header { get; }
+        int Width { get; }
 
         /// <summary>
-        /// The color pixels of the frame
+        /// The height of the image
         /// </summary>
-        public Color[][] Frame { get; }
+        int Height { get; }
 
         /// <summary>
-        /// The width of the frame
+        /// Get a specific pixel from the image
         /// </summary>
-        public int Width
-        {
-            get { return Header.Width; }
-        }
-
-        /// <summary>
-        /// The height of the frame
-        /// </summary>
-        public int Height
-        {
-            get { return Header.Height; }
-        }
-        #endregion
-
-        #region ctor
-        /// <summary>
-        /// Construct a new VideoFrame
-        /// </summary>
-        /// <param name="header">The frame header</param>
-        /// <param name="frame">The actual color matrix</param>
-        public VideoFrame(Header header, Color[][] frame)
-        {
-            Header = header;
-            Frame = frame;
-        }
-        #endregion
-
-        #region public function
-        public Color GetPixel(int x, int y)
-        {
-            // y == row, x == col
-            return Frame[y][x];
-        }
-        #endregion
+        /// <param name="x">The x-coordinate</param>
+        /// <param name="y">The y-coordinate</param>
+        /// <returns>The color at the coordinate</returns>
+        Color GetPixel(int x, int y);
     }
 }

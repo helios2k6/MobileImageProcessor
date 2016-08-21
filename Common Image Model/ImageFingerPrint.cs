@@ -160,14 +160,14 @@ namespace CommonImageModel
         public bool IsSimilarTo(ImageFingerPrint other)
         {
             return TopLeft.IsSimilarTo(other.TopLeft) &&
-            TopRight.IsSimilarTo(other.TopRight) &&
-            Center.IsSimilarTo(other.Center) &&
-            BottomLeft.IsSimilarTo(other.BottomLeft) &&
-            BottomRight.IsSimilarTo(other.BottomRight) &&
-            FocusSquareTopLeft.IsSimilarTo(other.FocusSquareTopLeft) &&
-            FocusSquareTopRight.IsSimilarTo(other.FocusSquareTopRight) &&
-            FocusSquareBottomLeft.IsSimilarTo(other.FocusSquareBottomLeft) &&
-            FocusSquareBottomRight.IsSimilarTo(other.FocusSquareBottomRight);
+                TopRight.IsSimilarTo(other.TopRight) &&
+                Center.IsSimilarTo(other.Center) &&
+                BottomLeft.IsSimilarTo(other.BottomLeft) &&
+                BottomRight.IsSimilarTo(other.BottomRight) &&
+                FocusSquareTopLeft.IsSimilarTo(other.FocusSquareTopLeft) &&
+                FocusSquareTopRight.IsSimilarTo(other.FocusSquareTopRight) &&
+                FocusSquareBottomLeft.IsSimilarTo(other.FocusSquareBottomLeft) &&
+                FocusSquareBottomRight.IsSimilarTo(other.FocusSquareBottomRight);
         }
     }
 }

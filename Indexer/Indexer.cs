@@ -21,12 +21,9 @@
 
 using CommonImageModel;
 using CommonImageModel.Y4M;
-using Functional.Maybe;
 using Indexer.Media;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Indexer
@@ -34,7 +31,7 @@ namespace Indexer
     internal static class Indexer
     {
         #region private static fields
-        private static readonly TimeSpan PlaybackDuration = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan PlaybackDuration = TimeSpan.FromSeconds(7);
         #endregion
 
         #region public methods
@@ -57,17 +54,9 @@ namespace Indexer
         private static void IndexEntries(string videoFile, MediaInfo info, IndexDatabase database)
         {
             TimeSpan totalDuration = info.GetDuration();
-            foreach (TimeSpan startTime in GenerateStartTimeSpans(totalDuration))
-            {
-                IndexEntriesAtIndex(videoFile, startTime, info.GetFramerate(), totalDuration, database);
-            }
-        }
-
-        private static IEnumerable<TimeSpan> GenerateStartTimeSpans(TimeSpan totalDuration)
-        {
             for (var startTime = TimeSpan.FromSeconds(0); startTime < totalDuration; startTime += PlaybackDuration)
             {
-                yield return startTime;
+                IndexEntriesAtIndex(videoFile, startTime, info.GetFramerate(), totalDuration, database);
             }
         }
 
@@ -80,12 +69,12 @@ namespace Indexer
         )
         {
             string outputDirectory = Path.GetRandomFileName();
-            Ratio halfFramerate = new Ratio(framerate.Numerator, framerate.Denominator * 2);
+            Ratio fullFramerate = new Ratio(framerate.Numerator, framerate.Denominator);
             var ffmpegProcessSettings = new FFMPEGProcessSettings(
                 videoFile,
                 outputDirectory,
                 startTime,
-                CalculateFramesToOutputFromFramerate(startTime, halfFramerate, totalDuration),
+                CalculateFramesToOutputFromFramerate(startTime, fullFramerate, totalDuration),
                 framerate,
                 FFMPEGOutputFormat.Y4M
             );
@@ -116,7 +105,7 @@ namespace Indexer
             {
                 new VideoFileParser(file).TryParseVideoFile().Apply(videoFile =>
                 {
-                    foreach (VideoFrame frame in videoFile.Frames)
+                    Parallel.ForEach(videoFile.Frames, frame =>
                     {
                         database.QueueAddEntry(new IndexEntry
                         {
@@ -125,7 +114,7 @@ namespace Indexer
                             EndTime = startTime + PlaybackDuration,
                             FrameHash = ImageFingerPrinter.CalculateFingerPrint(frame),
                         });
-                    }
+                    });
                 });
             }
         }

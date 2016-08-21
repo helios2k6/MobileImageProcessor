@@ -55,24 +55,15 @@ namespace Indexer
             Parser.Default.ParseArguments<SearchCommandVerb, IndexCommandVerb>(args)
                 .WithParsed<SearchCommandVerb>(search =>
                 {
-                    var database = new IndexDatabase(search.IndexFile);
-                    Maybe<IEnumerable<IndexEntry>> queryResultMaybe =
-                        from fingerPrint in ImageFingerPrinter.TryCalculateFingerPrint(search.PictureFile)
-                        from queryResult in database.TryFindEntries(fingerPrint)
-                        select queryResult;
-
-                    if (queryResultMaybe.HasValue)
+                    Maybe<ImageFingerPrint> fingerPrintMaybe = ImageFingerPrinter.TryCalculateFingerPrint(search.PictureFile);
+                    if (fingerPrintMaybe.IsSomething())
                     {
-                        IEnumerable<IndexEntry> queryResults = queryResultMaybe.Value.ToList();
-                        Console.Error.WriteLine(string.Format("{0} Result(s) Found:", queryResults.Count()));
+                        var database = new IndexDatabase(search.IndexFile);
+                        IEnumerable<IndexEntry> queryResults = database.TryFindEntries(fingerPrintMaybe.Value);
                         foreach (IndexEntry entry in queryResults)
                         {
                             Console.Error.WriteLine(string.Format("{0} @ {1}", entry.VideoFile, entry.StartTime));
                         }
-                    }
-                    else
-                    {
-                        Console.Error.WriteLine("No results found.");
                     }
                 })
                 .WithParsed<IndexCommandVerb>(index =>

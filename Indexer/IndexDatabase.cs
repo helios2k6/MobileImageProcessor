@@ -23,8 +23,10 @@ using CommonImageModel;
 using Functional.Maybe;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Indexer
 {
@@ -35,7 +37,7 @@ namespace Indexer
     internal sealed class IndexDatabase
     {
         private readonly string _pathToIndexFile;
-        private readonly List<IndexEntry> _queuedIndexEntriesForAddition;
+        private readonly ConcurrentQueue<IndexEntry> _queuedIndexEntriesForAddition;
 
         private IndexEntries _indexEntries;
         private Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>> _hashToEntriesMap;
@@ -44,7 +46,7 @@ namespace Indexer
         {
             _hashToEntriesMap =
                 new Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>>(IndexAllEntries);
-            _queuedIndexEntriesForAddition = new List<IndexEntry>();
+            _queuedIndexEntriesForAddition = new ConcurrentQueue<IndexEntry>();
         }
 
         /// <summary>
@@ -69,15 +71,13 @@ namespace Indexer
         /// Attempts to find the set of entries that match the given fingerprint
         /// </summary>
         /// <param name="fingerPrint">The image fingerprint to look for</param>
-        public Maybe<IEnumerable<IndexEntry>> TryFindEntries(ImageFingerPrint fingerPrint)
+        public IEnumerable<IndexEntry> TryFindEntries(ImageFingerPrint fingerPrint)
         {
-            ICollection<IndexEntry> bucket;
-            if (_hashToEntriesMap.Value.TryGetValue(fingerPrint, out bucket))
-            {
-                return bucket.ToMaybe<IEnumerable<IndexEntry>>();
-            }
-
-            return Maybe<IEnumerable<IndexEntry>>.Nothing;
+            // TODO: Develop locality-based hashing data-structure
+            return from kvp in _hashToEntriesMap.Value
+                   where kvp.Key.IsSimilarTo(fingerPrint)
+                   from entry in kvp.Value
+                   select entry;
         }
 
         /// <summary>
@@ -86,29 +86,17 @@ namespace Indexer
         /// </summary>
         public void QueueAddEntry(IndexEntry entry)
         {
-            _queuedIndexEntriesForAddition.Add(entry);
+            _queuedIndexEntriesForAddition.Enqueue(entry);
         }
-        
-        /// <summary>
-        /// Queue an IEnumerable{IndexEntry} to be added to the database. In order to completely
-        /// serialize the entries to disk, you must call Flush()
-        /// </summary>
-        public void QueueAddEntries(IEnumerable<IndexEntry> entries)
-        {
-            _queuedIndexEntriesForAddition.AddRange(entries);
-        }
-        
+
         /// <summary>
         /// Flush any queued entries for addition to disk
         /// </summary>
         public void Flush()
         {
-            var freshEntries = new List<IndexEntry>(_indexEntries.Entries);
-            freshEntries.AddRange(_queuedIndexEntriesForAddition);
-
             var updatedIndexEntriesObject = new IndexEntries
             {
-                Entries = freshEntries.ToArray(),
+                Entries = _queuedIndexEntriesForAddition.ToArray(),
             };
 
             var serializedEntriesFile = JsonConvert.SerializeObject(updatedIndexEntriesObject);
@@ -120,8 +108,17 @@ namespace Indexer
             }
 
             _indexEntries = updatedIndexEntriesObject;
-            _queuedIndexEntriesForAddition.Clear();
+            ClearQueuedEntries();
             _hashToEntriesMap = new Lazy<IDictionary<ImageFingerPrint, ICollection<IndexEntry>>>(IndexAllEntries);
+        }
+
+        private void ClearQueuedEntries()
+        {
+            IndexEntry _;
+            while (_queuedIndexEntriesForAddition.TryDequeue(out _))
+            {
+                // Do nothing
+            }
         }
 
         private static bool TrySerializeNewEntries(string pathToIndexFile, string jsonBlob)

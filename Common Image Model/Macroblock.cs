@@ -163,7 +163,7 @@ namespace CommonImageModel
 
         private int CalculateHashCode()
         {
-            int currentHashCode = 0;
+            int currentHashCode = 5953;
             foreach (var c in ColorGrid)
             {
                 currentHashCode = currentHashCode ^ c.GetHashCode();

@@ -99,15 +99,15 @@ namespace CommonImageModel
 
         public ImageFingerPrint(SerializationInfo info, StreamingContext context)
         {
-            TopLeft = (Macroblock)info.GetValue("TopLeft", GetType());
-            TopRight = (Macroblock)info.GetValue("TopRight", GetType());
-            Center = (Macroblock)info.GetValue("Center", GetType());
-            BottomLeft = (Macroblock)info.GetValue("BottomLeft", GetType());
-            BottomRight = (Macroblock)info.GetValue("BottomRight", GetType());
-            FocusSquareTopLeft = (Macroblock)info.GetValue("FocusSquareTopLeft", GetType());
-            FocusSquareTopRight = (Macroblock)info.GetValue("FocusSquareTopRight", GetType());
-            FocusSquareBottomLeft = (Macroblock)info.GetValue("FocusSquareBottomLeft", GetType());
-            FocusSquareBottomRight = (Macroblock)info.GetValue("FocusSquareBottomRight", GetType());
+            TopLeft = (Macroblock)info.GetValue("TopLeft", typeof(Macroblock));
+            TopRight = (Macroblock)info.GetValue("TopRight", typeof(Macroblock));
+            Center = (Macroblock)info.GetValue("Center", typeof(Macroblock));
+            BottomLeft = (Macroblock)info.GetValue("BottomLeft", typeof(Macroblock));
+            BottomRight = (Macroblock)info.GetValue("BottomRight", typeof(Macroblock));
+            FocusSquareTopLeft = (Macroblock)info.GetValue("FocusSquareTopLeft", typeof(Macroblock));
+            FocusSquareTopRight = (Macroblock)info.GetValue("FocusSquareTopRight", typeof(Macroblock));
+            FocusSquareBottomLeft = (Macroblock)info.GetValue("FocusSquareBottomLeft", typeof(Macroblock));
+            FocusSquareBottomRight = (Macroblock)info.GetValue("FocusSquareBottomRight", typeof(Macroblock));
         }
         #endregion
 

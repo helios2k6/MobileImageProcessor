@@ -70,7 +70,7 @@ namespace CommonImageModel.Y4M
                                                from redDiff in TryReadChromaPlane(rawStream)
                                                from frameHeader in frameHeaderMaybe
                                                from colorSpace in frameHeader.ColorSpace
-                                               from colorMatrix in ColorConverters.TryConvertToRGB(
+                                               from colorMatrix in ColorConverters.TryConvertFrameToRGB(
                                                    colorSpace,
                                                    lumaPlane,
                                                    blueDiff,
@@ -98,7 +98,7 @@ namespace CommonImageModel.Y4M
             {
                 lumaPlaneBuffer[row] = new byte[_header.Width];
                 int readBytes = rawStream.Read(lumaPlaneBuffer[row], 0, _header.Width);
-                if (readBytes != _header.Width * _header.Height)
+                if (readBytes != _header.Width)
                 {
                     return Maybe<byte[][]>.Nothing;
                 }
@@ -120,7 +120,7 @@ namespace CommonImageModel.Y4M
                 // 4:2:2
                 return ReadPlane(rawStream, _header.Width / 2, _header.Height);
             }
-            else if (Equals(DetectedColorSpace, ColorSpace.FourFourFour))
+            else if (Equals(DetectedColorSpace, ColorSpace.FourTwoZeroMpeg2))
             {
                 // 4:2:0
                 return ReadPlane(rawStream, _header.Width / 2, _header.Height / 2);

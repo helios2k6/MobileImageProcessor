@@ -33,7 +33,7 @@ namespace CommonImageModel.Y4M
     public static class ColorConverters
     {
         #region private classes
-        private sealed class YCrCbFrames
+        private sealed class YCrCbFrame
         {
             public byte[][] Luma { get; set; }
 
@@ -64,7 +64,7 @@ namespace CommonImageModel.Y4M
         /// shifted a half-pixel down).
         /// https://msdn.microsoft.com/en-us/library/windows/desktop/dd206750(v=vs.85).aspx
         /// </remarks>
-        public static Maybe<Color[][]> TryConvertToRGB(
+        public static Maybe<Color[][]> TryConvertFrameToRGB(
             ColorSpace sourceColorspace,
             byte[][] luma,
             byte[][] blueDifferential,
@@ -73,64 +73,111 @@ namespace CommonImageModel.Y4M
             int height
         )
         {
+            var inFrames = new YCrCbFrame
+            {
+                ColorSpace = sourceColorspace,
+                Luma = luma,
+                Cb = blueDifferential,
+                Cr = redDifferential,
+                Width = width,
+                Height = height,
+            };
             if (Equals(sourceColorspace, ColorSpace.FourFourFour))
             {
-                return TryConvertYCbCr444ToRGB(luma, blueDifferential, redDifferential, width, height);
+                return TryConvertYCbCr444ToRGB(inFrames);
             }
 
             if (Equals(sourceColorspace, ColorSpace.FourTwoTwo))
             {
-
+                return from horizontalUpconvert in TryConvert422To444(inFrames)
+                       select TryConvertYCbCr444ToRGB(horizontalUpconvert);
             }
 
-            if (Equals(sourceColorspace, ColorSpace.FourTwoZero))
+            if (Equals(sourceColorspace, ColorSpace.FourTwoZeroMpeg2))
             {
-
+                return from verticalUpconvert in TryConvert420To422(inFrames)
+                       from horizontalUpconvert in TryConvert422To444(verticalUpconvert)
+                       select TryConvertYCbCr444ToRGB(horizontalUpconvert);
             }
+
+            return Maybe<Color[][]>.Nothing;
         }
         #endregion
 
         #region private methods
-        private static bool TryConvert422To444(
-            YCrCbFrames inFrames,
-            YCrCbFrames outFullResolutionFrames
+        private static Maybe<YCrCbFrame> TryConvert422To444(
+            YCrCbFrame subsampledFrames
         )
         {
+            var outFrames = new YCrCbFrame
+            {
+                ColorSpace = ColorSpace.FourTwoTwo,
+                Luma = subsampledFrames.Luma,
+                Cb = new byte[subsampledFrames.Height][],
+                Cr = new byte[subsampledFrames.Height][],
+                Width = subsampledFrames.Width,
+                Height = subsampledFrames.Height,
+            };
 
+            UpsampleHorizontalResolution(subsampledFrames.Cb, outFrames.Cb);
+            UpsampleHorizontalResolution(subsampledFrames.Cr, outFrames.Cr);
+
+            return outFrames.ToMaybe();
         }
 
-        private static bool TryConvert420To422(
-            YCrCbFrames subsampledFrames,
-            YCrCbFrames outFullResolutionFrames
+        /// <summary>
+        /// Vertically upconvert from 4:2:0 to 4:2:2
+        /// </summary>
+        /// <param name="subsampledFrames"></param>
+        /// <returns></returns>
+        private static Maybe<YCrCbFrame> TryConvert420To422(
+            YCrCbFrame subsampledFrames
         )
         {
+            var outFrames = new YCrCbFrame
+            {
+                ColorSpace = ColorSpace.FourTwoTwo,
+                Luma = subsampledFrames.Luma,
+                Cb = new byte[subsampledFrames.Height][],
+                Cr = new byte[subsampledFrames.Height][],
+                Width = subsampledFrames.Width,
+                Height = subsampledFrames.Height,
+            };
 
+            // Initialize all chroma planes
+            int widthOfChromaRow = subsampledFrames.Cb[0].Length;
+            for (int row = 0; row < outFrames.Height; row++)
+            {
+                outFrames.Cb[row] = new byte[widthOfChromaRow];
+                outFrames.Cr[row] = new byte[widthOfChromaRow];
+            }
+
+            UpsampleVerticalResolution(subsampledFrames.Cb, outFrames.Cb);
+            UpsampleVerticalResolution(subsampledFrames.Cr, outFrames.Cr);
+
+            return outFrames.ToMaybe();
         }
 
         private static Maybe<Color[][]> TryConvertYCbCr444ToRGB(
-            byte[][] luma,
-            byte[][] upsampledBlueDifferential,
-            byte[][] upsampledRedDifferential,
-            int width,
-            int height
+            YCrCbFrame inFrame
         )
         {
             try
             {
-                Color[][] frame = new Color[height][];
-                for (int row = 0; row < height; row++)
+                Color[][] frame = new Color[inFrame.Height][];
+                for (int row = 0; row < inFrame.Height; row++)
                 {
-                    frame[row] = new Color[width];
-                    for (int col = 0; col < width; col++)
+                    frame[row] = new Color[inFrame.Width];
+                    for (int col = 0; col < inFrame.Width; col++)
                     {
-                        byte currentLuma = luma[row][col];
-                        byte currentCb = upsampledBlueDifferential[row][col];
-                        byte currentCr = upsampledRedDifferential[row][col];
+                        byte currentLuma = inFrame.Luma[row][col];
+                        byte currentCb = inFrame.Cb[row][col];
+                        byte currentCr = inFrame.Cr[row][col];
                         frame[row][col] = ConvertYUVToRGB(currentLuma, currentCb, currentCr);
                     }
                 }
 
-                if (frame.Length != height || frame[0].Length != width)
+                if (frame.Length != inFrame.Height || frame[0].Length != inFrame.Width)
                 {
                     return Maybe<Color[][]>.Nothing;
                 }
@@ -220,6 +267,11 @@ namespace CommonImageModel.Y4M
             if (chromaPlaneIndex == 0)
             {
                 return Clamp((byte)((9 * (chromaLine.ElementAt(0) + chromaLine.ElementAt(1)) - (chromaLine.ElementAt(0) + chromaLine.ElementAt(2)) + 8) >> 4));
+            }
+            // Check to see if we're right before the bottom edge; gotta special case this second-to-last line
+            else if (chromaPlaneIndex == lengthOfChromaLine - 2)
+            {
+                return Clamp((byte)((9 * (chromaLine.ElementAt(chromaPlaneIndex) + chromaLine.ElementAt(chromaPlaneIndex + 1)) - (chromaLine.ElementAt(chromaPlaneIndex - 1) + chromaLine.ElementAt(chromaPlaneIndex + 1)) + 8) >> 4));
             }
             // Check to see if we're at the bottom edge
             else if (chromaPlaneIndex == lengthOfChromaLine - 1)

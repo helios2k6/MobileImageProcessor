@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using CommonImageModel.Y4M;
+using System.Drawing;
 
 namespace Indexer
 {
@@ -55,8 +56,24 @@ namespace Indexer
         {
             if (true)
             {
-                var videoFileParser = new VideoFileParser(@"D:\TEST_BAY\raw_output.y4m");
+                var videoFileParser = new VideoFileParser(@"D:\BENCH\raw_output.y4m");
                 Maybe<VideoFile> videoFile = videoFileParser.TryParseVideoFile();
+                if (videoFile.IsSomething())
+                {
+                    VideoFile m = videoFile.Value;
+                    var bitmap = new Bitmap(m.Header.Width, m.Header.Height);
+                    VideoFrame firstFrame = m.Frames.First();
+                    for (int row = 0; row < m.Header.Height; row++)
+                    {
+                        for (int col = 0; col < m.Header.Width; col++)
+                        {
+                            bitmap.SetPixel(col, row, firstFrame.Frame[row][col]);
+                        }
+                    }
+
+                    bitmap.Save(@"D:\BENCH\raw_output_420_to_444.png");
+                    bitmap.Dispose();
+                }
             }
             Parser.Default.ParseArguments<SearchCommandVerb, IndexCommandVerb>(args)
                 .WithParsed<SearchCommandVerb>(search =>

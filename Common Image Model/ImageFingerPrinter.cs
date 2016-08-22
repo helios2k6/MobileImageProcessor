@@ -52,7 +52,7 @@ namespace CommonImageModel
         /// </summary>
         /// <param name="image">The LockBitImage</param>
         /// <returns>A FingerPrint representing this LockBitImage</returns>
-        public static ImageFingerPrint CalculateFingerPrint(IFingerPrintable image)
+        public static ImageFingerPrint CalculateFingerPrint(IImageFrame image)
         {
             var cropWindow = new Size(MACROBLOCK_LENGTH, MACROBLOCK_LENGTH);
 
@@ -80,7 +80,7 @@ namespace CommonImageModel
             );
         }
 
-        private static Macroblock GetMacroblock(IFingerPrintable image, Rectangle cropArea)
+        private static Macroblock GetMacroblock(IImageFrame image, Rectangle cropArea)
         {
             Color[,] colorGrid = new Color[cropArea.Width, cropArea.Height];
             int colorGridY = 0;

@@ -27,7 +27,7 @@ namespace CommonImageModel.Y4M
     /// <summary>
     /// Represents a single frame of video
     /// </summary>
-    public sealed class VideoFrame : IFingerPrintable
+    public sealed class VideoFrame : IImageFrame
     {
         #region public properties
         /// <summary>

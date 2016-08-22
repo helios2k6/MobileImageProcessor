@@ -61,12 +61,12 @@ namespace Indexer
         )
         {
             string outputDirectory = Path.GetRandomFileName();
-            Ratio halfFramerate = new Ratio(framerate.Numerator, framerate.Denominator * 2);
+            Ratio quarterFramerate = new Ratio(framerate.Numerator, framerate.Denominator * 4);
             var ffmpegProcessSettings = new FFMPEGProcessSettings(
                 videoFile,
                 outputDirectory,
                 startTime,
-                CalculateFramesToOutputFromFramerate(startTime, halfFramerate, totalDuration),
+                CalculateFramesToOutputFromFramerate(startTime, quarterFramerate, totalDuration),
                 framerate,
                 FFMPEGOutputFormat.Y4M
             );
@@ -97,18 +97,23 @@ namespace Indexer
             {
                 new VideoFileParser(file).TryParseVideoFile().Apply(videoFile =>
                 {
-                    Parallel.ForEach(videoFile.Frames, frame =>
+                    Parallel.ForEach(videoFile.Frames, (frame, _, frameNumber) =>
                     {
                         database.QueueAddEntry(new IndexEntry
                         {
                             VideoFile = originalFileName,
                             StartTime = startTime,
-                            EndTime = startTime + PlaybackDuration,
+                            EndTime = CalculateEndTime(startTime, videoFile.Header.Framerate, frameNumber),
                             FrameHash = ImageFingerPrinter.CalculateFingerPrint(frame),
                         });
                     });
                 });
             }
+        }
+
+        private static TimeSpan CalculateEndTime(TimeSpan startTime, Ratio frameRate, long frameNumber)
+        {
+            return startTime + TimeSpan.FromMilliseconds(1000.0 * (frameNumber / ((double)frameRate.Numerator)));
         }
 
         private static int CalculateFramesToOutputFromFramerate(TimeSpan index, Ratio framerate, TimeSpan totalDuration)

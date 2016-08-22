@@ -90,7 +90,7 @@ namespace Indexer
         public IEnumerable<IndexEntry> TryFindEntries(ImageFingerPrint fingerPrint)
         {
             // TODO: Develop locality-based hashing data-structure
-            return from kvp in _hashToEntriesMap.Value
+            return from kvp in _hashToEntriesMap.Value.AsParallel()
                    where kvp.Key.IsSimilarTo(fingerPrint)
                    from entry in kvp.Value
                    select entry;

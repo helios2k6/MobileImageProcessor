@@ -29,7 +29,7 @@ namespace CommonImageModel
     /// <summary>
     /// An Image object that allows you to read from it form multiple threads
     /// </summary>
-    public sealed class LockBitImage : IDisposable, IFingerPrintable
+    public sealed class LockBitImage : IDisposable, IImageFrame
     {
         private readonly Image _image;
         private readonly Bitmap _bitmap;

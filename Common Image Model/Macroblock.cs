@@ -34,8 +34,9 @@ namespace CommonImageModel
     public sealed class Macroblock : IEquatable<Macroblock>, ISerializable
     {
         #region private fields
+        private const double DISTANCE_THRESHOLD = 1500.0;
+
         private readonly Lazy<int> _hashCode;
-        private readonly Lazy<Color> _averageColor;
         #endregion
 
         #region public properties
@@ -69,7 +70,6 @@ namespace CommonImageModel
         public Macroblock()
         {
             _hashCode = new Lazy<int>(CalculateHashCode);
-            _averageColor = new Lazy<Color>(CalculateAverageColor);
         }
 
         /// <summary>
@@ -156,11 +156,37 @@ namespace CommonImageModel
                 return false;
             }
 
-            return AreColorsCloseEnough(_averageColor.Value, other._averageColor.Value);
+            return AreColorsCloseEnough(ColorGrid, other.ColorGrid);
         }
         #endregion
 
         #region private methods
+        private static bool AreColorsCloseEnough(Color[,] a, Color[,] b)
+        {
+            return CalculateDistanceBetweenColors(a, b) <= DISTANCE_THRESHOLD;
+        }
+
+        private static double CalculateDistanceBetweenColors(Color[,] a, Color[,] b)
+        {
+            double innerSum = 0.0;
+            for (int row = 0; row < a.GetLength(0); row++)
+            {
+                for (int col = 0; col < a.GetLength(1); col++)
+                {
+                    Color aColor = a[row, col];
+                    Color bColor = b[row, col];
+
+                    innerSum += (
+                        Math.Pow(bColor.R - aColor.R, 2) +
+                        Math.Pow(bColor.G - aColor.G, 2) +
+                        Math.Pow(bColor.B - aColor.B, 2)
+                    );
+                }
+            }
+
+            return Math.Sqrt(innerSum);
+        }
+
         private static bool CompareGrids(Color[,] a, Color[,] b)
         {
             int width = a.GetLength(0);
@@ -191,36 +217,6 @@ namespace CommonImageModel
             }
 
             return currentHashCode;
-        }
-
-        private static bool AreColorsCloseEnough(Color a, Color b)
-        {
-            int redDiff = Math.Abs(a.R - b.R);
-            int greenDiff = Math.Abs(a.G - b.G);
-            int blueDiff = Math.Abs(a.B - b.B);
-
-            return redDiff + greenDiff + blueDiff < 45;
-        }
-
-        private Color CalculateAverageColor()
-        {
-            int red, green, blue, runningCount;
-            red = green = blue = runningCount = 0;
-
-            foreach (var color in ColorGrid)
-            {
-                red += color.R;
-                green += color.G;
-                blue += color.B;
-
-                runningCount++;
-            }
-
-            int averageRed = (int)Math.Floor(red / (double)runningCount);
-            int averageGreen = (int)Math.Floor(green / (double)runningCount);
-            int averageBlue = (int)Math.Floor(blue / (double)runningCount);
-
-            return Color.FromArgb(averageRed, averageGreen, averageBlue);
         }
         #endregion
     }

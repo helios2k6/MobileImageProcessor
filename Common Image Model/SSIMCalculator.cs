@@ -233,7 +233,7 @@ namespace CommonImageModel
             );
         }
 
-        private static Grid ConvertToGrayscale(LockBitImage bitmap)
+        private static Grid ConvertToGrayscale(IImageFrame bitmap)
         {
             return Grid.Op(
                 (i, j) => ConvertColorToGrayscaleDouble(bitmap.GetPixel(i, j)),

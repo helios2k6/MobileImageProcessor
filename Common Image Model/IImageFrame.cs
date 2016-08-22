@@ -24,9 +24,9 @@ using System.Drawing;
 namespace CommonImageModel
 {
     /// <summary>
-    /// An object that can be fingerprinted by the ImageFingerPrinter
+    /// An object that reprsents an image frame
     /// </summary>
-    public interface IFingerPrintable
+    public interface IImageFrame
     {
         /// <summary>
         /// The width of the image

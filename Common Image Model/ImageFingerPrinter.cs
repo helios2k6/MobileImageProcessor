@@ -31,6 +31,8 @@ namespace CommonImageModel
     public static class ImageFingerPrinter
     {
         private const int MACROBLOCK_LENGTH = 16;
+        private const int FINGERPRINT_WIDTH = 128;
+        private const int FINGERPRINT_PASS1_WIDTH = 32;
 
         /// <summary>
         /// Attempts to calculate the fingerprint of the image by automatically loading the 
@@ -45,6 +47,33 @@ namespace CommonImageModel
                        () => CalculateFingerPrint(lockBitImage),
                        lockBitImage
                    );
+        }
+
+        public static Maybe<Image> TryResizeAndBlurImage(IImageFrame image)
+        {
+            // Copy image to bitmap
+            using (var bitmap = new Bitmap(image.Width, image.Height))
+            {
+                for (int row = 0; row < image.Height; row++)
+                {
+                    for (int col = 0; col < image.Height; col++)
+                    {
+                        bitmap.SetPixel(col, row, image.GetPixel(col, row));
+                    }
+                }
+                return
+                    from pass1Image in ImageTransformations.TryResizeImage(
+                        bitmap,
+                        FINGERPRINT_PASS1_WIDTH,
+                        (image.Height * FINGERPRINT_PASS1_WIDTH) / image.Width
+                    )
+                    from blurredImage in ImageTransformations.TryBlurImage(pass1Image)
+                    select ImageTransformations.TryResizeImage(
+                        blurredImage,
+                        FINGERPRINT_WIDTH, 
+                        (image.Height * FINGERPRINT_WIDTH) / image.Width
+                    );
+            }
         }
 
         /// <summary>

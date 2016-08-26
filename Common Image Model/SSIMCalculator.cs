@@ -215,12 +215,12 @@ namespace CommonImageModel
         }
 
         /// <summary>
-        /// Calculate the SSIM between two LockBitImages
+        /// Calculate the SSIM between two IImageFrames
         /// </summary>
         /// <param name="first">The first image</param>
         /// <param name="second">The second image</param>
-        /// <returns>The SSIM of two LockBitImages</returns>
-        public static double Compute(LockBitImage first, LockBitImage second)
+        /// <returns>The SSIM of two IImageFrames</returns>
+        public static double Compute(IImageFrame first, IImageFrame second)
         {
             if (first == null || second == null)
             {

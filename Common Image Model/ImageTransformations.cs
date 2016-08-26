@@ -33,6 +33,7 @@ namespace CommonImageModel
     public static class ImageTransformations
     {
         private const int PRECISION = 1000;
+        private const double GAUSSIAN_RADIUS_RANGE = 2.57;
 
         /// <summary>
         /// Resize an image to an arbitrary width and height
@@ -162,6 +163,53 @@ namespace CommonImageModel
         public static Maybe<Image> TryCropImage(Image image, Point point, Size size)
         {
             return WrapFuncInMaybe<Image>(() => CropImage(image, point, size));
+        }
+
+        public static Maybe<Image> TryFastGaussianBlur(Image image, int radius)
+        {
+            return Maybe<Image>.Nothing;
+        }
+
+        public static Maybe<Image> TrySlowGaussianBlur(Image image, int radius)
+        {
+            using(var lockbitImage = new LockBitImage(image))
+            {
+                int radiusEffectiveRange = (int)Math.Ceiling(radius * GAUSSIAN_RADIUS_RANGE);
+                // Go through every single pixel
+                for (int row = 0; row < image.Height; row++)
+                {
+                    for (int col = 0; col < image.Width; col++) 
+                    {
+                        // Calculate the weighted sum of all of the neighboring pixels, 
+                        // governed by the radiusEffectiveRange variable above, and take
+                        // the average value and then set it to the value of whatever
+                        // pixel is at (row, col) 
+                        int neighborhoodPixelWeightedSum = 0, sumOfGaussianValues = 0;
+                        for (
+                            int neighboringPixelRow = row - radiusEffectiveRange;
+                            neighboringPixelRow <= row + radiusEffectiveRange;
+                            neighboringPixelRow++
+                        )
+                        {
+                            for (
+                                int neighboringPixelCol = col - radiusEffectiveRange;
+                                neighboringPixelCol <= col + radiusEffectiveRange;
+                                neighboringPixelCol++
+                            )
+                            {
+                                // This is used so we don't try to get a pixel that's outside the boundaries
+                                // of the image (e.g. (-1, 0))
+                                int chosenRow = Math.Min(image.Height - 1, Math.Max(0, neighboringPixelRow));
+                                int chosenCol = Math.Min(image.Width - 1, Math.Max(0, neighboringPixelCol));
+
+                                // The Gaussian Formula is: (e ^ ((x^2 + y^2) / 2 * radius^2)) / (2 * PI * radius^2)
+                                // Here, x = col and y = row
+                                double exponent = 
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private static Maybe<T> WrapFuncInMaybe<T>(Func<T> func)

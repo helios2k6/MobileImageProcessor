@@ -106,6 +106,11 @@ namespace CommonImageModel
             return ResizeImage(image, newWidth, newHeight);
         }
 
+        public static Maybe<Image> TryBlurImage(Image image)
+        {
+            return Maybe<Image>.Nothing;
+        }
+
         /// <summary>
         /// Crop an Image given the upper left-hand corner of the viewport
         /// and the width and height of the viewport rectangle

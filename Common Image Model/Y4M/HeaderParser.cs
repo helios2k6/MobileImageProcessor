@@ -42,16 +42,6 @@ namespace CommonImageModel.Y4M
         private const char InterlaceParameter = 'I';
         private const char PixelAspectRatioParameter = 'A';
         private const char ColorSpaceParameter = 'C';
-        private static readonly ICollection<char> ParameterSet = new HashSet<char>
-        {
-            CommentParameter,
-            WidthParameter,
-            HeightParemter,
-            FrameRateParameter,
-            InterlaceParameter,
-            PixelAspectRatioParameter,
-            ColorSpaceParameter,
-        };
         #endregion
 
         #region public properties

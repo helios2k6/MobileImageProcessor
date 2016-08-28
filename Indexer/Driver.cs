@@ -26,6 +26,8 @@ using System;
 using System.Collections.Generic;
 using static Indexer.IndexDatabase;
 
+using System.Drawing;
+
 namespace Indexer
 {
     [Verb("index", HelpText = "Index a video's frames")]

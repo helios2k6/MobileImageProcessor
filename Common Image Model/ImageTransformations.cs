@@ -108,7 +108,7 @@ namespace CommonImageModel
 
         public static Maybe<Image> TryBlurImage(Image image)
         {
-            return Maybe<Image>.Nothing;
+            return TrySlowGaussianBlur(image, 5);
         }
 
         /// <summary>
@@ -170,51 +170,89 @@ namespace CommonImageModel
             return WrapFuncInMaybe<Image>(() => CropImage(image, point, size));
         }
 
-        public static Maybe<Image> TryFastGaussianBlur(Image image, int radius)
+        private static Maybe<Image> TryFastGaussianBlur(Image image, int radius)
         {
             return Maybe<Image>.Nothing;
         }
 
-        public static Maybe<Image> TrySlowGaussianBlur(Image image, int radius)
+        private static Maybe<Image> TrySlowGaussianBlur(Image image, int radius)
         {
-            using(var lockbitImage = new LockBitImage(image))
+            try
             {
-                int radiusEffectiveRange = (int)Math.Ceiling(radius * GAUSSIAN_RADIUS_RANGE);
-                // Go through every single pixel
-                for (int row = 0; row < image.Height; row++)
+                // Output color matrix
+                Bitmap outputBitmap = new Bitmap(image.Width, image.Height);
+
+                // Setting up some constants up here
+                double exponentDenominator = 2 * radius * radius;
+                double gaussianWeightDenominator = exponentDenominator * Math.PI;
+                using (var lockbitImage = new LockBitImage(image))
                 {
-                    for (int col = 0; col < image.Width; col++) 
+                    int radiusEffectiveRange = (int)Math.Ceiling(radius * GAUSSIAN_RADIUS_RANGE);
+                    // Go through every single pixel
+                    for (int row = 0; row < image.Height; row++)
                     {
-                        // Calculate the weighted sum of all of the neighboring pixels, 
-                        // governed by the radiusEffectiveRange variable above, and take
-                        // the average value and then set it to the value of whatever
-                        // pixel is at (row, col) 
-                        int neighborhoodPixelWeightedSum = 0, sumOfGaussianValues = 0;
-                        for (
-                            int neighboringPixelRow = row - radiusEffectiveRange;
-                            neighboringPixelRow <= row + radiusEffectiveRange;
-                            neighboringPixelRow++
-                        )
+                        for (int col = 0; col < image.Width; col++) 
                         {
+                            // Calculate the weighted sum of all of the neighboring pixels, 
+                            // governed by the radiusEffectiveRange variable above, and take
+                            // the average value and then set it to the value of whatever
+                            // pixel is at (row, col) 
+                            double neighborhoodRedPixelWeightedSum = 0,
+                                neighborhoodGreenPixelWeightedSum = 0,
+                                neighborhoodBluePixelWeightedSum = 0,
+                                sumOfGaussianValues = 0;
+
                             for (
-                                int neighboringPixelCol = col - radiusEffectiveRange;
-                                neighboringPixelCol <= col + radiusEffectiveRange;
-                                neighboringPixelCol++
+                                int neighboringPixelRow = row - radiusEffectiveRange;
+                                neighboringPixelRow <= row + radiusEffectiveRange;
+                                neighboringPixelRow++
                             )
                             {
-                                // This is used so we don't try to get a pixel that's outside the boundaries
-                                // of the image (e.g. (-1, 0))
-                                int chosenRow = Math.Min(image.Height - 1, Math.Max(0, neighboringPixelRow));
-                                int chosenCol = Math.Min(image.Width - 1, Math.Max(0, neighboringPixelCol));
+                                for (
+                                    int neighboringPixelCol = col - radiusEffectiveRange;
+                                    neighboringPixelCol <= col + radiusEffectiveRange;
+                                    neighboringPixelCol++
+                                )
+                                {
+                                    // This is used so we don't try to get a pixel that's outside the boundaries
+                                    // of the image (e.g. (-1, 0))
+                                    int chosenRow = Math.Min(image.Height - 1, Math.Max(0, neighboringPixelRow));
+                                    int chosenCol = Math.Min(image.Width - 1, Math.Max(0, neighboringPixelCol));
 
-                                // The Gaussian Formula is: (e ^ ((x^2 + y^2) / 2 * radius^2)) / (2 * PI * radius^2)
-                                // Here, x = col and y = row
-                                double exponent = 
+                                    // The Gaussian Formula is: (e ^ ((x^2 + y^2) / 2 * radius^2)) / (2 * PI * radius^2)
+                                    // Here, x = col and y = row. We have to subtract the neighboringPixelCol/Row from
+                                    // col/row so that we can translate the coordinate back to the origin. This is because
+                                    // the gaussian function is expressed as a function from the distance from the origin
+                                    double exponentNumerator = ((neighboringPixelCol - col) * (neighboringPixelCol - col)) + 
+                                        ((neighboringPixelRow - row) * (neighboringPixelRow - row));
+                                    
+                                    double gaussianWeight = Math.Exp(-exponentNumerator / exponentDenominator)
+                                        / gaussianWeightDenominator;
+                                    
+                                    Color currentPixel = lockbitImage.GetPixel(chosenCol, chosenRow);
+                                    neighborhoodRedPixelWeightedSum += currentPixel.R * gaussianWeight;
+                                    neighborhoodGreenPixelWeightedSum += currentPixel.G * gaussianWeight;
+                                    neighborhoodBluePixelWeightedSum += currentPixel.B * gaussianWeight;
+
+                                    sumOfGaussianValues += gaussianWeight;
+                                }
                             }
+                            outputBitmap.SetPixel(col, row, Color.FromArgb(
+                                (int)Math.Round(neighborhoodRedPixelWeightedSum / sumOfGaussianValues),
+                                (int)Math.Round(neighborhoodGreenPixelWeightedSum / sumOfGaussianValues),
+                                (int)Math.Round(neighborhoodBluePixelWeightedSum / sumOfGaussianValues)
+                            ));
                         }
                     }
                 }
+
+                return outputBitmap.ToMaybe<Image>();
             }
+            catch (Exception)
+            {
+            }
+
+            return Maybe<Image>.Nothing;
         }
 
         private static Maybe<T> WrapFuncInMaybe<T>(Func<T> func)

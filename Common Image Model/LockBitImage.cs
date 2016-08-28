@@ -57,8 +57,12 @@ namespace CommonImageModel
                 _image.PixelFormat
             );
 
-            _bitDepth = Image.GetPixelFormatSize(_image.PixelFormat) / 8;
-            _buffer = new byte[_bitmapData.Width * _bitmapData.Height * _bitDepth];
+            _bitDepth = Image.GetPixelFormatSize(_image.PixelFormat);
+            if (_bitDepth != 8 && _bitDepth != 24 && _bitDepth != 32)
+            {
+                throw new ArgumentException("Only 8, 24, and 32 bit pixels are supported.");
+            }
+            _buffer = new byte[_bitmapData.Width * _bitmapData.Height * (_bitDepth / 8)];
             _width = _image.Width;
             _height = _image.Height;
 
@@ -73,12 +77,40 @@ namespace CommonImageModel
         /// <returns>A color representing this pixel</returns>
         public Color GetPixel(int x, int y)
         {
-            var offset = (y * _bitmapData.Width + x) * _bitDepth;
-            var red = _buffer[offset];
-            var green = _buffer[offset + 1];
-            var blue = _buffer[offset + 2];
+            Color clr = Color.Empty;
 
-            return Color.FromArgb(red, green, blue);
+            // Get color components count
+            int cCount = _bitDepth / 8;
+
+            // Get start index of the specified pixel
+            int offset = ((y * Width) + x) * cCount;
+
+            if (offset > _buffer.Length - cCount)
+            {
+                throw new IndexOutOfRangeException();
+            }
+
+            if (_bitDepth == 32) // For 32 bpp get Red, Green, Blue and Alpha
+            {
+                byte b = _buffer[offset];
+                byte g = _buffer[offset + 1];
+                byte r = _buffer[offset + 2];
+                byte a = _buffer[offset + 3]; // a
+                clr = Color.FromArgb(a, r, g, b);
+            }
+            if (_bitDepth == 24) // For 24 bpp get Red, Green and Blue
+            {
+                byte b = _buffer[offset];
+                byte g = _buffer[offset + 1];
+                byte r = _buffer[offset + 2];
+                clr = Color.FromArgb(r, g, b);
+            }
+            if (_bitDepth == 8)  // For 8 bpp get color value (Red, Green and Blue values are the same)
+            {
+                byte c = _buffer[offset];
+                clr = Color.FromArgb(c, c, c);
+            }
+            return clr;
         }
 
         /// <summary>

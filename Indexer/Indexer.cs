@@ -21,17 +21,17 @@
 
 using CommonImageModel;
 using CommonImageModel.Y4M;
+using Functional.Maybe;
 using Indexer.Media;
 using System;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Indexer
 {
     internal static class Indexer
     {
         #region private static fields
-        private static readonly TimeSpan PlaybackDuration = TimeSpan.FromSeconds(15);
+        private static readonly TimeSpan PlaybackDuration = TimeSpan.FromSeconds(180);
         #endregion
 
         #region public methods
@@ -79,7 +79,7 @@ namespace Indexer
             using (var ffmpegProcess = new FFMPEGProcess(ffmpegProcessSettings))
             {
                 ffmpegProcess.Execute();
-                IndexFilesInDirectory(videoFile, outputDirectory, startTime, database);
+                IndexFilesInDirectory(videoFile, outputDirectory, startTime, database, quarterFramerate);
                 try
                 {
                     Directory.Delete(outputDirectory, true);
@@ -91,35 +91,44 @@ namespace Indexer
             }
         }
 
-        private static void IndexFilesInDirectory(string originalFileName, string directory, TimeSpan startTime, IndexDatabase database)
+        private static void IndexFilesInDirectory(string originalFileName, string directory, TimeSpan startTime, IndexDatabase database, Ratio frameRate)
         {
             foreach (string file in Directory.EnumerateFiles(directory, "*.y4m"))
             {
-                new VideoFileParser(file).TryParseVideoFile().Apply(videoFile =>
+                using (var parser = new VideoFileParser(file))
                 {
-                    Parallel.ForEach(videoFile.Frames, (frame, _, frameNumber) =>
+                    Maybe<VideoFile> videoFileMaybe = parser.TryParseVideoFile();
+                    if (videoFileMaybe.IsNothing())
+                    {
+                        return;
+                    }
+
+                    VideoFile videoFile = videoFileMaybe.Value;
+                    int frameNumber = 0;
+                    foreach (VideoFrame frame in videoFile.Frames)
                     {
                         database.QueueAddEntry(new IndexEntry
                         {
                             VideoFile = originalFileName,
                             StartTime = startTime,
-                            EndTime = CalculateEndTime(startTime, videoFile.Header.Framerate, frameNumber),
+                            EndTime = CalculateEndTime(startTime, frameRate, frameNumber),
                             FrameHash = ImageFingerPrinter.CalculateFingerPrint(frame),
                         });
-                    });
-                });
+                        frameNumber++;
+                    }
+                }
             }
         }
 
         private static TimeSpan CalculateEndTime(TimeSpan startTime, Ratio frameRate, long frameNumber)
         {
-            return startTime + TimeSpan.FromMilliseconds(1000.0 * (frameNumber / ((double)frameRate.Numerator)));
+            return startTime + TimeSpan.FromSeconds((frameRate.Denominator / (double)frameRate.Numerator) * frameNumber);
         }
 
         private static int CalculateFramesToOutputFromFramerate(TimeSpan index, Ratio framerate, TimeSpan totalDuration)
         {
             int numeratorMultiplier = index + PlaybackDuration < totalDuration
-                ? PlaybackDuration.Seconds
+                ? (int)PlaybackDuration.TotalSeconds
                 : (totalDuration - index).Seconds;
 
             return (framerate.Numerator * numeratorMultiplier) / framerate.Denominator;

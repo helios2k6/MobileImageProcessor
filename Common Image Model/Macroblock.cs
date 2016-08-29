@@ -34,7 +34,7 @@ namespace CommonImageModel
     public sealed class Macroblock : IEquatable<Macroblock>, ISerializable
     {
         #region private fields
-        private const double DISTANCE_THRESHOLD = 1500.0;
+        private const double DISTANCE_THRESHOLD = 150.0;
 
         private readonly Lazy<int> _hashCode;
         #endregion

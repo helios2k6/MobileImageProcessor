@@ -26,8 +26,6 @@ using System;
 using System.Collections.Generic;
 using static Indexer.IndexDatabase;
 
-using System.Drawing;
-
 namespace Indexer
 {
     [Verb("index", HelpText = "Index a video's frames")]
@@ -72,7 +70,7 @@ namespace Indexer
                         IEnumerable<IndexEntry> queryResults = database.TryFindEntries(fingerPrintMaybe.Value);
                         foreach (IndexEntry entry in queryResults)
                         {
-                            Console.Error.WriteLine(string.Format("{0} @ {1}", entry.VideoFile, entry.StartTime));
+                            Console.Error.WriteLine(string.Format("{0} ({1}, {2}) ", entry.VideoFile, entry.StartTime, entry.EndTime));
                         }
                     }
                 })

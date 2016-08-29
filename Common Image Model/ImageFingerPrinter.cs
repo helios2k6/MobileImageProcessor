@@ -30,7 +30,7 @@ namespace CommonImageModel
     /// </summary>
     public static class ImageFingerPrinter
     {
-        private const int MACROBLOCK_LENGTH = 16;
+        private const int MACROBLOCK_LENGTH = 4;
         private const int FINGERPRINT_WIDTH = 128;
         private const int FINGERPRINT_PASS1_WIDTH = 32;
 

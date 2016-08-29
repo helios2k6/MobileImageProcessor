@@ -23,16 +23,21 @@ using Functional.Maybe;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System;
 
 namespace CommonImageModel.Y4M
 {
     /// <summary>
     /// Parses a video file from a bitstream
     /// </summary>
-    public sealed class VideoFileParser
+    public sealed class VideoFileParser : IDisposable
     {
         #region private fields
         private readonly string _videoFilePath;
+        private readonly Stream _fileStream;
+
+        private bool _hasRun;
+        private bool _disposedValue; 
         #endregion
 
         #region ctor
@@ -43,6 +48,9 @@ namespace CommonImageModel.Y4M
         public VideoFileParser(string videoFilePath)
         {
             _videoFilePath = videoFilePath;
+            _fileStream = new FileStream(_videoFilePath, FileMode.Open, FileAccess.Read);
+            _hasRun = false;
+            _disposedValue = false;
         }
         #endregion
 
@@ -53,35 +61,54 @@ namespace CommonImageModel.Y4M
         /// <returns>A newly parsed video file or None</returns>
         public Maybe<VideoFile> TryParseVideoFile()
         {
-            using (var stream = new FileStream(_videoFilePath, FileMode.Open, FileAccess.Read))
+            if (_hasRun)
             {
-                // First read file header
-                Maybe<Header> fileHeader = FileHeaderParser.Instance.TryParseHeader(stream);
-                if (fileHeader.IsNothing())
-                {
-                    return Maybe<VideoFile>.Nothing;
-                }
+                throw new InvalidOperationException("This video parser has been executed once already");
+            }
+            _hasRun = true;
 
-                // Second read the frames
-                Maybe<VideoFrame> parsedVideoFrame = Maybe<VideoFrame>.Nothing;
-                var videoFrames = new List<VideoFrame>();
-                do
-                {
-                    parsedVideoFrame = new VideoFrameParser(fileHeader.Value).TryParseVideoFrame(stream);
-                    parsedVideoFrame.Apply(videoFrame =>
-                    {
-                        videoFrames.Add(parsedVideoFrame.Value);
-                    });
-                } while (parsedVideoFrame.IsSomething());
+            // First read file header
+            Maybe<Header> fileHeader = FileHeaderParser.Instance.TryParseHeader(_fileStream);
+            if (fileHeader.IsNothing())
+            {
+                return Maybe<VideoFile>.Nothing;
+            }
 
-                if (videoFrames.Any())
-                {
-                    return new VideoFile(fileHeader.Value, videoFrames).ToMaybe();
-                }
+            // Second read the frames
+            IEnumerable<VideoFrame> frames = EnumerateVideoFrames(fileHeader.Value, _fileStream);
+            if (frames.Any())
+            {
+                return new VideoFile(fileHeader.Value, frames).ToMaybe();
             }
 
             return Maybe<VideoFile>.Nothing;
         }
+        #endregion
+
+        #region private methods
+        private IEnumerable<VideoFrame> EnumerateVideoFrames(Header fileHeader, Stream stream)
+        {
+            Maybe<VideoFrame> parsedVideoFrame = Maybe<VideoFrame>.Nothing;
+            do
+            {
+                parsedVideoFrame = new VideoFrameParser(fileHeader).TryParseVideoFrame(stream);
+                if (parsedVideoFrame.IsSomething())
+                {
+                    yield return parsedVideoFrame.Value;
+                }
+            } while (parsedVideoFrame.IsSomething());
+        }
+
+        #region IDisposable Support
+        public void Dispose()
+        {
+            if (!_disposedValue)
+            {
+                _fileStream.Dispose();
+                _disposedValue = true;
+            }
+        }
+        #endregion
         #endregion
     }
 }

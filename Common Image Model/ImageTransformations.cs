@@ -20,10 +20,7 @@
  */
 
 using Functional.Maybe;
-using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 
 namespace CommonImageModel
 {
@@ -62,20 +59,6 @@ namespace CommonImageModel
         public static Maybe<Image> TryCropImage(Image image, Point point, Size size)
         {
             return new CropTransformation(image, point, size).TryTransform();
-        }
-
-        private static Maybe<T> WrapFuncInMaybe<T>(Func<T> func)
-        {
-            try
-            {
-                return func.Invoke().ToMaybe<T>();
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine(e);
-            }
-
-            return Maybe<T>.Nothing;
         }
     }
 }

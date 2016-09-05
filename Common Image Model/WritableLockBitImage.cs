@@ -224,7 +224,7 @@ namespace CommonImageModel
             }
             _locked = true;
             //Marshal.Copy(_buffer, 0, _bitmapData.Scan0, _buffer.Length);
-            WriteBitsDirectlyToMemory();
+            WriteBufferDirectlyToMemory();
             _bitmap.UnlockBits(_bitmapData);
         }
 
@@ -256,7 +256,7 @@ namespace CommonImageModel
             _bitmap.Dispose();
         }
 
-        private void WriteBitsDirectlyToMemory()
+        private void WriteBufferDirectlyToMemory()
         {
             unsafe
             {

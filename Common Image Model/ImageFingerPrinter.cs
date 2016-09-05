@@ -67,7 +67,7 @@ namespace CommonImageModel
                         FINGERPRINT_PASS1_WIDTH,
                         (image.Height * FINGERPRINT_PASS1_WIDTH) / image.Width
                     )
-                    from blurredImage in ImageTransformations.TryBlurImage(pass1Image)
+                    from blurredImage in ImageTransformations.TryBlurImage(pass1Image, 5)
                     select ImageTransformations.TryResizeImage(
                         blurredImage,
                         FINGERPRINT_WIDTH, 

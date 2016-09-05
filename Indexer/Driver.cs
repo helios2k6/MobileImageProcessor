@@ -58,6 +58,7 @@ namespace Indexer
     {
         public static void Main(string[] args)
         {
+
             Parser.Default.ParseArguments<SearchCommandVerb, IndexCommandVerb>(args)
                 .WithParsed<SearchCommandVerb>(search =>
                 {

@@ -13,6 +13,7 @@
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,6 +23,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -44,12 +46,17 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BoxBlurExtensions.cs" />
+    <Compile Include="BoxBlurGaussianBlurTransformation.cs" />
     <Compile Include="CommonFunctions.cs" />
     <Compile Include="CommonLinqExtensions.cs" />
     <Compile Include="CommonMaybeExtensions.cs" />
+    <Compile Include="CropTransformation.cs" />
     <Compile Include="FFMPEGOutputFormat.cs" />
     <Compile Include="FFMPEGProcess.cs" />
     <Compile Include="FFMPEGProcessSettings.cs" />
+    <Compile Include="GaussianBlurTransformation.cs" />
+    <Compile Include="IBoxBlur.cs" />
     <Compile Include="IImageFrame.cs" />
     <Compile Include="Ratio.cs" />
     <Compile Include="ImageFingerPrint.cs" />
@@ -58,10 +65,14 @@
     <Compile Include="ImageJobs.cs" />
     <Compile Include="Macroblock.cs" />
     <Compile Include="ImageTransformations.cs" />
+    <Compile Include="ITransformation.cs" />
     <Compile Include="LockBitImage.cs" />
     <Compile Include="Predicates.cs" />
     <Compile Include="EnvironmentTools.cs" />
+    <Compile Include="FastAccBoxBlurGaussianBlurTransformation.cs" />
+    <Compile Include="FastBoxBlurGaussianBlurTransformation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ResizeTransformation.cs" />
     <Compile Include="SSIMCalculator.cs" />
     <Compile Include="TimingToken.cs" />
     <Compile Include="Y4M\ColorConverters.cs" />
@@ -78,6 +89,7 @@
     <Compile Include="Y4M\VideoFile.cs" />
     <Compile Include="Y4M\VideoFileParser.cs" />
     <Compile Include="Y4M\VideoFrame.cs" />
+    <Compile Include="WritableLockBitImage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

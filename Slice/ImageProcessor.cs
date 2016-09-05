@@ -113,10 +113,10 @@ namespace Slice
 
         private static ImageSliceContext TrySliceImage(ImageSliceContext context)
         {
-            var slicedImage = from originalFile in context.OriginalFile
-                              from image in context.Image
-                              from sliceSize in context.SliceSize
-                              select ImageTransformations.CropImage(image, sliceSize.Point, sliceSize.Size);
+            Maybe<Image> slicedImage = from originalFile in context.OriginalFile
+                                       from image in context.Image
+                                       from sliceSize in context.SliceSize
+                                       select ImageTransformations.TryCropImage(image, sliceSize.Point, sliceSize.Size);
 
             return ImageSliceContext.Create(
                 context.OriginalFile,

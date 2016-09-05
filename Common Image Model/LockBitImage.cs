@@ -31,7 +31,6 @@ namespace CommonImageModel
     /// </summary>
     public sealed class LockBitImage : IDisposable, IImageFrame
     {
-        private readonly Image _image;
         private readonly Bitmap _bitmap;
         private readonly BitmapData _bitmapData;
         private readonly byte[] _buffer;
@@ -49,22 +48,21 @@ namespace CommonImageModel
         /// <param name="image">The image to create a Lockbit image of</param>
         public LockBitImage(Image image)
         {
-            _image = image.Clone() as Image;
-            _bitmap = new Bitmap(_image);
+            _bitmap = new Bitmap(image.Clone() as Image);
             _bitmapData = _bitmap.LockBits(
                 new Rectangle(0, 0, image.Width, image.Height),
                 ImageLockMode.ReadOnly,
-                _image.PixelFormat
+                image.PixelFormat
             );
 
-            _bitDepth = Image.GetPixelFormatSize(_image.PixelFormat);
+            _bitDepth = Image.GetPixelFormatSize(image.PixelFormat);
             if (_bitDepth != 8 && _bitDepth != 24 && _bitDepth != 32)
             {
                 throw new ArgumentException("Only 8, 24, and 32 bit pixels are supported.");
             }
             _buffer = new byte[_bitmapData.Width * _bitmapData.Height * (_bitDepth / 8)];
-            _width = _image.Width;
-            _height = _image.Height;
+            _width = image.Width;
+            _height = image.Height;
 
             Marshal.Copy(_bitmapData.Scan0, _buffer, 0, _buffer.Length);
         }
@@ -135,13 +133,12 @@ namespace CommonImageModel
         /// <returns>A clone of the backing Image</returns>
         public Image GetImageClone()
         {
-            return _image.Clone() as Image;
+            return _bitmap.Clone() as Image;
         }
 
         public void Dispose()
         {
             _bitmap.UnlockBits(_bitmapData);
-            _image.Dispose();
             _bitmap.Dispose();
         }
     }
